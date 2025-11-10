@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import DetailUnitDialog from "../../components/DetailUnitDialog";
 
 export default function Dashboard() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedUnit, setSelectedUnit] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const openModal = (product) => {
-    setSelectedProduct(product);
+  const openModal = (unit) => {
+    setSelectedUnit(unit);
     setIsOpen(true);
   };
 
@@ -37,57 +37,72 @@ export default function Dashboard() {
     return () => document.removeEventListener("click", handleSmoothScroll);
   }, []);
 
-  const products = [
+  const units = [
     {
-      model: "iPhone 15 Pro",
+      model: "iPhone 15 Plus",
       price: "Rp 850.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pro_blue_titanium_1_6.jpg&w=1920&q=45",
+      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fa%2Fp%2Fapple_iphone_15_blue_1_1.jpg&w=3840&q=45",
       desc: "iPhone flagship terbaru dengan chip A17 Pro, kamera ProRAW, dan performa super cepat untuk kebutuhan profesional.",
       detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pro_blue_titanium_1_6.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pro_natural_titanium_1_4.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pro_white_titanium_1_4.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pro_black_titanium_1_4.jpg&w=1920&q=45",
+        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fa%2Fp%2Fapple_iphone_15_blue_1_1.jpg&w=3840&q=45",
       ],
     },
     {
-      model: "iPhone 15",
+      model: "iPhone XR",
       price: "Rp 700.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_blue_1.jpg&w=1920&q=45",
+      img: "https://i.pinimg.com/736x/9b/dc/a8/9bdca8190cc2869e058a18fc06519e0f.jpg",
       desc: "Performa tinggi dengan Dynamic Island, kamera 48MP, dan baterai awet untuk aktivitas sehari-hari.",
       detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_blue_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_pink_1_3.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_yellow_1_3.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_green_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fp%2Fapple_iphone_15_black_1_1.jpg&w=1920&q=45",
+        "https://i.pinimg.com/736x/9b/dc/a8/9bdca8190cc2869e058a18fc06519e0f.jpg",
       ],
     },
     {
       model: "iPhone 14",
       price: "Rp 600.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_yellow_1_3.jpg&w=1920&q=45",
+      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
       desc: "Masih powerful dengan chip A15 Bionic dan kamera berkualitas tinggi untuk hasil foto jernih dan tajam.",
       detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_yellow_1_3.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_product_red_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_purple_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_starlight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_blue_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_starlight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_14_blue_1.jpg&w=1920&q=45",
+        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_starlight_1.jpg&w=1920&q=45",
+        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
       ],
     },
     {
       model: "iPhone 13",
       price: "Rp 550.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_13_midnight_1.jpg&w=1920&q=45",
+      img: "https://i.pinimg.com/1200x/a5/84/b7/a584b7b1bbae0b02a4297b8644e01498.jpg",
       desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
       detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_13_midnight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Fproduct%2Fi%2Fp%2Fiphone_13_starlight_1.jpg&w=1920&q=45",
+        "https://i.pinimg.com/1200x/4b/52/61/4b526157acf8ddd10ed374d5cc841c51.jpg",
+      ],
+    },
+    {
+      model: "iPhone X",
+      price: "Rp 550.000 / bulan",
+      img: "https://i.pinimg.com/736x/69/91/81/69918186ea86921b28b8900f3aed3312.jpg",
+      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
+      detailImages: [
+        "https://i.pinimg.com/736x/69/91/81/69918186ea86921b28b8900f3aed3312.jpg",
+      ],
+    },
+    {
+      model: "iPhone 11",
+      price: "Rp 550.000 / bulan",
+      img: "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
+      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
+      detailImages: [
+        "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
+        "https://i.pinimg.com/736x/dc/3b/96/dc3b9684af282bbbf71755affd1e76a8.jpg",
+        "https://i.pinimg.com/736x/5a/58/88/5a5888e6bb65ae4f5ae738af768ca5d6.jpg",
+      ],
+    },
+    {
+      model: "iPhone 12",
+      price: "Rp 550.000 / bulan",
+      img: "https://i.pinimg.com/736x/3d/79/f3/3d79f3f0f1c0b7f4221b441de61a0f73.jpg",
+      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
+      detailImages: [
+        "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
+        "https://i.pinimg.com/736x/5a/58/88/5a5888e6bb65ae4f5ae738af768ca5d6.jpg",
       ],
     },
   ];
@@ -111,9 +126,10 @@ export default function Dashboard() {
 
         {/* hero */}
         <div className="mx-auto max-w-2xl py-28 sm:py-44 lg:py-48 text-center">
-          <h1 className="text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-gray-900 text-center">
             sewaiphoneaja.bekasi
           </h1>
+
           <p className="mt-6 text-lg text-gray-600">
             Layanan penyewaan iPhone dengan harga terjangkau, unit original, dan
             pengiriman cepat ke seluruh Indonesia.
@@ -121,7 +137,7 @@ export default function Dashboard() {
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <a
               href="#daftar-iphone"
-              className="rounded-md bg-blue-900 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 transition"
+              className="rounded-md bg-blue-900 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-blue-800 transition"
             >
               Lihat iPhone Tersedia
             </a>
@@ -159,7 +175,7 @@ export default function Dashboard() {
           </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {products.map((p, i) => (
+            {units.map((p, i) => (
               <div
                 key={i}
                 onClick={() => openModal(p)}
@@ -181,7 +197,7 @@ export default function Dashboard() {
                   </h3>
                   <p className="text-sm text-gray-500 mt-1 mb-4">{p.price}</p>
 
-                  <button className="w-full bg-blue-900 hover:bg-blue-700 text-white rounded-lg py-2 text-sm font-medium transition">
+                  <button className="w-full bg-blue-900 hover:bg-blue-800 text-white rounded-lg py-2 text-sm font-medium transition">
                     Lihat Detail
                   </button>
                 </div>
@@ -196,7 +212,7 @@ export default function Dashboard() {
         <DetailUnitDialog
           isOpen={isOpen}
           onClose={closeModal}
-          product={selectedProduct}
+          unit={selectedUnit}
         />
 
         {/* divider */}
@@ -248,7 +264,7 @@ export default function Dashboard() {
             Pilih iPhone favoritmu dan nikmati kemudahan penyewaan hanya dengan
             beberapa klik.
           </p>
-          <button className="bg-blue-900 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition">
+          <button className="bg-blue-900 hover:bg-blue-800 text-white font-semibold px-6 py-3 rounded-lg transition">
             Mulai Sewa Sekarang
           </button>
         </div>

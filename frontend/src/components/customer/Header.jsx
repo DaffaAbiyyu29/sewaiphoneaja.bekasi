@@ -19,14 +19,16 @@ export default function Header() {
         aria-label="Global"
         className="flex items-center justify-between p-6 lg:px-8"
       >
-        <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Your Company</span>
+        <div className="flex items-center lg:flex-1 gap-2">
+          <a href="/" className="flex items-center gap-2">
             <img
-              alt=""
-              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+              alt="Logo Sewa iPhone"
+              src="/images/sewaiphoneaja.png"
               className="h-8 w-auto"
             />
+            <span className="font-semibold text-gray-900 text-sm sm:text-base">
+              sewaiphoneaja.bekasi
+            </span>
           </a>
         </div>
         <div className="flex lg:hidden">
