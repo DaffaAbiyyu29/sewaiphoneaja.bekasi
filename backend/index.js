@@ -1,9 +1,13 @@
 require("dotenv").config();
 const userRoutes = require("./routes/auth/AuthRoute");
 const unitRoutes = require("./routes/admin/UnitRoute");
+const unitCustomerRoutes = require("./routes/customer/UnitPageRoute");
+const variantUnitRoutes = require("./routes/admin/VariantUnitRoute");
+const priceUnitRoutes = require("./routes/admin/PriceUnitRoute");
 
 const express = require("express");
 const cors = require("cors"); // import cors
+const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -19,12 +23,18 @@ app.use(
     credentials: true, // Untuk mengizinkan pengiriman cookie/token
   })
 );
-
 app.use(express.json());
+
+const UPLOAD_FOLDER = "public/images";
+app.use("/get-image", express.static(path.join(__dirname, UPLOAD_FOLDER)));
+
+app.use("/api/unit/catalog", unitCustomerRoutes);
 
 app.use("/auth", userRoutes);
 
-app.use("/api/units", unitRoutes);
+app.use("/api/unit", unitRoutes);
+app.use("/api/unit/variant-unit", variantUnitRoutes);
+app.use("/api/unit/price", priceUnitRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");

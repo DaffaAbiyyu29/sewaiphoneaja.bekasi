@@ -1,11 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SkeletonCard from "../../components/SkeletonCard";
 import DetailUnitDialog from "../../components/DetailUnitDialog";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowRight,
+  faBoxesPacking,
+  faClock,
+  faMobileScreen,
+  faShield,
+  faStar,
+  faZap,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function Dashboard() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  // State untuk data API
+  const [units, setUnits] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const openModal = (unit) => {
     setSelectedUnit(unit);
@@ -14,7 +33,7 @@ export default function Dashboard() {
 
   const closeModal = () => setIsOpen(false);
 
-  // smooth scroll behavior pas klik anchor link
+  // useEffect untuk smooth scroll (sudah bagus, dipertahankan)
   useEffect(() => {
     const handleSmoothScroll = (e) => {
       if (
@@ -37,252 +56,433 @@ export default function Dashboard() {
     return () => document.removeEventListener("click", handleSmoothScroll);
   }, []);
 
-  const units = [
+  // useEffect baru untuk fetch data dari API
+  useEffect(() => {
+    const fetchUnits = async () => {
+      // Contoh: "https://api.sewaiphone.com/images/" atau "/uploads/"
+      const IMAGE_BASE_URL = `${API_URL}/get-image/`; // <-- SESUAIKAN INI
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await axios.get(`${API_URL}/api/unit/catalog`);
+        console.log(response);
+        if (!response.data.success) {
+          throw new Error("Gagal mengambil data dari server");
+        }
+
+        const data = response.data;
+
+        if (data && data.success && Array.isArray(data.data)) {
+          // "Adapter" - Mengubah data API agar sesuai dengan format yang
+          // diharapkan oleh komponen (DetailUnitDialog & Card)
+          const formattedUnits = data.data.map((unit) => {
+            // Format harga
+            const priceInfo =
+              unit.prices.length > 0
+                ? `Rp ${new Intl.NumberFormat("id-ID").format(
+                    unit.prices[0].price_per_day
+                  )} / hari`
+                : "Hubungi Admin";
+
+            // Ambil gambar utama & gambar detail dari varian
+            const mainImage = unit.photo
+              ? `${IMAGE_BASE_URL}${unit.photo}`
+              : null;
+            const detailImages =
+              unit.variants.length > 0
+                ? unit.variants.map(
+                    (variant) => `${IMAGE_BASE_URL}${variant.photo}`
+                  )
+                : [mainImage]; // Fallback jika tidak ada varian
+
+            return {
+              model: unit.unit_name,
+              price: priceInfo,
+              img: mainImage,
+              desc:
+                unit.description ||
+                `Sewa ${unit.unit_name} sekarang dengan penawaran terbaik.`, // Fallback deskripsi
+              detailImages: detailImages,
+              // ...simpan data asli jika diperlukan modal
+              originalData: unit,
+            };
+          });
+          setUnits(formattedUnits);
+        } else {
+          throw new Error("Format data tidak sesuai");
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching units:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUnits();
+  }, []); // Dependency array kosong, fetch 1x saat mount
+
+  // Data 'units' yang lama sudah dihapus
+
+  const features = [
     {
-      model: "iPhone 15 Plus",
-      price: "Rp 850.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fa%2Fp%2Fapple_iphone_15_blue_1_1.jpg&w=3840&q=45",
-      desc: "iPhone flagship terbaru dengan chip A17 Pro, kamera ProRAW, dan performa super cepat untuk kebutuhan profesional.",
-      detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fa%2Fp%2Fapple_iphone_15_blue_1_1.jpg&w=3840&q=45",
-      ],
+      icon: faShield,
+      title: "Unit Original",
+      desc: "100% iPhone original dengan garansi kualitas",
     },
     {
-      model: "iPhone XR",
-      price: "Rp 700.000 / bulan",
-      img: "https://i.pinimg.com/736x/9b/dc/a8/9bdca8190cc2869e058a18fc06519e0f.jpg",
-      desc: "Performa tinggi dengan Dynamic Island, kamera 48MP, dan baterai awet untuk aktivitas sehari-hari.",
-      detailImages: [
-        "https://i.pinimg.com/736x/9b/dc/a8/9bdca8190cc2869e058a18fc06519e0f.jpg",
-      ],
+      icon: faClock,
+      title: "Sewa Fleksibel",
+      desc: "Pilih durasi sewa sesuai kebutuhan Anda",
     },
     {
-      model: "iPhone 14",
-      price: "Rp 600.000 / bulan",
-      img: "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
-      desc: "Masih powerful dengan chip A15 Bionic dan kamera berkualitas tinggi untuk hasil foto jernih dan tajam.",
-      detailImages: [
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_starlight_1.jpg&w=1920&q=45",
-        "https://ibox.co.id/_next/image?url=https%3A%2F%2Fcdnpro.eraspace.com%2Fmedia%2Fcatalog%2Funit%2Fi%2Fp%2Fiphone_14_midnight_1.jpg&w=1920&q=45",
-      ],
+      icon: faZap,
+      title: "Proses Cepat",
+      desc: "Booking mudah dan approval dalam hitungan menit",
     },
     {
-      model: "iPhone 13",
-      price: "Rp 550.000 / bulan",
-      img: "https://i.pinimg.com/1200x/a5/84/b7/a584b7b1bbae0b02a4297b8644e01498.jpg",
-      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
-      detailImages: [
-        "https://i.pinimg.com/1200x/4b/52/61/4b526157acf8ddd10ed374d5cc841c51.jpg",
-      ],
-    },
-    {
-      model: "iPhone X",
-      price: "Rp 550.000 / bulan",
-      img: "https://i.pinimg.com/736x/69/91/81/69918186ea86921b28b8900f3aed3312.jpg",
-      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
-      detailImages: [
-        "https://i.pinimg.com/736x/69/91/81/69918186ea86921b28b8900f3aed3312.jpg",
-      ],
-    },
-    {
-      model: "iPhone 11",
-      price: "Rp 550.000 / bulan",
-      img: "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
-      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
-      detailImages: [
-        "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
-        "https://i.pinimg.com/736x/dc/3b/96/dc3b9684af282bbbf71755affd1e76a8.jpg",
-        "https://i.pinimg.com/736x/5a/58/88/5a5888e6bb65ae4f5ae738af768ca5d6.jpg",
-      ],
-    },
-    {
-      model: "iPhone 12",
-      price: "Rp 550.000 / bulan",
-      img: "https://i.pinimg.com/736x/3d/79/f3/3d79f3f0f1c0b7f4221b441de61a0f73.jpg",
-      desc: "Pilihan hemat dengan performa tinggi dan desain modern, cocok untuk kamu yang ingin tampil stylish.",
-      detailImages: [
-        "https://i.pinimg.com/1200x/43/47/41/4347411103750db832be1af82c622c7c.jpg",
-        "https://i.pinimg.com/736x/5a/58/88/5a5888e6bb65ae4f5ae738af768ca5d6.jpg",
-      ],
+      icon: faBoxesPacking,
+      title: "Kondisi Prima",
+      desc: "Semua device terawat dan siap pakai",
     },
   ];
 
   return (
-    <div className="bg-white min-h-screen overflow-hidden scroll-smooth">
-      <div className="relative isolate px-6 pt-14 lg:px-8">
-        {/* background blur atas */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        >
-          <div
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-            className="relative left-[calc(50%-11rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-gradient-to-tr from-blue-400 to-blue-900 opacity-30 sm:left-[calc(50%-30rem)] sm:w-288.75"
-          />
-        </div>
+    <div className="bg-white min-h-screen">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
 
-        {/* hero */}
-        <div className="mx-auto max-w-2xl py-28 sm:py-44 lg:py-48 text-center">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-gray-900 text-center">
-            sewaiphoneaja.bekasi
-          </h1>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="inline-block">
+                <span className="bg-blue-100 text-blue-900 px-4 py-2 rounded-full text-sm font-semibold">
+                  🎉 Promo Spesial - Diskon 20% untuk Sewa Mingguan!
+                </span>
+              </div>
 
-          <p className="mt-6 text-lg text-gray-600">
-            Layanan penyewaan iPhone dengan harga terjangkau, unit original, dan
-            pengiriman cepat ke seluruh Indonesia.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <a
-              href="#daftar-iphone"
-              className="rounded-md bg-blue-900 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-blue-800 transition"
-            >
-              Lihat iPhone Tersedia
-            </a>
-            <a
-              href="/contact"
-              className="text-sm font-semibold text-blue-900 hover:text-blue-700 transition"
-            >
-              Hubungi Kami <span aria-hidden="true">→</span>
-            </a>
+              <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                Sewa iPhone
+                <span className="block bg-gradient-to-r from-blue-900 via-blue-700 to-gray-900 bg-clip-text text-transparent">
+                  Terbaru di Bekasi
+                </span>
+              </h1>
+
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Nikmati pengalaman menggunakan iPhone flagship tanpa harus
+                membeli. Unit original, harga terjangkau, dan proses mudah.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="#daftar-iphone"
+                  className="group bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center space-x-2"
+                >
+                  <span>Lihat iPhone Tersedia</span>
+                  <FontAwesomeIcon
+                    icon={faArrowRight}
+                    className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  />
+                </a>
+                <a
+                  href="#kontak"
+                  className="border-2 border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center"
+                >
+                  Hubungi Admin
+                </a>
+              </div>
+
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">500+</p>
+                  <p className="text-sm text-gray-600 mt-1">Transaksi Sukses</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">4.9</p>
+                  <p className="text-sm text-gray-600 mt-1">Rating Customer</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-blue-900">24/7</p>
+                  <p className="text-sm text-gray-600 mt-1">Customer Support</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden lg:block relative">
+              <div className="relative transform hover:scale-[1.02] transition-transform duration-500 ease-in-out">
+                {/* Efek Latar Belakang Kotak Foto */}
+                <div className="absolute inset-0 bg-blue-100 rounded-4xl transform rotate-3 shadow-xl"></div>
+                <div className="absolute inset-0 bg-yellow-100 rounded-4xl transform -rotate-3 shadow-xl"></div>
+
+                {/* Kotak Foto Utama */}
+                <div className="relative bg-[#FAFAFA] rounded-4xl p-5 shadow-3xl transform">
+                  <div className="text-center">
+                    {/* Mengganti gambar dengan yang lebih relevan dan jelas, tambahkan shadow */}
+
+                    {/* Gunakan image asset Anda yang relevan */}
+                    <img
+                      src="https://www.apple.com/v/iphone/home/cb/images/overview/welcome/switch/welcome__n6xy87ib1gyu_large.jpg" // Ganti dengan gambar produk iPhone Anda yang fokus
+                      alt="iPhone Terbaru Siap Disewa di Bekasi"
+                      className="rounded-2xl mx-auto max-h-[500px] object-contain transform hover:rotate-1 transition-transform duration-300"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* divider */}
-        <div className="border-t border-gray-200 my-20" />
-
-        {/* penjelasan singkat */}
-        <div className="max-w-4xl mx-auto mb-20">
-          <div className="rounded-2xl bg-gradient-to-r from-blue-900 to-yellow-400 p-10 shadow-lg text-center text-white">
-            <h2 className="text-2xl font-bold mb-4">sewaiphoneaja.bekasi</h2>
-            <p className="text-base leading-relaxed text-white/90">
-              Kami hadir untuk memudahkan kamu mendapatkan pengalaman
-              menggunakan iPhone tanpa harus membeli mahal. Semua unit kami
-              original, berkualitas tinggi, dan selalu dalam kondisi terbaik.
+      {/* Features Section */}
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Mengapa Pilih Kami?
+            </h2>
+            <p className="text-xl text-gray-600">
+              Layanan terbaik untuk pengalaman sewa yang sempurna
             </p>
           </div>
-        </div>
 
-        {/* divider */}
-        <div className="border-t border-gray-200 my-20" />
-
-        {/* daftar iphone */}
-        <div id="daftar-iphone" className="max-w-6xl mx-auto mb-20 px-4">
-          <h2 className="text-3xl font-bold mb-10 text-gray-900 text-center">
-            iPhone Tersedia
-          </h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {units.map((p, i) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, idx) => (
               <div
-                key={i}
-                onClick={() => openModal(p)}
-                className="group relative cursor-pointer bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                key={idx}
+                className="group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200"
               >
-                <div className="bg-gradient-to-b from-gray-50 to-white flex items-center justify-center h-56">
-                  <img
-                    src={p.img}
-                    alt={p.model}
-                    className="h-44 object-contain transition-transform duration-300 group-hover:scale-105"
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <FontAwesomeIcon
+                    icon={feature.icon}
+                    className="w-7 h-7 text-blue-900"
                   />
                 </div>
-
-                <div className="border-t border-gray-100" />
-
-                <div className="p-5 text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {p.model}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1 mb-4">{p.price}</p>
-
-                  <button className="w-full bg-blue-900 hover:bg-blue-800 text-white rounded-lg py-2 text-sm font-medium transition">
-                    Lihat Detail
-                  </button>
-                </div>
-
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-600 to-yellow-400 opacity-0 group-hover:opacity-100 transition" />
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* MODAL DETAIL */}
-        <DetailUnitDialog
-          isOpen={isOpen}
-          onClose={closeModal}
-          unit={selectedUnit}
-        />
+      {/* iPhone Catalog */}
+      <section id="daftar-iphone" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              iPhone Tersedia
+            </h2>
+            <p className="text-xl text-gray-600">
+              Pilih iPhone favoritmu dan mulai sewa hari ini
+            </p>
+          </div>
 
-        {/* divider */}
-        <div className="border-t border-gray-200 my-20" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {isLoading ? (
+              [...Array(4)].map((_, i) => <SkeletonCard key={i} />)
+            ) : error ? (
+              <div className="col-span-full text-center py-12">
+                <div className="inline-block p-4 bg-red-50 rounded-2xl mb-4">
+                  <svg
+                    className="w-12 h-12 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-red-600 font-semibold">
+                  Terjadi kesalahan: {error}
+                </p>
+              </div>
+            ) : units.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  Belum ada unit iPhone yang tersedia saat ini.
+                </p>
+              </div>
+            ) : (
+              units.map((unit, i) => (
+                <div
+                  key={i}
+                  onClick={() => openModal(unit)}
+                  className="group relative cursor-pointer bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold z-10">
+                    Tersedia
+                  </div>
 
-        {/* testimoni */}
-        <section className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-10">
-            Apa Kata Mereka?
-          </h2>
+                  <div className="bg-gradient-to-b from-gray-50 to-white flex items-center justify-center h-64 p-6">
+                    {unit.img ? (
+                      <img
+                        src={unit.img}
+                        alt={unit.model}
+                        className="h-52 object-contain transition-transform duration-300 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 rounded-2xl flex flex-col items-center justify-center">
+                        <svg
+                          className="w-16 h-16 text-gray-300 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span className="text-gray-400 text-sm font-medium">
+                          No Image
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 text-center group-hover:text-blue-900 transition">
+                      {unit.model}
+                    </h3>
+                    <p className="text-center text-blue-900 font-bold text-lg mb-4">
+                      {unit.price}
+                    </p>
+
+                    <button className="w-full bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-xl py-3 text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                      <span>Lihat Detail</span>
+                      <FontAwesomeIcon
+                        icon={faArrowRight}
+                        className="w-4 h-4"
+                      />
+                    </button>
+                  </div>
+
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-600 to-yellow-400 opacity-0 group-hover:opacity-100 transition" />
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Modal */}
+      <DetailUnitDialog
+        isOpen={isOpen}
+        onClose={closeModal}
+        unit={selectedUnit}
+      />
+
+      {/* Testimonials */}
+      <section
+        id="testimoni"
+        className="py-20 px-6 bg-gradient-to-b from-white to-gray-50"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Apa Kata Mereka?
+            </h2>
+            <p className="text-xl text-gray-600">
+              Testimoni dari customer yang puas
+            </p>
+          </div>
+
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 name: "Rizky Ananda",
+                rating: 5,
                 comment:
                   "Pelayanan super cepat! iPhone langsung dikirim ke rumah, kondisi mulus banget.",
               },
               {
                 name: "Nabila Putri",
+                rating: 5,
                 comment:
                   "Sangat recommended, adminnya responsif dan prosesnya gampang.",
               },
               {
                 name: "Yoga Saputra",
+                rating: 5,
                 comment:
                   "Coba sewa buat event kantor, semuanya lancar dan iPhone-nya oke banget!",
               },
             ].map((t, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl p-6 shadow-md border border-gray-100 bg-gradient-to-br from-blue-50 to-yellow-50 hover:shadow-lg transition"
+                className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
               >
-                <p className="text-gray-700 text-sm italic">“{t.comment}”</p>
-                <p className="mt-4 font-semibold text-blue-900">{t.name}</p>
+                <div className="flex mb-4">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <FontAwesomeIcon
+                      icon={faStar}
+                      key={i}
+                      className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                    />
+                  ))}
+                </div>
+                <p className="text-gray-700 text-base italic mb-6">
+                  "{t.comment}"
+                </p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
+                    <span className="text-blue-900 font-bold text-lg">
+                      {t.name[0]}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{t.name}</p>
+                    <p className="text-sm text-gray-500">Customer</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </section>
-
-        {/* divider */}
-        <div className="border-t border-gray-200 my-20" />
-
-        {/* CTA terakhir */}
-        <div className="max-w-4xl mx-auto text-center mb-32">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Sewa iPhone Sekarang?
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Pilih iPhone favoritmu dan nikmati kemudahan penyewaan hanya dengan
-            beberapa klik.
-          </p>
-          <button className="bg-blue-900 hover:bg-blue-800 text-white font-semibold px-6 py-3 rounded-lg transition">
-            Mulai Sewa Sekarang
-          </button>
         </div>
+      </section>
 
-        {/* background bawah */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-        >
-          <div
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-            className="relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-gradient-to-tr from-blue-400 to-yellow-300 opacity-30 sm:left-[calc(50%+36rem)] sm:w-288.75"
-          />
+      {/* CTA Section */}
+      <section id="kontak" className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 rounded-3xl p-12 shadow-2xl text-center text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-300 rounded-full opacity-10 translate-y-1/2 -translate-x-1/2"></div>
+
+            <div className="relative z-10">
+              <h2 className="text-4xl font-bold mb-4">
+                Siap Sewa iPhone Sekarang?
+              </h2>
+              <p className="text-xl text-blue-100 mb-8">
+                Hubungi kami sekarang dan dapatkan iPhone impianmu dengan harga
+                terjangkau
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl">
+                  WhatsApp Admin
+                </button>
+                <button className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-4 rounded-xl font-bold transition-all duration-300">
+                  Lihat Katalog
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

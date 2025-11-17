@@ -54,10 +54,10 @@ export default function AdminAuth({ children }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-gray-500">
-        {/* Memeriksa autentikasi... */}
-      </div>
-      //   <Loader />
+      // <div className="flex justify-center items-center h-screen text-gray-500">
+      //   {/* Memeriksa autentikasi... */}
+      // </div>
+      <Loader />
     );
   }
 

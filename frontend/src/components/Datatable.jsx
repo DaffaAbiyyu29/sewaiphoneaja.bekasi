@@ -28,6 +28,7 @@ const useDebounce = (value, delay) => {
 };
 
 export default function Datatable({
+  key,
   apiUrl,
   columns,
   allowAdd = false,
@@ -45,7 +46,7 @@ export default function Datatable({
   const [orderDir, setOrderDir] = useState("DESC");
   const [isLoading, setIsLoading] = useState(false);
 
-  const limitOptions = [5, 10, 25, 50, 100];
+  const limitOptions = [10, 25, 50, 100];
   const debouncedSearch = useDebounce(searchTerm, 500);
 
   const fetchData = useCallback(async () => {
@@ -70,7 +71,7 @@ export default function Datatable({
     } finally {
       setIsLoading(false);
     }
-  }, [apiUrl, page, limit, debouncedSearch, orderBy, orderDir]);
+  }, [key, apiUrl, page, limit, debouncedSearch, orderBy, orderDir]);
 
   useEffect(() => {
     fetchData();

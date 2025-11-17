@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHome,
-  faPercent,
   faMobile,
   faUser,
   faCartShopping,
@@ -83,12 +82,14 @@ export default function Sidebar({
         </div>
       )}
       {items.map((item) => {
-        const active = location.pathname === item.path;
+        const active =
+          location.pathname === item.path ||
+          location.pathname.startsWith(item.path + "/");
         return (
           <Link
             key={item.name}
             to={item.path}
-            className={`flex items-center p-3 rounded-lg transition-colors duration-200 group ${
+            className={`flex items-center mb-1 p-3 rounded-lg transition-colors duration-200 group ${
               active
                 ? "bg-sky-50 text-sky-900 font-semibold"
                 : "text-gray-700 hover:bg-gray-100"

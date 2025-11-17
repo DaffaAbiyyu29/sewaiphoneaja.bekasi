@@ -18,11 +18,14 @@ export default function Header({ onMenuClick }) {
   const location = useLocation();
 
   const { unitCode } = useParams();
+  const { variantUnitCode } = useParams();
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Manajemen Unit", path: "/menu/unit" },
+    { name: "Tambah Unit", path: "/menu/unit/create" },
     { name: "Detail Unit", path: "/menu/unit/" + unitCode },
+    { name: "Update Unit", path: "/menu/unit/update/" + unitCode },
     { name: "Unit", path: "/menu/unit" },
     { name: "Customer", path: "/customer" },
     { name: "Sewa Aktif", path: "/sewa-aktif" },
@@ -30,6 +33,10 @@ export default function Header({ onMenuClick }) {
     { name: "Pembayaran", path: "/pembayaran" },
     { name: "Booking Request", path: "/booking-request" },
     { name: "Pengembalian", path: "/pengembalian" },
+    {
+      name: "Update Variant",
+      path: "/menu/unit/variant/update/" + variantUnitCode,
+    },
     {
       name: "Denda / Keterlambatan",
       path: "/denda",

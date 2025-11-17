@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/customer/Dashboard";
+import LandingPage from "./pages/customer/LandingPage";
+import LandingPage2 from "./pages/customer/Dashboard";
 import Contact from "./pages/customer/Contact";
 import Catalog from "./pages/customer/Unit";
 import { Loader } from "./components/Loader";
@@ -13,6 +14,10 @@ import MasterUnit from "./pages/admin/unit/Index";
 import DetailUnit from "./pages/admin/unit/Detail";
 import NotFoundPage from "./components/PageNotFound";
 import PageLoader from "./components/PageLoader";
+import CreateUnitPage from "./pages/admin/unit/Create";
+import UpdateUnitPage from "./pages/admin/unit/Update";
+import UpdateVariantUnitPage from "./pages/admin/unit/UpdateVariant";
+import RentalForm from "./pages/customer/RentalForm";
 
 export default function App() {
   // const [loading, setLoading] = useState(true);
@@ -31,7 +36,7 @@ export default function App() {
     <PageLoader>
       <Routes>
         <Route path="/" element={<LayoutCustomer />}>
-          <Route index element={<LandingPage />} />
+          <Route index element={<LandingPage2 />} />
           <Route path="unit" element={<Catalog />} />
           <Route path="contact" element={<Contact />} />
         </Route>
@@ -46,6 +51,15 @@ export default function App() {
         >
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="menu/unit" element={<MasterUnit />} />
+          <Route path="menu/unit/create" element={<CreateUnitPage />} />
+          <Route
+            path="menu/unit/update/:unitCode"
+            element={<UpdateUnitPage />}
+          />
+          <Route
+            path="menu/unit/variant/update/:variantUnitCode"
+            element={<UpdateVariantUnitPage />}
+          />
           <Route path="menu/unit/:unitCode" element={<DetailUnit />} />
         </Route>
 
@@ -58,6 +72,7 @@ export default function App() {
           }
         />
 
+        <Route path="rent-form" element={<RentalForm />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </PageLoader>

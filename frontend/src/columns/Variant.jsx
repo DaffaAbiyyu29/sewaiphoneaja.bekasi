@@ -2,7 +2,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
 
-export const VariantColumns = [
+const API_URL = import.meta.env.VITE_API_URL;
+
+export const VariantColumns = (onDeleteClick) => [
   { header: "No", render: (_, index) => index + 1 },
   //   { header: "Kode Variant", accessor: "variant_unit_code", sortable: true },
   //   { header: "Kode Unit", accessor: "unit_code" },
@@ -10,42 +12,50 @@ export const VariantColumns = [
   { header: "Qty", accessor: "qty" },
   { header: "Status", accessor: "status" },
   {
-    header: "Tanggal Dibuat",
-    accessor: "created_at",
-    render: (row) =>
-      new Date(row.created_at).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
+    header: "Foto",
+    accessor: "photo",
+    sortable: true,
+    render: (row) => (
+      <div className="flex justify-center items-center">
+        {" "}
+        {row.photo ? (
+          <img
+            src={`${API_URL}/get-image/${row.photo}`}
+            alt={row.unit_name}
+            className="max-w-20 max-h-20 object-cover min-w-20 min-h-20"
+          />
+        ) : (
+          <div
+            className="w-full h-full border-2 border-dashed border-gray-200 rounded-lg 
+                     flex items-center justify-center text-gray-500 text-xs 
+                     max-w-20 max-h-20 min-w-20 min-h-20"
+          >
+            Tidak Ada Foto
+          </div>
+        )}
+      </div>
+    ),
   },
   {
     header: "Aksi",
     render: (row) => (
       <div className="flex gap-2 justify-center items-center">
-        {/* Tombol View */}
-        <button
-          onClick={() => getPage("/menu/unit/" + row.unit_code)}
-          className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-opacity-50"
-          title="Lihat Detail Unit"
-        >
-          <FontAwesomeIcon icon={faEye} />
-        </button>
-
         {/* Tombol Edit */}
         <button
-          onClick={() => console.log("Edit", row.unit_code)}
+          onClick={() =>
+            getPage(`/menu/unit/variant/update/${row.variant_unit_code}`)
+          }
           className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-opacity-50"
-          title="Edit Data Unit"
+          title="Edit Data Variant Unit"
         >
           <FontAwesomeIcon icon={faEdit} />
         </button>
 
         {/* Tombol Delete */}
         <button
-          onClick={() => console.log("Delete", row.unit_code)}
+          onClick={() => onDeleteClick(row.variant_unit_code)}
           className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-opacity-50"
-          title="Hapus Unit"
+          title="Hapus Variant Unit"
         >
           <FontAwesomeIcon icon={faTrash} />
         </button>

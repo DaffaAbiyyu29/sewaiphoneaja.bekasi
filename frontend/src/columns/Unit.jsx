@@ -1,8 +1,11 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
+import Swal from "sweetalert2";
 
-export const UnitColumns = [
+const API_URL = import.meta.env.VITE_API_URL;
+
+export const UnitColumns = (onDeleteClick) => [
   {
     header: "No",
     render: (_, index) => index + 1,
@@ -26,27 +29,34 @@ export const UnitColumns = [
     header: "Deskripsi",
     accessor: "description",
   },
-  //   {
-  //     header: "Harga (Rp)",
-  //     accessor: "price",
-  //     sortable: true,
-  //     render: (row) => parseFloat(row.price).toLocaleString("id-ID"),
-  //   },
   {
     header: "Status",
     accessor: "status",
     sortable: true,
   },
   {
-    header: "Tanggal Dibuat",
-    accessor: "created_at",
+    header: "Foto",
+    accessor: "photo",
     sortable: true,
-    render: (row) =>
-      new Date(row.created_at).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
+    render: (row) => (
+      <div className="flex justify-center items-center">
+        {row.photo ? (
+          <img
+            src={`${API_URL}/get-image/${row.photo}`}
+            alt={row.unit_name}
+            className="max-w-20 max-h-20 object-cover min-w-20 min-h-20"
+          />
+        ) : (
+          <div
+            className="w-full h-full border-2 border-dashed border-gray-200 rounded-lg 
+                     flex items-center justify-center text-gray-500 text-xs 
+                     max-w-20 max-h-20 min-w-20 min-h-20"
+          >
+            Tidak Ada Foto
+          </div>
+        )}
+      </div>
+    ),
   },
   {
     header: "Aksi",
@@ -55,7 +65,7 @@ export const UnitColumns = [
         {/* Tombol View */}
         <button
           onClick={() => getPage("/menu/unit/" + row.unit_code)}
-          className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-opacity-50"
+          className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
           title="Lihat Detail Unit"
         >
           <FontAwesomeIcon icon={faEye} />
@@ -63,8 +73,8 @@ export const UnitColumns = [
 
         {/* Tombol Edit */}
         <button
-          onClick={() => console.log("Edit", row.unit_code)}
-          className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-opacity-50"
+          onClick={() => getPage("/menu/unit/update/" + row.unit_code)}
+          className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150"
           title="Edit Data Unit"
         >
           <FontAwesomeIcon icon={faEdit} />
@@ -72,8 +82,8 @@ export const UnitColumns = [
 
         {/* Tombol Delete */}
         <button
-          onClick={() => console.log("Delete", row.unit_code)}
-          className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-opacity-50"
+          onClick={() => onDeleteClick(row.unit_code)} // ⬅️ panggil fungsi dari index.jsx
+          className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150"
           title="Hapus Unit"
         >
           <FontAwesomeIcon icon={faTrash} />
