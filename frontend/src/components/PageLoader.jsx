@@ -17,8 +17,5 @@ export default function PageLoader({ children }) {
 
   return children;
 }
-<<<<<<< HEAD
-=======
 
 //testing push and git
->>>>>>> repoB/main

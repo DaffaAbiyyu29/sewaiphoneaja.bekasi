@@ -22,9 +22,9 @@ const getVariantUnitByUnitCode = async (req, res) => {
   }
 };
 
-// =========================
+// ====
 // CREATE VARIANT UNIT
-// =========================
+// ====
 const createVariantUnit = async (req, res) => {
   try {
     const { unit_code, color, qty, status } = req.body;
@@ -61,9 +61,9 @@ const createVariantUnit = async (req, res) => {
   }
 };
 
-// =========================
+// ====
 // UPDATE VARIANT UNIT
-// =========================
+// ====
 const updateVariantUnit = async (req, res) => {
   try {
     const { variantUnitCode } = req.params;
@@ -112,9 +112,9 @@ const updateVariantUnit = async (req, res) => {
   }
 };
 
-// =========================
+// ====
 // DELETE VARIANT UNIT
-// =========================
+// ====
 const deleteVariantUnit = async (req, res) => {
   try {
     const { variantUnitCode } = req.params;

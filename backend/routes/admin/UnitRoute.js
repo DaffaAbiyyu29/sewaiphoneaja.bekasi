@@ -12,17 +12,17 @@ const { verifyToken } = require("../../middleware/middleware");
 const { uploadPhoto } = require("../../middleware/upload");
 const router = express.Router();
 
-// =======================
+// ==
 // ✅ ROUTE GET (sudah ada)
-// =======================
+// ==
 router.get("/", verifyToken, getAllUnit); // GET all units
 router.get("/:unitCode", verifyToken, getUnitByCode); // GET unit by code
 router.get("/variant/:unitCode", verifyToken, getVariantUnitByUnitCode); // GET variant by unit code
 router.get("/price/:unitCode", verifyToken, getPriceUnitByUnitCode); // GET price by unit code
 
-// =======================
+// ==
 // ✅ ROUTE CREATE / UPDATE / DELETE
-// =======================
+// ==
 
 // CREATE Unit
 router.post("/", verifyToken, uploadPhoto, createUnit);

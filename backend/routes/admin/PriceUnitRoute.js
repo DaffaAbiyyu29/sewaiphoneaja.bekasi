@@ -7,9 +7,9 @@ const {
 } = require("../../controllers/admin/PriceUnitController");
 const router = express.Router();
 
-// =======================
+// ==
 // ✅ ROUTE CREATE / UPDATE / DELETE
-// =======================
+// ==
 
 // CREATE Price Unit
 router.post("/", verifyToken, createPriceUnit);

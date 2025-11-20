@@ -3,9 +3,9 @@ const MstCustomer = require("../../models/MstCustomer");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const { generateCustomerID } = require("../../helpers/generateID");
 
-// ========================
+// ===
 // GET ALL CUSTOMERS
-// ========================
+// ===
 const getAllCustomers = async (req, res) => {
   try {
     let {
@@ -45,12 +45,7 @@ const getAllCustomers = async (req, res) => {
     }
 
     // Validasi orderBy
-    const validOrderBy = [
-      "customer_id",
-      "fullname",
-      "email",
-      "created_at",
-    ];
+    const validOrderBy = ["customer_id", "fullname", "email", "created_at"];
     if (!validOrderBy.includes(orderBy)) orderBy = "created_at";
 
     // Validasi orderDir
@@ -79,9 +74,9 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
-// ========================
+// ===
 // GET CUSTOMER BY ID
-// ========================
+// ===
 const getCustomerByID = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -105,9 +100,9 @@ const getCustomerByID = async (req, res) => {
   }
 };
 
-// ========================
+// ===
 // CREATE CUSTOMER
-// ========================
+// ===
 const createCustomer = async (req, res) => {
   try {
     const {
@@ -184,9 +179,9 @@ const createCustomer = async (req, res) => {
   }
 };
 
-// ========================
+// ===
 // UPDATE CUSTOMER
-// ========================
+// ===
 const updateCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -233,9 +228,9 @@ const updateCustomer = async (req, res) => {
   }
 };
 
-// ========================
+// ===
 // DELETE CUSTOMER
-// ========================
+// ===
 const deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -259,9 +254,9 @@ const deleteCustomer = async (req, res) => {
   }
 };
 
-// ========================
+// ===
 // SEARCH CUSTOMER BY EMAIL
-// ========================
+// ===
 const searchCustomerByEmail = async (req, res) => {
   try {
     const { email } = req.query;

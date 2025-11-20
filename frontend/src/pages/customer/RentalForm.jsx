@@ -26,9 +26,9 @@ const socialMediaOptions = [
   { value: "lainnya", label: "Lainnya" },
 ];
 
-// =========================================================================
+// ===
 // Helper SVG Components (Unchanged)
-// =========================================================================
+// ===
 
 const SVGCheck = ({ className, size = 20 }) => (
   <svg
@@ -208,9 +208,9 @@ const initialUnit = {
   variants: [],
 };
 
-// =========================================================================
+// ===
 // Main Component
-// =========================================================================
+// ===
 
 const RentalForm = ({ onClose }) => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -253,9 +253,9 @@ const RentalForm = ({ onClose }) => {
     setSelectedData(JSON.parse(sessionStorage.getItem("selectedUnit")));
   }, []);
 
-  // =========================================================================
+  // ===
   // Fetch Data Unit (Unchanged)
-  // =========================================================================
+  // ===
   const fetchUnitData = async () => {
     // ... (kode fetchUnitData tidak diubah)
     try {
@@ -323,9 +323,9 @@ const RentalForm = ({ onClose }) => {
     }
   }, [startDate, selectedPrice]);
 
-  // =========================================================================
+  // ===
   // Derived State and Calculations (Unchanged)
-  // =========================================================================
+  // ===
   const activePrices = unit.prices?.filter((p) => p.status === "Active") || [];
   const hasVariants = unit.variants?.length > 0;
   const requiredRentalDays = selectedPrice?.duration || 0;
@@ -394,9 +394,9 @@ const RentalForm = ({ onClose }) => {
     (hasVariants && !selectedVariant) ||
     !isDurationValid;
 
-  // =========================================================================
+  // ===
   // Handlers (Most Unchanged)
-  // =========================================================================
+  // ===
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (errors[e.target.name]) {
@@ -467,9 +467,9 @@ const RentalForm = ({ onClose }) => {
     if (file) handleImageChange(file);
   };
 
-  // =========================================================================
+  // ===
   // Validation and Step Navigation Logic
-  // =========================================================================
+  // ===
 
   const validateStep = (step) => {
     const newErrors = {};
@@ -599,9 +599,9 @@ const RentalForm = ({ onClose }) => {
     }
   };
 
-  // =========================================================================
+  // ===
   // Step Content Rendering Function
-  // =========================================================================
+  // ===
   const renderStepContent = (step) => {
     switch (step) {
       case 1:
@@ -1035,9 +1035,9 @@ const RentalForm = ({ onClose }) => {
     }
   };
 
-  // =========================================================================
+  // ===
   // Success Screen (Unchanged)
-  // =========================================================================
+  // ===
   if (submissionSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
@@ -1077,9 +1077,9 @@ const RentalForm = ({ onClose }) => {
     );
   }
 
-  // =========================================================================
+  // ===
   // Main Form Layout with Stepper
-  // =========================================================================
+  // ===
   const stepperItems = [
     { step: 1, title: "Detail Unit", icon: SVGPackage },
     { step: 2, title: "Data Diri", icon: SVGUser },

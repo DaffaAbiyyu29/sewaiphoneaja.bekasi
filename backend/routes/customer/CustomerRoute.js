@@ -10,9 +10,9 @@ const {
 } = require("../../controllers/customer/CustomerController");
 const router = express.Router();
 
-// =======================
+// ==
 // ✅ CUSTOMER CRUD ROUTES
-// =======================
+// ==
 // 🚀 NOTE: Untuk development/testing, semua route TEMPORARY tanpa auth
 // Di production, tambahkan verifyToken middleware ke setiap route yang butuh protection
 
