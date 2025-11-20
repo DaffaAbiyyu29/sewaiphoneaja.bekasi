@@ -4,10 +4,8 @@ const unitRoutes = require("./routes/admin/UnitRoute");
 const unitCustomerRoutes = require("./routes/customer/UnitPageRoute");
 const variantUnitRoutes = require("./routes/admin/VariantUnitRoute");
 const priceUnitRoutes = require("./routes/admin/PriceUnitRoute");
-<<<<<<< HEAD
-=======
+
 const customerRoutes = require("./routes/customer/CustomerRoute");
->>>>>>> repoB/main
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -27,8 +25,7 @@ app.use(
     credentials: true, // Untuk mengizinkan pengiriman cookie/token
   })
 );
-<<<<<<< HEAD
-=======
+
 // Pastikan preflight (OPTIONS) selalu dijawab dengan header CORS yang sesuai
 // Fallback middleware: tambahkan header CORS untuk semua response (berguna di dev)
 app.use((req, res, next) => {
@@ -47,7 +44,7 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
->>>>>>> repoB/main
+
 app.use(express.json());
 
 const UPLOAD_FOLDER = "public/images";
@@ -60,10 +57,6 @@ app.use("/auth", userRoutes);
 app.use("/api/unit", unitRoutes);
 app.use("/api/unit/variant-unit", variantUnitRoutes);
 app.use("/api/unit/price", priceUnitRoutes);
-<<<<<<< HEAD
-=======
-app.use("/api/customer", customerRoutes);
->>>>>>> repoB/main
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");
