@@ -4,6 +4,10 @@ const unitRoutes = require("./routes/admin/UnitRoute");
 const unitCustomerRoutes = require("./routes/customer/UnitPageRoute");
 const variantUnitRoutes = require("./routes/admin/VariantUnitRoute");
 const priceUnitRoutes = require("./routes/admin/PriceUnitRoute");
+<<<<<<< HEAD
+=======
+const customerRoutes = require("./routes/customer/CustomerRoute");
+>>>>>>> repoB/main
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -23,6 +27,27 @@ app.use(
     credentials: true, // Untuk mengizinkan pengiriman cookie/token
   })
 );
+<<<<<<< HEAD
+=======
+// Pastikan preflight (OPTIONS) selalu dijawab dengan header CORS yang sesuai
+// Fallback middleware: tambahkan header CORS untuk semua response (berguna di dev)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || "*";
+  res.header("Access-Control-Allow-Origin", origin);
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  // Jika menggunakan credentials, jangan gunakan wildcard origin
+  // namun untuk convenience development ini mengizinkan origin dinamis.
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+>>>>>>> repoB/main
 app.use(express.json());
 
 const UPLOAD_FOLDER = "public/images";
@@ -35,6 +60,10 @@ app.use("/auth", userRoutes);
 app.use("/api/unit", unitRoutes);
 app.use("/api/unit/variant-unit", variantUnitRoutes);
 app.use("/api/unit/price", priceUnitRoutes);
+<<<<<<< HEAD
+=======
+app.use("/api/customer", customerRoutes);
+>>>>>>> repoB/main
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");

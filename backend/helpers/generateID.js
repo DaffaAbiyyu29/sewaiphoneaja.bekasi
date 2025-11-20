@@ -1,6 +1,10 @@
 const MstPriceUnit = require("../models/MstPriceUnit");
 const MstUnit = require("../models/MstUnit");
 const MstVariantUnit = require("../models/MstVariantUnit");
+<<<<<<< HEAD
+=======
+const MstCustomer = require("../models/MstCustomer");
+>>>>>>> repoB/main
 
 const generateUnitCode = async () => {
   // Ambil unit terakhir dari database
@@ -53,8 +57,32 @@ const generatePriceUnitCode = async () => {
   return `PNT${String(nextNumber).padStart(4, "0")}`;
 };
 
+<<<<<<< HEAD
+=======
+const generateCustomerID = async () => {
+  // Ambil customer terakhir dari database
+  const lastCustomer = await MstCustomer.findOne({
+    order: [["created_at", "DESC"]],
+  });
+
+  // Ambil angka terakhir dari kode sebelumnya (misal: CUST-0001 → 1)
+  let nextNumber = 1;
+  if (lastCustomer && lastCustomer.customer_id) {
+    const match = lastCustomer.customer_id.match(/(\d+)$/);
+    if (match) nextNumber = parseInt(match[1]) + 1;
+  }
+
+  // Format ke kode baru: CUST-0001
+  return `CST${String(nextNumber).padStart(4, "0")}`;
+};
+
+>>>>>>> repoB/main
 module.exports = {
   generateUnitCode,
   generateVariantUnitCode,
   generatePriceUnitCode,
+<<<<<<< HEAD
+=======
+  generateCustomerID,
+>>>>>>> repoB/main
 };

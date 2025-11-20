@@ -8,6 +8,10 @@ import axios from "axios";
 import { getToken } from "../../../helpers/GetToken";
 import { Loader } from "../../../components/Loader";
 import AddVariantDialog from "../../../components/admin/AddVariantUnitDialog";
+<<<<<<< HEAD
+=======
+import EditPriceUnitDialog from "../../../components/admin/EditPriceUnitDialog";
+>>>>>>> repoB/main
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import AddPriceUnitDialog from "../../../components/admin/AddPriceUnitDialog";
@@ -20,6 +24,11 @@ export default function DetailUnitPage() {
   const [unitData, setUnitData] = useState(null);
   const [showDialogVariant, setShowDialogVariant] = useState(false);
   const [showDialogPrice, setShowDialogPrice] = useState(false);
+<<<<<<< HEAD
+=======
+  const [showEditPrice, setShowEditPrice] = useState(false);
+  const [selectedPriceForEdit, setSelectedPriceForEdit] = useState(null);
+>>>>>>> repoB/main
   const [refreshKeyPrice, setRefreshKeyPrice] = useState(0);
   const [refreshKeyVariant, setRefreshKeyVariant] = useState(0);
 
@@ -45,6 +54,14 @@ export default function DetailUnitPage() {
     setShowDialogPrice(true);
   };
 
+<<<<<<< HEAD
+=======
+  const handleEditPriceClick = (priceData) => {
+    setSelectedPriceForEdit(priceData);
+    setShowEditPrice(true);
+  };
+
+>>>>>>> repoB/main
   const handleDeleteVariant = async (variantUnitCode) => {
     const confirmResult = await Swal.fire({
       title: "Apakah kamu yakin?",
@@ -101,6 +118,12 @@ export default function DetailUnitPage() {
   };
 
   //edit price harga
+<<<<<<< HEAD
+=======
+  const handleEditPrice = (priceData) => {
+    handleEditPriceClick(priceData);
+  };
+>>>>>>> repoB/main
 
   //delete price harga
   const handleDeletePrice = async (priceCode) => {
@@ -330,7 +353,11 @@ export default function DetailUnitPage() {
             <Datatable
               key={refreshKeyPrice}
               apiUrl={`${API_URL}/api/unit/price/${unitCode}`}
+<<<<<<< HEAD
               columns={PriceColumns(handleDeletePrice)}
+=======
+              columns={PriceColumns(handleDeletePrice, handleEditPrice)}
+>>>>>>> repoB/main
               isSearch={true}
               isCard={false}
               allowAdd={true}
@@ -419,6 +446,17 @@ export default function DetailUnitPage() {
           setRefreshKeyPrice((prev) => prev + 1);
         }}
       />
+<<<<<<< HEAD
+=======
+      <EditPriceUnitDialog
+        isOpen={showEditPrice}
+        onClose={() => setShowEditPrice(false)}
+        priceData={selectedPriceForEdit}
+        onSuccess={() => {
+          setRefreshKeyPrice((prev) => prev + 1);
+        }}
+      />
+>>>>>>> repoB/main
     </div>
   );
 }
