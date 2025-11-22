@@ -116,6 +116,7 @@ const createCustomer = async (req, res) => {
       social_media_type,
       social_media_username,
       ktp_image,
+      status,
     } = req.body;
 
     // Validasi field required
@@ -130,6 +131,7 @@ const createCustomer = async (req, res) => {
       "social_media_type",
       "social_media_username",
       "ktp_image",
+      "status"
     ];
 
     const missingFields = requiredFields.filter((field) => !req.body[field]);
@@ -170,6 +172,8 @@ const createCustomer = async (req, res) => {
       social_media_type,
       social_media_username,
       ktp_image,
+      status,
+      created_by: "SYSTEM",
     });
 
     return resSuccess(res, "Customer berhasil dibuat", newCustomer, null, 201);

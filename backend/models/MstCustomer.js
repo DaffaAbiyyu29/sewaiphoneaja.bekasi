@@ -61,13 +61,15 @@ const MstCustomer = sequelize.define(
     updated_at: {
       type: DataTypes.DATE,
       allowNull: true, // boleh null
-      defaultValue: sequelize.literal(
-        "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-      ),
     },
     updated_by: {
       type: DataTypes.STRING(16),
       allowNull: true, // boleh null
+    },
+    status: {
+      type: DataTypes.ENUM("Active", "Inactive"),
+      allowNull: true, // boleh null
+      defaultValue: "Active",
     },
   },
   {

@@ -4,8 +4,10 @@ const unitRoutes = require("./routes/admin/UnitRoute");
 const unitCustomerRoutes = require("./routes/customer/UnitPageRoute");
 const variantUnitRoutes = require("./routes/admin/VariantUnitRoute");
 const priceUnitRoutes = require("./routes/admin/PriceUnitRoute");
-
 const customerRoutes = require("./routes/customer/CustomerRoute");
+const paymentRoutes = require("./routes/payment/PaymentRoute");
+const rentalRoutes = require("./routes/rental/RentalRoute");
+const detailrentalRoutes = require("./routes/rental/DetailRentalRoute");
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -57,6 +59,10 @@ app.use("/auth", userRoutes);
 app.use("/api/unit", unitRoutes);
 app.use("/api/unit/variant-unit", variantUnitRoutes);
 app.use("/api/unit/price", priceUnitRoutes);
+app.use("/api/customer", customerRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/rental", rentalRoutes);
+app.use("/api/detailrental", detailrentalRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");

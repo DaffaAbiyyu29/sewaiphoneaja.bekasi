@@ -21,13 +21,14 @@ const router = express.Router();
 // Query params: page, limit, search, orderBy, orderDir
 router.get("/", getAllCustomers);
 
-// GET CUSTOMER BY ID
-// GET /api/customer/:customerId
-router.get("/:customerId", getCustomerByID);
 
 // SEARCH CUSTOMER BY EMAIL
 // GET /api/customer/search?email=customer@example.com
 router.get("/search", searchCustomerByEmail);
+
+// GET CUSTOMER BY ID
+// GET /api/customer/:customerId
+router.get("/:customerId", getCustomerByID);
 
 // CREATE NEW CUSTOMER (PUBLIC - untuk testing/registration)
 // POST /api/customer
