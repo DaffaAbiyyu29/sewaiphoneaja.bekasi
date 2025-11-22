@@ -4,10 +4,15 @@ const sequelize = require("./index");
 const MstUser = sequelize.define(
   "mst_user",
   {
-    nik: {
+    user_id: {
       type: DataTypes.STRING(16),
       primaryKey: true,
       allowNull: false,
+    },
+    nik: {
+      type: DataTypes.STRING(16),
+      allowNull: false,
+      unique: true,
     },
     name: {
       type: DataTypes.STRING(100),

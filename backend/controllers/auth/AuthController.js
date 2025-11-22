@@ -22,13 +22,14 @@ const login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return resError(res, "Password salah", "Unauthorized", 401);
 
-    // Generate JWT
-    const payload = { name: user.name, nik: user.nik, email: user.email };
+    // Generate JWT (include user_id)
+    const payload = { user_id: user.user_id, name: user.name, nik: user.nik, email: user.email };
     const token = jwt.sign(payload, process.env.JWT_SECRET || "secretkey", {
       expiresIn: "2h",
     });
 
     const userData = {
+      user_id: user.user_id,
       nik: user.nik,
       name: user.name,
       email: user.email,

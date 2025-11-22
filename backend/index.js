@@ -8,6 +8,7 @@ const customerRoutes = require("./routes/customer/CustomerRoute");
 const paymentRoutes = require("./routes/payment/PaymentRoute");
 const rentalRoutes = require("./routes/rental/RentalRoute");
 const detailrentalRoutes = require("./routes/rental/DetailRentalRoute");
+const userAdminRoutes = require("./routes/user/UserRoute");
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -63,6 +64,7 @@ app.use("/api/customer", customerRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/rental", rentalRoutes);
 app.use("/api/detailrental", detailrentalRoutes);
+app.use("/api/user", userAdminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");
