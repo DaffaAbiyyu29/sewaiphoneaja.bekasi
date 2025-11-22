@@ -44,8 +44,6 @@ const createUser = async (req, res) => {
       status: 'active',
       created_at: new Date(),
       created_by: created_by || null,
-      updated_at: new Date(),
-      updated_by: created_by || null,
     });
 
     // do not return password
