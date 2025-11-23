@@ -40,23 +40,23 @@ const generatePriceUnitCode = async () => {
   return generateIncrementId(MstPriceUnit, "price_id", "PNT");
 };
 
-// CUSTOMER → CST0001
+// CUSTOMER → CUST0001
 const generateCustomerID = async () => {
-  return generateIncrementId(MstCustomer, "customer_id", "CST");
+  return generateIncrementId(MstCustomer, "customer_id", "CUST");
 };
 
 // ===============================
 // 🔧 GENERATOR BARU (DARI PERMINTAAN KAMU SEBELUMNYA)
 // ===============================
 
-// RENTAL → RNT0001
+// RENTAL → RENT0001
 const generateRentID = async (model) => {
-  return generateIncrementId(model, "rent_id", "RNT");
+  return generateIncrementId(model, "rent_id", "RENT");
 };
 
-// DETAIL RENTAL → DTL0001
+// DETAIL RENTAL → DETL0001
 const generateDetailRentID = async (model) => {
-  return generateIncrementId(model, "detail_id", "DTL");
+  return generateIncrementId(model, "detail_id", "DETL");
 };
 
 // PAYMENT → PAY0001
