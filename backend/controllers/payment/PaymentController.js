@@ -1,10 +1,7 @@
 const TrnPayment = require("../../models/MstPayment");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
+const { generateIncrementId } = require("../../helpers/generateID");
 
-// Simple payment id generator
-const generatePaymentId = () => {
-  return `PAY${Date.now().toString().slice(-10)}`;
-};
 
 const createPayment = async (req, res) => {
   try {
@@ -25,7 +22,7 @@ const createPayment = async (req, res) => {
       return resError(res, "Data pembayaran tidak lengkap", `Missing fields: ${missing.join(", ")}`, 400);
     }
 
-    const payment_id = generatePaymentId();
+    const payment_id = await generateIncrementId(TrnPayment, "payment_id", "PAY");
 
     const newPayment = await TrnPayment.create({
       payment_id,

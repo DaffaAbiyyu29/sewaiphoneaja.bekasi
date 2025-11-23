@@ -1,9 +1,7 @@
 const TrnRent = require("../../models/MstRental");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
+const { generateIncrementId } = require("../../helpers/generateID");
 
-const generateRentId = () => {
-  return `RNT${Date.now().toString().slice(-10)}`;
-};
 
 const createRent = async (req, res) => {
   try {
@@ -28,7 +26,7 @@ const createRent = async (req, res) => {
     if (total_price === undefined || total_price === null || total_price === "") missing.push("total_price");
     if (missing.length) return resError(res, "Data rental tidak lengkap", `Missing fields: ${missing.join(", ")}`, 400);
 
-    const rent_id = generateRentId();
+    const rent_id = await generateIncrementId(TrnRent, "rent_id", "RNT");
 
     const newRent = await TrnRent.create({
       rent_id,
