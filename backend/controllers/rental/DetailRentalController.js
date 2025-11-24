@@ -13,7 +13,7 @@ const createDetail = async (req, res) => {
     if (price === undefined || price === null || price === "") missing.push("price");
     if (missing.length) return resError(res, "Data detail rental tidak lengkap", `Missing fields: ${missing.join(", ")}`, 400);
 
-    const detail_id = await generateIncrementId(TrnDetailRent, "detail_id", "DTL");
+    const detail_id = await generateIncrementId(TrnDetailRent, "detail_id", "DET");
     const q = qty !== undefined && qty !== null && qty !== "" ? Number(qty) : 1;
     const p = Number(price);
     const subtotal = p * q;

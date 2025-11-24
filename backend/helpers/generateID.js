@@ -2,6 +2,7 @@ const MstPriceUnit = require("../models/MstPriceUnit");
 const MstUnit = require("../models/MstUnit");
 const MstVariantUnit = require("../models/MstVariantUnit");
 const MstCustomer = require("../models/MstCustomer");
+const MstUser = require("../models/MstUser");
 
 // ===============================
 // 🔧 GENERATOR GLOBAL UNTUK SEMUA PREFIX
@@ -45,6 +46,11 @@ const generateCustomerID = async () => {
   return generateIncrementId(MstCustomer, "customer_id", "CUST");
 };
 
+// GENERATE USER → USR0001
+const generateUserID = async () => {
+  return generateIncrementId(MstUser, "user_id", "USR");
+};
+
 // ===============================
 // 🔧 GENERATOR BARU (DARI PERMINTAAN KAMU SEBELUMNYA)
 // ===============================
@@ -70,6 +76,7 @@ module.exports = {
   generateVariantUnitCode,
   generatePriceUnitCode,
   generateCustomerID,
+  generateUserID,
   generateRentID,
   generateDetailRentID,
   generatePaymentID,

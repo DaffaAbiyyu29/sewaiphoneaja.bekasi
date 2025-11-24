@@ -26,7 +26,7 @@ const createRent = async (req, res) => {
     if (total_price === undefined || total_price === null || total_price === "") missing.push("total_price");
     if (missing.length) return resError(res, "Data rental tidak lengkap", `Missing fields: ${missing.join(", ")}`, 400);
 
-    const rent_id = await generateIncrementId(TrnRent, "rent_id", "RNT");
+    const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
 
     const newRent = await TrnRent.create({
       rent_id,
