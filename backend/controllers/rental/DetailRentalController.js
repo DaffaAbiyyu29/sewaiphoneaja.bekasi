@@ -28,8 +28,6 @@ const createDetail = async (req, res) => {
       subtotal,
       created_at: new Date(),
       created_by: created_by || null,
-      updated_at: new Date(),
-      updated_by: created_by || null,
     });
 
     return resSuccess(res, "Detail rental berhasil dibuat", newDetail, null, 201);

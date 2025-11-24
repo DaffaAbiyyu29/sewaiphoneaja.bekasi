@@ -18,6 +18,8 @@ import CreateUnitPage from "./pages/admin/unit/Create";
 import UpdateUnitPage from "./pages/admin/unit/Update";
 import UpdateVariantUnitPage from "./pages/admin/unit/UpdateVariant";
 import RentalForm from "./pages/customer/RentalForm";
+import RentalPage from "./pages/admin/rental";
+import RentalDetail from "./pages/admin/rental/Detail";
 
 export default function App() {
   // const [loading, setLoading] = useState(true);
@@ -61,6 +63,8 @@ export default function App() {
             element={<UpdateVariantUnitPage />}
           />
           <Route path="menu/unit/:unitCode" element={<DetailUnit />} />
+          <Route path="menu/rental" element={<RentalPage />} />
+          <Route path="menu/rental/:rentId" element={<RentalDetail />} />
         </Route>
 
         <Route

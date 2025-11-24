@@ -1,7 +1,7 @@
 // RentalForm.jsx - Enhanced with Stepper Tabs Layout
 
 "use client";
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 // Import komponen kustom
 import Input from "../../components/Input";
@@ -14,6 +14,7 @@ import SelectQuantity from "../../components/customer/SelectQuantity";
 import GalleryUnit from "../../components/customer/GaleryUnit";
 import PriceSummary from "../../components/customer/PriceSummary";
 import ActionButton from "../../components/ActionButton";
+import { useNavigate } from "react-router-dom";
 
 // Data dummy untuk dropdown Jenis Sosial Media
 const socialMediaOptions = [
@@ -197,14 +198,10 @@ const AlertCircle = SVGAlertCircle;
 
 const initialUnit = {
   unit_code: "",
-  unit_name: "Unit Sewa",
+  unit_name: "",
   photo: "",
   description: "",
   prices: [],
-  required_id_card: false,
-  required_passport: false,
-  required_driving_license: false,
-  required_others: false,
   variants: [],
 };
 
@@ -213,6 +210,8 @@ const initialUnit = {
 // ===
 
 const RentalForm = ({ onClose }) => {
+  const navigate = useNavigate();
+
   const API_URL = import.meta.env.VITE_API_URL;
   const fileInputRef = useRef(null);
 
@@ -222,16 +221,16 @@ const RentalForm = ({ onClose }) => {
   const [selectedData, setSelectedData] = useState();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
+    fullname: "",
+    nik: "",
+    telp: "",
     email: "",
     address: "",
-    identity_type: "KTP",
-    nik: "",
-    contactName: "",
-    contactPhone: "",
+    closestContactName: "",
+    closestContactTelp: "",
     socialMediaType: "",
     socialMediaUsername: "",
+    ktpImage: "",
   });
 
   const [imageFile, setImageFile] = useState(null);
@@ -250,6 +249,10 @@ const RentalForm = ({ onClose }) => {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   useEffect(() => {
+    if (!sessionStorage.getItem("selectedUnit")) {
+      navigate("/unit");
+    }
+
     setSelectedData(JSON.parse(sessionStorage.getItem("selectedUnit")));
   }, []);
 
@@ -267,19 +270,22 @@ const RentalForm = ({ onClose }) => {
       });
 
       const data = res.data.data;
+
       const mappedUnit = {
         unit_code: data.unit_code,
         unit_name: data.unit_name,
         photo: data.photo,
         description: data.description,
         prices: data.prices || [],
-        required_id_card: data.required_id_card || false,
-        required_passport: data.required_passport || false,
-        required_driving_license: data.required_driving_license || false,
-        required_others: data.required_others || false,
         variants: data.variants || [],
+        // only unit data needed; identity is always KTP so no requirement flags
       };
       setUnit(mappedUnit);
+
+      setStartDate(selectedData?.startDate);
+      setStartTime(selectedData?.startTime);
+      setEndDate(selectedData?.endDate);
+      setEndTime(selectedData?.endTime);
 
       const activePrices =
         mappedUnit.prices?.filter((p) => p.status === "Active") || [];
@@ -295,12 +301,12 @@ const RentalForm = ({ onClose }) => {
         setMainImage({ id: mappedUnit.unit_code, src: mappedUnit.photo });
       }
     } catch (err) {
-      console.error("Gagal mengambil data unit dari API:", err);
+      console.log(err);
+      retry;
     }
   };
 
   useEffect(() => {
-    console.log(selectedData);
     fetchUnitData().then(() => {
       setRetry(true);
     });
@@ -397,11 +403,9 @@ const RentalForm = ({ onClose }) => {
   // ===
   // Handlers (Most Unchanged)
   // ===
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors((prev) => ({ ...prev, [e.target.name]: null }));
-    }
+
+  const handleChange = (field) => (e) => {
+    setFormData({ ...formData, [field]: e.target.value });
   };
 
   const handleSelectVariant = (variant) => {
@@ -455,16 +459,48 @@ const RentalForm = ({ onClose }) => {
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
-    if (e.type === "dragleave") setDragActive(false);
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    }
+    if (e.type === "dragleave") {
+      setDragActive(false);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleImageChange(file);
+
+    // Validasi dataTransfer exists
+    if (!e.dataTransfer) return;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      // Validasi file type sebelum mengubah state
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          photo: "Foto harus jpg, png, atau webp",
+        }));
+        return;
+      }
+
+      // Validasi file size
+      const maxSizeMB = 5;
+      if (file.size / 1024 / 1024 > maxSizeMB) {
+        setErrors((prev) => ({
+          ...prev,
+          photo: `Ukuran foto maksimal ${maxSizeMB}MB`,
+        }));
+        return;
+      }
+
+      handleImageChange(file);
+    }
   };
 
   // ===
@@ -492,9 +528,9 @@ const RentalForm = ({ onClose }) => {
 
     // Validation for Step 2 (Personal Data)
     if (step === 2) {
-      if (!formData.name) newErrors.name = "Nama lengkap wajib diisi.";
-      if (!formData.phone || !/^\d{9,15}$/.test(formData.phone))
-        newErrors.phone = "Nomor telepon tidak valid.";
+      if (!formData.fullname) newErrors.fullname = "Nama lengkap wajib diisi.";
+      if (!formData.telp || !/^\d{9,15}$/.test(formData.telp))
+        newErrors.telp = "Nomor telepon tidak valid.";
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
         newErrors.email = "Alamat email tidak valid.";
       if (!formData.address) newErrors.address = "Alamat wajib diisi.";
@@ -504,10 +540,14 @@ const RentalForm = ({ onClose }) => {
         !/^\d+$/.test(formData.nik)
       )
         newErrors.nik = "NIK wajib diisi dan harus 16 digit angka.";
-      if (!formData.contactName)
-        newErrors.contactName = "Nama kontak terdekat wajib diisi.";
-      if (!formData.contactPhone || !/^\d{9,15}$/.test(formData.contactPhone))
-        newErrors.contactPhone = "Nomor telepon kontak terdekat tidak valid.";
+      if (!formData.closestContactName)
+        newErrors.closestContactName = "Nama kontak terdekat wajib diisi.";
+      if (
+        !formData.closestContactTelp ||
+        !/^\d{9,15}$/.test(formData.closestContactTelp)
+      )
+        newErrors.closestContactTelp =
+          "Nomor telepon kontak terdekat tidak valid.";
       if (!formData.socialMediaType)
         newErrors.socialMediaType = "Jenis sosial media wajib dipilih.";
       if (!formData.socialMediaUsername)
@@ -516,10 +556,10 @@ const RentalForm = ({ onClose }) => {
       isValid = Object.keys(newErrors).length === 0;
     }
 
-    // Validation for Step 3 (Document) - Only if required_id_card is true
+    // Validation for Step 3 (Document) - KTP wajib (only KTP allowed)
     if (step === 3) {
-      if (unit.required_id_card && !imageFile) {
-        newErrors.photo = `File ${formData.identity_type} wajib diunggah.`;
+      if (!imageFile) {
+        newErrors.photo = `Foto KTP wajib diunggah.`;
       }
       isValid = Object.keys(newErrors).length === 0;
     }
@@ -543,50 +583,157 @@ const RentalForm = ({ onClose }) => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) {
-      window.scrollTo(0, 0);
-      return;
-    }
-
     setLoading(true);
-
     try {
       const token = await getToken();
-      const rentalData = {
-        unit_code: unit.unit_code,
-        variant_unit_code: selectedVariant?.variant_unit_code || null,
-        price_id: selectedPrice.price_id,
-        quantity: quantity,
-        start_date: `${startDate}T${startTime}:00`,
-        end_date: `${endDate}T${endTime}:00`,
-        total_price: totalPrice,
-        customer: {
-          ...formData,
-          // Include identity_type for backend logic if needed
-          identity_type: formData.identity_type,
-        },
-      };
 
-      const payload = new FormData();
-      payload.append("data", JSON.stringify(rentalData));
-      if (imageFile) payload.append("id_card_file", imageFile);
+      // 1. Validasi KTP wajib
+      if (!imageFile) {
+        setErrors((prev) => ({ ...prev, photo: `Foto KTP wajib diunggah.` }));
+        setLoading(false);
+        return;
+      }
 
-      const response = await axios.post(
-        `${API_URL}/api/v1/rental/submit`,
-        payload,
+      // 2. Cek ketersediaan customer berdasarkan NIK sebelum membuat
+      try {
+        if (!formData.nik) {
+          setErrors((prev) => ({ ...prev, nik: "NIK wajib diisi" }));
+          setLoading(false);
+          return;
+        }
+
+        const checkRes = await axios.get(
+          `${API_URL}/api/customer/nik/${formData.nik}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Jika API mengembalikan success tapi can_rent === false, blokir
+        const checkData = checkRes.data?.data || {};
+        if (checkData.can_rent === false) {
+          setErrors({
+            submit:
+              checkRes.data?.message ||
+              "Customer tidak dapat meminjam saat ini.",
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        // Jika backend mengembalikan 409 Conflict, tampilkan pesan dan hentikan
+        if (err.response && err.response.status === 409) {
+          setErrors({
+            submit:
+              err.response.data?.message ||
+              "Customer tidak dapat meminjam saat ini.",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Untuk error lain, lempar supaya ditangani oleh outer catch
+        throw err;
+      }
+
+      // 3. Buat customer (FormData, multipart)
+      const customerPayload = new FormData();
+      customerPayload.append("nik", formData.nik || "");
+      customerPayload.append("fullname", formData.fullname || "");
+      customerPayload.append("telp", formData.telp || "");
+      customerPayload.append("email", formData.email || "");
+      customerPayload.append("address", formData.address || "");
+      customerPayload.append(
+        "closest_contact_name",
+        formData.closestContactName || ""
+      );
+      customerPayload.append(
+        "closest_contact_telp",
+        formData.closestContactTelp || ""
+      );
+      customerPayload.append(
+        "social_media_type",
+        formData.socialMediaType || ""
+      );
+      customerPayload.append(
+        "social_media_username",
+        formData.socialMediaUsername || ""
+      );
+      customerPayload.append("ktp_image", imageFile.name || "");
+      customerPayload.append("status", "Active");
+      customerPayload.append("photo", imageFile);
+
+      const responseCustomer = await axios.post(
+        `${API_URL}/api/customer`,
+        customerPayload,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      if (response.data.success) {
-        setSubmissionSuccess(true);
-      } else {
-        throw new Error(response.data.message || "Pengajuan gagal dikirim.");
+      const customerData = responseCustomer.data?.data;
+      if (!customerData || !customerData.customer_id) {
+        throw new Error("Gagal membuat customer. Mohon cek data Anda.");
       }
+      const customer_id = customerData.customer_id;
+
+      // 3. Buat rental (rent)
+      const rentPayload = {
+        customer_id,
+        start_rent_date: `${startDate}T${startTime}:00`,
+        end_rent_date: `${endDate}T${endTime}:00`,
+        total_price: selectedPrice?.price_per_day
+          ? selectedPrice.price_per_day * quantity
+          : 0,
+        total_paid: 0,
+        balance: selectedPrice?.price_per_day
+          ? selectedPrice.price_per_day * quantity
+          : 0,
+        status: "Open",
+        created_by: formData.fullname || "SYSTEM",
+      };
+      const responseRent = await axios.post(
+        `${API_URL}/api/rental`,
+        rentPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const rentData = responseRent.data?.data;
+      if (!rentData || !rentData.rent_id) {
+        throw new Error("Gagal membuat data rental.");
+      }
+      const rent_id = rentData.rent_id;
+
+      // 4. Buat detail rental (detail)
+      const detailPayload = {
+        rent_id,
+        unit_code: unit.unit_code,
+        variant_unit_code: selectedVariant?.variant_unit_code || null,
+        price: selectedPrice?.price_per_day || 0,
+        qty: quantity,
+        created_by: formData.fullname || "SYSTEM",
+      };
+      const responseDetail = await axios.post(
+        `${API_URL}/api/detailrental`,
+        detailPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const detailData = responseDetail.data?.data;
+      if (!detailData || !detailData.detail_id) {
+        throw new Error("Gagal membuat detail rental.");
+      }
+
+      setSubmissionSuccess(true);
+      sessionStorage.removeItem("selectedUnit");
     } catch (error) {
       console.error("Submission error:", error);
       setErrors({
@@ -608,7 +755,7 @@ const RentalForm = ({ onClose }) => {
         // STEP 1: Unit Selection (Pilih Paket & Jadwal)
         return (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div className="bg-blue-900 px-6 py-4">
               <div className="flex items-center gap-3">
                 <SVGPackage className="w-6 h-6 text-white" size={24} />
                 <h2 className="text-xl font-bold text-white">
@@ -694,7 +841,7 @@ const RentalForm = ({ onClose }) => {
         // STEP 2: Personal Data (Data Diri & Kontak)
         return (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+            <div className="bg-blue-900 px-6 py-4">
               <div className="flex items-center gap-3">
                 <SVGUser className="w-6 h-6 text-white" size={24} />
                 <h2 className="text-xl font-bold text-white">
@@ -709,8 +856,9 @@ const RentalForm = ({ onClose }) => {
                   <Input
                     label="NIK (Nomor Induk Kependudukan)"
                     name="nik"
+                    type="number"
                     value={formData.nik}
-                    onChange={handleChange}
+                    onChange={handleChange("nik")}
                     placeholder="16 digit NIK"
                     maxLength={16}
                     error={errors.nik}
@@ -719,28 +867,29 @@ const RentalForm = ({ onClose }) => {
 
                 <Input
                   label="Nama Lengkap"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
+                  name="fullname"
+                  value={formData.fullname}
+                  onChange={handleChange("fullname")}
                   placeholder="Sesuai KTP"
-                  error={errors.name}
+                  error={errors.fullname}
                 />
 
                 <Input
                   label="Nomor Telepon"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
+                  name="telp"
+                  value={formData.telp}
+                  onChange={handleChange("telp")}
                   placeholder="08xxxxxxxxxx"
-                  type="tel"
-                  error={errors.phone}
+                  maxLength={13}
+                  type="number"
+                  error={errors.telp}
                 />
 
                 <Input
                   label="Email"
                   name="email"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={handleChange("email")}
                   placeholder="email@contoh.com"
                   type="email"
                   error={errors.email}
@@ -751,7 +900,7 @@ const RentalForm = ({ onClose }) => {
                     label="Alamat Lengkap"
                     name="address"
                     value={formData.address}
-                    onChange={handleChange}
+                    onChange={handleChange("address")}
                     placeholder="Alamat lengkap sesuai KTP"
                     type="textarea"
                     error={errors.address}
@@ -769,21 +918,22 @@ const RentalForm = ({ onClose }) => {
                 <div className="grid md:grid-cols-2 gap-5">
                   <Input
                     label="Nama Kontak Darurat"
-                    name="contactName"
-                    value={formData.contactName}
-                    onChange={handleChange}
+                    name="closestContactName"
+                    value={formData.closestContactName}
+                    onChange={handleChange("closestContactName")}
                     placeholder="Nama kerabat/teman"
-                    error={errors.contactName}
+                    error={errors.closestContactName}
                   />
 
                   <Input
                     label="Nomor Telepon Kontak Darurat"
-                    name="contactPhone"
-                    value={formData.contactPhone}
-                    onChange={handleChange}
+                    name="closestContactTelp"
+                    value={formData.closestContactTelp}
+                    onChange={handleChange("closestContactTelp")}
                     placeholder="08xxxxxxxxxx"
-                    type="tel"
-                    error={errors.contactPhone}
+                    maxLength={13}
+                    type="number"
+                    error={errors.closestContactTelp}
                   />
                 </div>
               </div>
@@ -813,7 +963,7 @@ const RentalForm = ({ onClose }) => {
                       name="socialMediaType"
                       id="socialMediaType"
                       value={formData.socialMediaType}
-                      onChange={handleChange}
+                      onChange={handleChange("socialMediaType")}
                       className={`block w-full border-2 rounded-lg shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 p-3 text-sm font-medium transition-all ${
                         errors.socialMediaType
                           ? "border-red-500 bg-red-50"
@@ -838,7 +988,7 @@ const RentalForm = ({ onClose }) => {
                     label="Username"
                     name="socialMediaUsername"
                     value={formData.socialMediaUsername}
-                    onChange={handleChange}
+                    onChange={handleChange("socialMediaUsername")}
                     placeholder="@username"
                     error={errors.socialMediaUsername}
                   />
@@ -852,7 +1002,7 @@ const RentalForm = ({ onClose }) => {
         // STEP 3: Document Upload (Upload Dokumen Identitas)
         return (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+            <div className="bg-blue-900 px-6 py-4">
               <div className="flex items-center gap-3">
                 <SVGCreditCard className="w-6 h-6 text-white" size={24} />
                 <h2 className="text-xl font-bold text-white">
@@ -862,49 +1012,20 @@ const RentalForm = ({ onClose }) => {
             </div>
 
             <div className="p-6 space-y-6">
-              {unit.required_id_card && (
-                <div>
-                  <label
-                    htmlFor="identity_type"
-                    className="block text-sm font-bold text-gray-900 mb-3"
-                  >
-                    Jenis Dokumen
-                  </label>
-                  <select
-                    id="identity_type"
-                    name="identity_type"
-                    value={formData.identity_type}
-                    onChange={handleChange}
-                    className="block w-full md:w-1/2 border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 p-3 text-sm font-medium bg-white transition-all"
-                  >
-                    <option value="KTP">KTP (Kartu Tanda Penduduk)</option>
-                    {unit.required_passport && (
-                      <option value="Passport">Passport</option>
-                    )}
-                    {unit.required_driving_license && (
-                      <option value="SIM">SIM (Surat Izin Mengemudi)</option>
-                    )}
-                    {unit.required_others && (
-                      <option value="Lainnya">Lainnya</option>
-                    )}
-                  </select>
-                </div>
-              )}
-
               {/* Upload Area */}
               <div>
                 <label className="block text-sm font-bold text-gray-900 mb-3">
-                  Upload Foto {formData.identity_type}
+                  Upload Foto KTP
                 </label>
 
                 {!imagePreview ? (
                   <div
                     className={`relative border-3 border-dashed rounded-xl cursor-pointer transition-all duration-300 p-10 min-h-[300px] flex items-center justify-center group ${
                       dragActive
-                        ? "border-green-500 bg-green-50 scale-[1.02]"
+                        ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
                         : errors.photo
-                        ? "border-red-400 bg-red-50"
-                        : "border-gray-300 hover:border-green-400 hover:bg-green-50"
+                        ? "border-red-400 bg-red-50 shadow-md"
+                        : "border-gray-300 hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
                     }`}
                     onDragEnter={handleDrag}
                     onDragOver={handleDrag}
@@ -914,20 +1035,28 @@ const RentalForm = ({ onClose }) => {
                   >
                     <div className="text-center">
                       <div className="relative inline-block mb-6">
-                        <div className="absolute inset-0 bg-green-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                        <div className="relative w-24 h-24 mx-auto bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl transform group-hover:scale-110 group-hover:rotate-6 transition-all">
+                        <div className="absolute inset-0 bg-blue-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                        <div className="relative w-24 h-24 mx-auto bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl flex items-center justify-center shadow-xl transform group-hover:scale-110 group-hover:rotate-6 transition-all">
                           <SVGUpload className="text-white" size={40} />
                         </div>
                       </div>
 
                       <p className="text-lg font-bold text-gray-900 mb-2">
-                        Drag & Drop File Di Sini
+                        {dragActive
+                          ? "📤 Lepaskan File Di Sini"
+                          : "Drag & Drop File Di Sini"}
                       </p>
                       <p className="text-sm text-gray-600 mb-4">
                         atau klik untuk memilih file
                       </p>
-                      <div className="inline-flex items-center gap-2 bg-white px-6 py-3 rounded-xl border-2 border-gray-300 text-sm font-bold text-gray-700 group-hover:border-green-400 group-hover:text-green-600 transition-all shadow-sm">
-                        Pilih File
+                      <div
+                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all shadow-sm ${
+                          dragActive
+                            ? "bg-blue-100 border-blue-600 text-blue-600"
+                            : "bg-white border-gray-300 text-gray-700 group-hover:border-blue-700 group-hover:text-blue-700"
+                        }`}
+                      >
+                        {dragActive ? "Lepas gambar" : "Pilih File"}
                       </div>
                       <p className="text-xs text-gray-500 mt-4">
                         PNG, JPG, WEBP • Maks. 5MB
@@ -962,9 +1091,9 @@ const RentalForm = ({ onClose }) => {
 
                       <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
                         <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3 shadow-lg">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                             <Check
-                              className="w-5 h-5 text-green-600"
+                              className="w-5 h-5 text-blue-600"
                               size={20}
                             />
                           </div>
@@ -984,7 +1113,7 @@ const RentalForm = ({ onClose }) => {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl"
+                        className="flex-1 bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl"
                       >
                         Ganti Foto
                       </button>
@@ -1040,13 +1169,13 @@ const RentalForm = ({ onClose }) => {
   // ===
   if (submissionSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-3xl p-12 text-center shadow-2xl border-2 border-green-100">
-            <div className="relative inline-block mb-8">
-              <div className="absolute inset-0 bg-green-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-green-400 to-emerald-500 rounded-full p-8 shadow-2xl">
-                <Check className="w-20 h-20 mx-auto text-white" size={80} />
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl border border-blue-200">
+            {/* Icon Container */}
+            <div className="mb-8 flex justify-center">
+              <div className="bg-blue-600 rounded-full p-6 shadow-lg">
+                <Check className="w-20 h-20 text-white" />
               </div>
             </div>
 
@@ -1054,20 +1183,20 @@ const RentalForm = ({ onClose }) => {
               Berhasil! 🎉
             </h2>
 
-            <p className="text-xl text-gray-700 mb-3 font-semibold">
+            <p className="text-xl text-gray-700 mb-2 font-semibold">
               Pengajuan penyewaan{" "}
-              <span className="text-green-600">{unit.unit_name}</span> telah
-              kami terima
+              <span className="text-blue-600">{unit.unit_name}</span> telah kami
+              terima
             </p>
 
-            <p className="text-gray-600 mb-10 max-w-lg mx-auto leading-relaxed">
-              Tim kami akan segera memproses dan menghubungi Anda melalui email
-              atau telepon dalam waktu 1x24 jam
+            <p className="text-gray-600 mb-10 max-w-lg mx-auto">
+              Tim kami bakal proses dan hubungi kamu via email atau telepon
+              dalam waktu 1×24 jam.
             </p>
 
             <ActionButton
-              onClick={onClose}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all px-12 py-5 text-lg font-bold rounded-2xl"
+              onClick={() => navigate("/unit")}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-xl transition-all px-12 py-4 text-lg font-bold rounded-2xl"
             >
               Tutup
             </ActionButton>
@@ -1101,7 +1230,7 @@ const RentalForm = ({ onClose }) => {
                   isCompleted
                     ? "bg-green-500 text-white"
                     : isActive
-                    ? "bg-blue-600 text-white ring-4 ring-blue-200"
+                    ? "bg-blue-900 text-white ring-4 ring-blue-900/30"
                     : "bg-gray-200 text-gray-600"
                 }`}
               >
@@ -1133,7 +1262,7 @@ const RentalForm = ({ onClose }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Progress Steps / Stepper */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -1186,7 +1315,7 @@ const RentalForm = ({ onClose }) => {
               </div>
 
               {/* Price Summary */}
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-xl text-white">
+              <div className="bg-blue-900 rounded-2xl p-6 shadow-xl text-white">
                 <PriceSummary
                   totalPrice={totalPrice}
                   rentalDays={rentalDays}
@@ -1203,30 +1332,30 @@ const RentalForm = ({ onClose }) => {
             {renderStepContent(currentStep)}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex justify-between items-center pt-4 gap-4">
               {currentStep > 1 && (
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="px-6 py-3 bg-white hover:bg-gray-100 text-gray-700 rounded-xl text-md font-bold transition-all border-2 border-gray-300 shadow-md"
+                  className="px-4 py-3 bg-white hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold transition-all border border-gray-300 shadow-sm"
                 >
-                  &larr; Kembali
+                  Kembali
                 </button>
               )}
-              {currentStep === 1 && <div />}{" "}
-              {/* Placeholder to push next button right */}
+              {currentStep === 1 && <div />}
+
               {currentStep < stepperItems.length ? (
                 <button
                   type="button"
                   onClick={nextStep}
                   disabled={isSewaDisabled && currentStep === 1}
-                  className={`px-6 py-3 rounded-xl text-md font-bold transition-all shadow-lg hover:shadow-xl ml-auto ${
+                  className={`px-4 py-3 bg-blue-900 hover:bg-blue-700 text-gray-700 rounded-lg text-sm font-semibold transition-all border border-gray-300 shadow-sm ${
                     isSewaDisabled && currentStep === 1
                       ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white"
+                      : "bg-blue-900 hover:bg-blue-800 text-white"
                   }`}
                 >
-                  Lanjut ke Step {currentStep + 1} &rarr;
+                  Lanjut Step {currentStep + 1} &rarr;
                 </button>
               ) : (
                 <button
@@ -1236,22 +1365,19 @@ const RentalForm = ({ onClose }) => {
                   className={`w-full ${
                     loading || isSewaDisabled
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 shadow-2xl hover:shadow-3xl transform hover:scale-[1.01] active:scale-[0.99]"
-                  } text-white px-10 py-6 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-4 group relative overflow-hidden`}
+                      : "bg-gradient-to-r from-blue-900 via-blue-900 to-sky-900 hover:from-blue-700 hover:via-sky-700 hover:to-sky-700 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99]"
+                  } text-white px-5 py-3 rounded-lg font-semibold text-base transition-all flex items-center justify-center gap-2 group relative overflow-hidden`}
                 >
                   {loading ? (
                     <>
-                      <div className="w-7 h-7 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Mengirim Pengajuan...</span>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Mengirim...</span>
                     </>
                   ) : (
                     <>
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      <Check
-                        className="w-7 h-7 transform group-hover:rotate-12 transition-transform"
-                        size={28}
-                      />
-                      <span>Kirim Pengajuan Sekarang</span>
+                      <Check className="w-4 h-4 transform group-hover:rotate-12 transition-transform" />
+                      <span>Kirim Pengajuan</span>
                     </>
                   )}
                 </button>

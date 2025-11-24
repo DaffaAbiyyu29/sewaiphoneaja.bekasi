@@ -19,6 +19,7 @@ export default function Header({ onMenuClick }) {
 
   const { unitCode } = useParams();
   const { variantUnitCode } = useParams();
+  const { rentId } = useParams();
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
@@ -27,9 +28,11 @@ export default function Header({ onMenuClick }) {
     { name: "Detail Unit", path: "/menu/unit/" + unitCode },
     { name: "Update Unit", path: "/menu/unit/update/" + unitCode },
     { name: "Unit", path: "/menu/unit" },
+    { name: "Penyewaan", path: "/menu/rental" },
+    { name: "Detail Penyewaan", path: "/menu/rental/"+ rentId },
+
     { name: "Customer", path: "/customer" },
     { name: "Sewa Aktif", path: "/sewa-aktif" },
-    { name: "Riwayat Sewa", path: "/riwayat-sewa" },
     { name: "Pembayaran", path: "/pembayaran" },
     { name: "Booking Request", path: "/booking-request" },
     { name: "Pengembalian", path: "/pengembalian" },

@@ -7,6 +7,7 @@ import {
   faCheck,
   faCircleExclamation,
   faMobile,
+  faFloppyDisk,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { getToken } from "../../../helpers/GetToken";
@@ -37,14 +38,20 @@ export default function CreateUnitPage() {
   const handleImageChange = (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setResponse({ success: false, message: "File harus berupa gambar!" });
-      return;
+      return setResponse({
+        success: false,
+        message: "File harus berupa gambar (PNG/JPG).",
+      });
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return setResponse({
+        success: false,
+        message: "Ukuran file maksimal 5MB.",
+      });
     }
     setImageFile(file);
     const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-    };
+    reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
   };
 
@@ -128,19 +135,21 @@ export default function CreateUnitPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <FontAwesomeIcon icon={faMobile} className="text-white text-xl" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Tambah Unit Baru
-            </h1>
-            <p className="text-gray-600 text-sm mt-1">
-              Lengkapi informasi unit dengan detail
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-linear-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon={faMobile} className="text-white text-xl" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Tambah Unit Baru
+              </h1>
+              <p className="text-gray-600 text-sm mt-1">
+                Lengkapi informasi unit dengan detail
+              </p>
+            </div>
           </div>
         </div>
 
@@ -157,7 +166,7 @@ export default function CreateUnitPage() {
 
               {!imagePreview ? (
                 <div
-                  className={`border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                  className={`border-2 border-dashed rounded-xl transition-all ${
                     dragActive
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-300 hover:border-gray-400"
@@ -166,7 +175,6 @@ export default function CreateUnitPage() {
                   onDragOver={handleDrag}
                   onDragLeave={handleDrag}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
                 >
                   <div className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -176,17 +184,20 @@ export default function CreateUnitPage() {
                       />
                     </div>
                     <p className="text-sm font-medium text-gray-700 mb-1">
-                      Drag & drop atau klik untuk upload
+                      Drag & drop foto di sini
                     </p>
-                    <p className="text-xs text-gray-500">PNG, JPG hingga 5MB</p>
+                    <p className="text-xs text-gray-500 mb-4">atau</p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-md hover:shadow-lg"
+                    >
+                      Pilih File
+                    </button>
+                    <p className="text-xs text-gray-400 mt-3">
+                      PNG, JPG hingga 5MB
+                    </p>
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e.target.files[0])}
-                    className="hidden"
-                  />
                 </div>
               ) : (
                 <div className="relative group">
@@ -223,6 +234,13 @@ export default function CreateUnitPage() {
                   </div>
                 </div>
               )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e.target.files[0])}
+                className="hidden"
+              />
             </div>
 
             {/* Input Detail */}
@@ -253,7 +271,7 @@ export default function CreateUnitPage() {
                   value={formData.brand}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none"
+                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -267,7 +285,7 @@ export default function CreateUnitPage() {
                   value={formData.description}
                   onChange={handleChange}
                   rows="4"
-                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none resize-none"
+                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none resize-none text-gray-900 placeholder:text-gray-400"
                 ></textarea>
               </div>
 
@@ -279,7 +297,7 @@ export default function CreateUnitPage() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none bg-white"
+                  className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 transition-all outline-none text-gray-900 bg-white"
                 >
                   <option value="Available">Available</option>
                   <option value="Unavailable">Unavailable</option>
@@ -288,7 +306,7 @@ export default function CreateUnitPage() {
             </div>
           </div>
 
-          {/* Pesan Respon */}
+          {/* === Response Message === */}
           {response.message && (
             <div
               className={`mx-8 mb-6 flex items-center gap-3 p-4 rounded-xl ${
@@ -297,16 +315,19 @@ export default function CreateUnitPage() {
                   : "bg-red-50 border border-red-200"
               }`}
             >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  response.success ? "bg-green-500" : "bg-red-500"
-                }`}
-              >
+              {response.success ? (
                 <FontAwesomeIcon
-                  icon={response.success ? faCheck : faCircleExclamation}
-                  className="text-white"
+                  icon={faCheck}
+                  className="text-green-600 text-lg"
                 />
-              </div>
+              ) : (
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon
+                    icon={faCircleExclamation}
+                    className="text-white text-lg"
+                  />
+                </div>
+              )}
               <span
                 className={`font-medium ${
                   response.success ? "text-green-800" : "text-red-800"
@@ -317,7 +338,7 @@ export default function CreateUnitPage() {
             </div>
           )}
 
-          {/* Tombol Aksi */}
+          {/* === Buttons === */}
           <div className="bg-gray-50 px-8 py-6 flex justify-end gap-3 border-t border-gray-200">
             <button
               type="button"
@@ -332,18 +353,35 @@ export default function CreateUnitPage() {
               className={`${
                 loading
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
+                  : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
               } text-white px-8 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2`}
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="opacity-25"
+                    ></circle>
+                    <path
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
                   Menyimpan...
                 </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faCheck} />
-                  Simpan Unit
+                  <FontAwesomeIcon icon={faFloppyDisk} /> Simpan Unit
                 </>
               )}
             </button>
