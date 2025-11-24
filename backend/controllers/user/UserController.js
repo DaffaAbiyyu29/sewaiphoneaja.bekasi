@@ -2,13 +2,11 @@ const MstUser = require("../../models/MstUser");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const bcrypt = require("bcrypt");
 
-const generateUserId = () => {
-  return `USR${Date.now().toString().slice(-10)}`;
-};
+const { generateIncrementId } = require("../../helpers/generateID");
 
 const createUser = async (req, res) => {
   try {
-    let { user_id, nik, name, email, password, telp, address, gender, birth_place, birth_date, profile_picture, created_by } = req.body;
+    let { nik, name, email, password, telp, address, gender, birth_place, birth_date, profile_picture, created_by } = req.body;
 
     const missing = [];
     if (!nik) missing.push('nik');
@@ -17,7 +15,7 @@ const createUser = async (req, res) => {
     if (missing.length) return resError(res, 'Data user tidak lengkap', `Missing fields: ${missing.join(', ')}`, 400);
 
     // generate user_id if not provided
-    if (!user_id) user_id = generateUserId();
+    const user_id = await generateIncrementId(MstUser, "user_id", "USR");
 
     // check existing nik or email
     const existNik = await MstUser.findOne({ where: { nik } });

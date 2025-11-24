@@ -1,11 +1,12 @@
 const { Op } = require("sequelize");
 const TrnRent = require("../../models/MstRental");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
+<<<<<<< HEAD
 const MstCustomer = require("../../models/MstCustomer");
+=======
+const { generateIncrementId } = require("../../helpers/generateID");
+>>>>>>> 50d47c8f394dd62c8cd8e1604503911403de78ec
 
-const generateRentId = () => {
-  return `RNT${Date.now().toString().slice(-10)}`;
-};
 
 const createRent = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ const createRent = async (req, res) => {
         400
       );
 
-    const rent_id = generateRentId();
+    const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
 
     const newRent = await TrnRent.create({
       rent_id,
