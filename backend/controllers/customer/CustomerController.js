@@ -1,7 +1,9 @@
 const { Op } = require("sequelize");
 const MstCustomer = require("../../models/MstCustomer");
+const TrnRent = require("../../models/MstRental");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const { generateCustomerID } = require("../../helpers/generateID");
+const { deletePhoto } = require("../../middleware/upload");
 
 // ===
 // GET ALL CUSTOMERS
@@ -101,9 +103,74 @@ const getCustomerByID = async (req, res) => {
 };
 
 // ===
+// CHECK CUSTOMER BY NIK
+// ===
+const checkCustomerByNIK = async (req, res) => {
+  try {
+    const { nik } = req.params;
+
+    if (!nik) {
+      return resError(res, "Customer ID diperlukan", "Bad Request", 400);
+    }
+
+    const customer = await MstCustomer.findOne({ where: { nik } });
+
+    // Jika customer tidak ditemukan => boleh lanjut (create customer dan sewa)
+    if (!customer) {
+      return resSuccess(res, "Customer tidak ditemukan, bisa lanjut", {
+        customer: null,
+        can_rent: true,
+      });
+    }
+
+    // Jika customer ditemukan tetapi status bukan Active (mis. Inactive), blokir peminjaman
+    if (customer.status && customer.status !== "Active") {
+      return resError(
+        res,
+        "Customer tidak aktif sehingga tidak dapat melakukan peminjaman",
+        "Conflict",
+        409
+      );
+    }
+
+    // Jika customer ditemukan, cek apakah ada rental aktif yang belum dikembalikan
+    const ongoingRent = await TrnRent.findOne({
+      where: {
+        customer_id: customer.customer_id,
+        status: { [Op.ne]: "Close" },
+        return_date: null,
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    if (ongoingRent) {
+      return resError(
+        res,
+        "Customer sedang melakukan peminjaman dan belum mengembalikan unit",
+        "Conflict",
+        409
+      );
+    }
+
+    // Tidak ada rental aktif => customer boleh melakukan peminjaman
+    return resSuccess(res, "Customer dapat melakukan peminjaman", {
+      customer,
+      can_rent: true,
+    });
+  } catch (err) {
+    console.error(err);
+    return resError(res, "Gagal mengambil data customer", err.message, 500);
+  }
+};
+
+// ===
 // CREATE CUSTOMER
 // ===
 const createCustomer = async (req, res) => {
+  // Handle uploaded KTP file via multer (if any)
+  const ktpPath = req.file ? req.file.path : null;
+  const ktpName = req.file ? req.file.filename : null;
+
   try {
     const {
       fullname,
@@ -115,11 +182,10 @@ const createCustomer = async (req, res) => {
       closest_contact_telp,
       social_media_type,
       social_media_username,
-      ktp_image,
       status,
     } = req.body;
 
-    // Validasi field required
+    // Validasi field required — ktp_image dapat berasal dari file upload
     const requiredFields = [
       "fullname",
       "nik",
@@ -131,11 +197,16 @@ const createCustomer = async (req, res) => {
       "social_media_type",
       "social_media_username",
       "ktp_image",
-      "status"
+      "status",
     ];
 
-    const missingFields = requiredFields.filter((field) => !req.body[field]);
+    const missingFields = requiredFields.filter((field) => {
+      if (field === "ktp_image") return !ktpName && !req.body[field];
+      return !req.body[field];
+    });
+
     if (missingFields.length > 0) {
+      if (ktpPath) deletePhoto(ktpPath);
       return resError(
         res,
         `Field berikut wajib diisi: ${missingFields.join(", ")}`,
@@ -150,16 +221,18 @@ const createCustomer = async (req, res) => {
     // Cek email sudah ada atau belum
     const existingEmail = await MstCustomer.findOne({ where: { email } });
     if (existingEmail) {
+      if (ktpPath) deletePhoto(ktpPath);
       return resError(res, "Email sudah terdaftar", "Conflict", 409);
     }
 
     // Cek NIK sudah ada atau belum
     const existingNIK = await MstCustomer.findOne({ where: { nik } });
     if (existingNIK) {
+      if (ktpPath) deletePhoto(ktpPath);
       return resError(res, "NIK sudah terdaftar", "Conflict", 409);
     }
 
-    // Create customer
+    // Create customer (store ktp_image as filename)
     const newCustomer = await MstCustomer.create({
       customer_id,
       fullname,
@@ -171,7 +244,7 @@ const createCustomer = async (req, res) => {
       closest_contact_telp,
       social_media_type,
       social_media_username,
-      ktp_image,
+      ktp_image: ktpName || req.body.ktp_image,
       status,
       created_by: "ADMIN",
     });
@@ -179,6 +252,8 @@ const createCustomer = async (req, res) => {
     return resSuccess(res, "Customer berhasil dibuat", newCustomer, null, 201);
   } catch (err) {
     console.error(err);
+    // cleanup uploaded file on error
+    if (ktpPath) deletePhoto(ktpPath);
     return resError(res, "Gagal membuat customer", err.message, 500);
   }
 };
@@ -187,10 +262,15 @@ const createCustomer = async (req, res) => {
 // UPDATE CUSTOMER
 // ===
 const updateCustomer = async (req, res) => {
+  // Handle uploaded new KTP file (if any)
+  const newKtpPath = req.file ? req.file.path : null;
+  const newKtpName = req.file ? req.file.filename : null;
+
   try {
     const { customerId } = req.params;
 
     if (!customerId) {
+      if (newKtpPath) deletePhoto(newKtpPath);
       return resError(res, "Customer ID diperlukan", "Bad Request", 400);
     }
 
@@ -199,6 +279,7 @@ const updateCustomer = async (req, res) => {
     });
 
     if (!customer) {
+      if (newKtpPath) deletePhoto(newKtpPath);
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
@@ -208,6 +289,7 @@ const updateCustomer = async (req, res) => {
         where: { email: req.body.email },
       });
       if (existingEmail) {
+        if (newKtpPath) deletePhoto(newKtpPath);
         return resError(res, "Email sudah terdaftar", "Conflict", 409);
       }
     }
@@ -218,16 +300,39 @@ const updateCustomer = async (req, res) => {
         where: { nik: req.body.nik },
       });
       if (existingNIK) {
+        if (newKtpPath) deletePhoto(newKtpPath);
         return resError(res, "NIK sudah terdaftar", "Conflict", 409);
       }
     }
 
+    // Prepare update payload
+    const oldKtpName = customer.ktp_image;
+
+    const updateData = { ...req.body };
+
+    // If new KTP uploaded, set filename; else if request asks to delete, set null
+    if (newKtpName) {
+      updateData.ktp_image = newKtpName;
+    } else if (req.body.delete_image && req.body.delete_image === "true") {
+      updateData.ktp_image = null;
+    }
+
     // Update customer
-    await customer.update(req.body);
+    await customer.update(updateData);
+
+    // If old ktp exists and was replaced or deleted, remove old file
+    if (
+      oldKtpName &&
+      (newKtpName ||
+        (req.body.delete_image && req.body.delete_image === "true"))
+    ) {
+      deletePhoto(oldKtpName);
+    }
 
     return resSuccess(res, "Customer berhasil diperbarui", customer);
   } catch (err) {
     console.error(err);
+    if (newKtpPath) deletePhoto(newKtpPath);
     return resError(res, "Gagal memperbarui customer", err.message, 500);
   }
 };
@@ -243,15 +348,32 @@ const deleteCustomer = async (req, res) => {
       return resError(res, "Customer ID diperlukan", "Bad Request", 400);
     }
 
+    // Ambil data customer dulu untuk mendapatkan nama file KTP (jika ada)
+    const customer = await MstCustomer.findOne({
+      where: { customer_id: customerId },
+    });
+
+    if (!customer) {
+      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+    }
+
+    const oldKtpName = customer.ktp_image;
+
     const deleted = await MstCustomer.destroy({
       where: { customer_id: customerId },
     });
 
     if (!deleted) {
-      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+      return resError(res, "Gagal menghapus customer", "Server Error", 500);
     }
 
-    return resSuccess(res, "Customer berhasil dihapus");
+    // Hapus file KTP dari filesystem jika ada
+    if (oldKtpName) deletePhoto(oldKtpName);
+
+    return resSuccess(res, "Customer berhasil dihapus", {
+      deleted_customer_id: customerId,
+      deleted_ktp_image: oldKtpName || null,
+    });
   } catch (err) {
     console.error(err);
     return resError(res, "Gagal menghapus customer", err.message, 500);
@@ -292,6 +414,7 @@ const searchCustomerByEmail = async (req, res) => {
 module.exports = {
   getAllCustomers,
   getCustomerByID,
+  checkCustomerByNIK,
   createCustomer,
   updateCustomer,
   deleteCustomer,

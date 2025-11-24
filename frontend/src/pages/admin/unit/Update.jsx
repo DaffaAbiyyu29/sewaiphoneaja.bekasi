@@ -5,13 +5,13 @@ import {
   faUpload,
   faXmark,
   faCheck,
+  faCircleExclamation,
   faMobile,
   faArrowLeft,
   faFloppyDisk,
 } from "@fortawesome/free-solid-svg-icons";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Loader } from "../../../components/Loader";
 
 export default function UpdateUnitPage() {
   const [formData, setFormData] = useState({
@@ -25,7 +25,6 @@ export default function UpdateUnitPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
   const [response, setResponse] = useState({ success: null, message: "" });
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
@@ -38,7 +37,7 @@ export default function UpdateUnitPage() {
   useEffect(() => {
     const fetchUnitData = async () => {
       try {
-        setLoadingData(true);
+        setLoading(true);
         const res = await axios.get(`${BASE_URL}/api/unit/${unitCode}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -65,7 +64,7 @@ export default function UpdateUnitPage() {
             "Gagal memuat data unit dari server.",
         });
       } finally {
-        setLoadingData(false);
+        setLoading(false);
       }
     };
 
@@ -166,10 +165,10 @@ export default function UpdateUnitPage() {
     }
   };
 
-  if (loadingData) return <Loader />;
+  // if (loadingData) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <button
@@ -181,7 +180,7 @@ export default function UpdateUnitPage() {
           </button>
 
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-linear-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <FontAwesomeIcon icon={faMobile} className="text-white text-xl" />
             </div>
             <div>
@@ -229,7 +228,7 @@ export default function UpdateUnitPage() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-md hover:shadow-lg"
+                        className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-md hover:shadow-lg"
                       >
                         Pilih File
                       </button>
@@ -365,8 +364,11 @@ export default function UpdateUnitPage() {
                     className="text-green-600 text-lg"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="text-white" size={18} />
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shrink-0">
+                    <FontAwesomeIcon
+                      icon={faCircleExclamation}
+                      className="text-white text-lg"
+                    />
                   </div>
                 )}
                 <span
@@ -394,12 +396,30 @@ export default function UpdateUnitPage() {
                 className={`${
                   loading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
+                    : "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
                 } text-white px-8 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2`}
               >
                 {loading ? (
                   <>
-                    <Loader className="w-4 h-4 animate-spin" />
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        className="opacity-25"
+                      ></circle>
+                      <path
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        fill="currentColor"
+                      ></path>
+                    </svg>
                     Menyimpan...
                   </>
                 ) : (

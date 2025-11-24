@@ -5,12 +5,7 @@ import {
   faHome,
   faMobile,
   faUser,
-  faCartShopping,
-  faClockRotateLeft,
-  faCreditCard,
   faClipboardList,
-  faUndo,
-  faExclamationTriangle,
   faCogs,
   faUserCog,
   faAngleDoubleLeft,
@@ -28,16 +23,7 @@ const masterItems = [
 ];
 
 const transactionItems = [
-  { name: "Sewa Aktif", path: "/sewa-aktif", icon: faCartShopping },
-  { name: "Riwayat Sewa", path: "/riwayat-sewa", icon: faClockRotateLeft },
-  { name: "Pembayaran", path: "/pembayaran", icon: faCreditCard },
-  { name: "Booking Request", path: "/booking-request", icon: faClipboardList },
-  { name: "Pengembalian", path: "/pengembalian", icon: faUndo },
-  {
-    name: "Denda / Keterlambatan",
-    path: "/denda",
-    icon: faExclamationTriangle,
-  },
+  { name: "Penyewaan", path: "/menu/rental", icon: faClipboardList },
 ];
 
 const settingItems = [

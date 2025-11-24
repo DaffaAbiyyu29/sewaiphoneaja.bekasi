@@ -2,6 +2,7 @@
 
 const multer = require("multer");
 const fs = require("fs");
+const path = require("path");
 
 // Konfigurasi penyimpanan
 const storage = multer.diskStorage({
@@ -34,14 +35,35 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // Batasan ukuran file (misalnya 5MB)
 });
 
-const deletePhoto = (filePath) => {
+const deletePhoto = (filePathOrName) => {
   try {
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`File berhasil dihapus: ${filePath}`);
+    if (!filePathOrName) return;
+
+    // 1) Jika diberikan full path dan file ada, hapus langsung
+    if (fs.existsSync(filePathOrName)) {
+      fs.unlinkSync(filePathOrName);
+      console.log(`File berhasil dihapus: ${filePathOrName}`);
+      return;
     }
+
+    // 2) Jika diberikan hanya nama file, coba beberapa lokasi umum
+    const tryPaths = [
+      path.join(__dirname, "../public/images", filePathOrName),
+      path.join(__dirname, "../public/uploads", filePathOrName),
+    ];
+
+    for (const p of tryPaths) {
+      if (fs.existsSync(p)) {
+        fs.unlinkSync(p);
+        console.log(`File berhasil dihapus: ${p}`);
+        return;
+      }
+    }
+
+    // Jika tidak ditemukan, log saja dan lanjutkan
+    console.warn(`File tidak ditemukan untuk dihapus: ${filePathOrName}`);
   } catch (err) {
-    console.error(`Gagal menghapus file ${filePath}:`, err.message);
+    console.error(`Gagal menghapus file ${filePathOrName}:`, err.message);
     // Tetap lanjutkan respons, karena error hapus file tidak boleh memblokir respons ke user
   }
 };

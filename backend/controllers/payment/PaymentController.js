@@ -34,8 +34,6 @@ const createPayment = async (req, res) => {
       status: status || "Unpaid",
       created_at: new Date(),
       created_by: created_by || null,
-      updated_at: new Date(),
-      updated_by: created_by || null,
     });
 
     return resSuccess(res, "Pembayaran berhasil dibuat", newPayment, null, 201);

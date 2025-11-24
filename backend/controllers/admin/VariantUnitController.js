@@ -2,8 +2,7 @@ const { generateVariantUnitCode } = require("../../helpers/generateID");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstVariantUnit = require("../../models/MstVariantUnit");
 const MstUnit = require("../../models/MstUnit");
-const path = require("path");
-const fs = require("fs");
+const { deletePhoto } = require("../../middleware/upload");
 
 const getVariantUnitByUnitCode = async (req, res) => {
   try {
@@ -81,16 +80,9 @@ const updateVariantUnit = async (req, res) => {
     // Jika ada file baru (foto)
     let photoName = variant.photo; // default pakai foto lama
     if (req.file) {
-      // Hapus foto lama jika ada
+      // Hapus foto lama jika ada (gunakan helper yang mencoba beberapa lokasi)
       if (variant.photo) {
-        const oldPath = path.join(
-          __dirname,
-          "../../public/uploads",
-          variant.photo
-        );
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
-        }
+        deletePhoto(variant.photo);
       }
 
       // Simpan nama file baru
@@ -128,19 +120,9 @@ const deleteVariantUnit = async (req, res) => {
       return resError(res, "Varian unit tidak ditemukan", "Not Found", 404);
     }
 
-    // Hapus file foto jika ada
+    // Hapus file foto jika ada (pakai helper)
     if (variant.photo) {
-      const filePath = path.join(
-        __dirname,
-        "../../public/uploads",
-        variant.photo
-      );
-      try {
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      } catch (fsErr) {
-        console.error("Gagal hapus file foto variant:", fsErr);
-        // kita lanjutkan walau gagal hapus file fisik
-      }
+      deletePhoto(variant.photo);
     }
 
     // Hapus dari DB

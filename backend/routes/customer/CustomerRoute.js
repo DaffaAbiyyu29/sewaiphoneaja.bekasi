@@ -7,7 +7,9 @@ const {
   updateCustomer,
   deleteCustomer,
   searchCustomerByEmail,
+  checkCustomerByNIK,
 } = require("../../controllers/customer/CustomerController");
+const { uploadPhoto } = require("../../middleware/upload");
 const router = express.Router();
 
 // ==
@@ -21,7 +23,6 @@ const router = express.Router();
 // Query params: page, limit, search, orderBy, orderDir
 router.get("/", getAllCustomers);
 
-
 // SEARCH CUSTOMER BY EMAIL
 // GET /api/customer/search?email=customer@example.com
 router.get("/search", searchCustomerByEmail);
@@ -30,14 +31,18 @@ router.get("/search", searchCustomerByEmail);
 // GET /api/customer/:customerId
 router.get("/:customerId", getCustomerByID);
 
+// GET CUSTOMER BY NIK
+// GET /api/customer/:nik
+router.get("/nik/:nik", checkCustomerByNIK);
+
 // CREATE NEW CUSTOMER (PUBLIC - untuk testing/registration)
 // POST /api/customer
 // Body: { fullname, nik, telp, email, address, closest_contact_name, closest_contact_telp, social_media_type, social_media_username, ktp_image }
-router.post("/", createCustomer);
+router.post("/", uploadPhoto, createCustomer);
 
 // UPDATE CUSTOMER
 // PUT /api/customer/:customerId
-router.put("/:customerId", updateCustomer);
+router.put("/:customerId", uploadPhoto, updateCustomer);
 
 // DELETE CUSTOMER
 // DELETE /api/customer/:customerId

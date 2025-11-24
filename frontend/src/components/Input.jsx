@@ -8,7 +8,8 @@ export default function Input({
   placeholder = "",
   showPasswordToggle = false,
   error = "",
-  rows = 3, // tambahan: buat tinggi textarea
+  rows = 3,
+  maxLength = 255,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -25,6 +26,20 @@ export default function Input({
       : "border-gray-300 focus:ring-blue-900"
   } focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 appearance-none`;
 
+  const length = value?.length || 0;
+
+  // ============================
+  // HANDLE CHANGE (BLOCK MAX LENGTH)
+  // ============================
+  const handleChange = (e) => {
+    const val = e.target.value;
+
+    // blok kalau panjang lebih dari maxLength
+    if (maxLength && val.length > maxLength) return;
+
+    onChange(e);
+  };
+
   return (
     <div className="w-full">
       {label && (
@@ -37,7 +52,7 @@ export default function Input({
         {type === "textarea" ? (
           <textarea
             value={value}
-            onChange={onChange}
+            onChange={handleChange}
             placeholder={placeholder}
             rows={rows}
             className={baseClass}
@@ -47,9 +62,13 @@ export default function Input({
             <input
               type={inputType}
               value={value}
-              onChange={onChange}
+              onChange={handleChange}
               placeholder={placeholder}
-              className={baseClass}
+              className={`${baseClass} ${
+                type === "number"
+                  ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  : ""
+              }`}
             />
 
             {type === "password" && showPasswordToggle && (
@@ -71,7 +90,7 @@ export default function Input({
                       d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z"
                       clipRule="evenodd"
                     />
-                    <path d="m10.748 13.93 2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
+                    <path d="m10.748 13.93 2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a.651.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
                   </svg>
                 ) : (
                   // eye
@@ -92,6 +111,12 @@ export default function Input({
               </button>
             )}
           </>
+        )}
+
+        {maxLength && (
+          <span className="absolute bottom-[-22px] right-1 text-xs text-gray-500">
+            {length} / {maxLength}
+          </span>
         )}
       </div>
 
