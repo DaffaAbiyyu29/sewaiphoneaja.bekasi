@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const MstCustomer = require("../../models/MstCustomer");
-const TrnRent = require("../../models/MstRental");
+const TrnRent = require("../../models/TrnRental");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const { generateCustomerID } = require("../../helpers/generateID");
 const { deletePhoto } = require("../../middleware/upload");

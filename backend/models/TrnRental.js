@@ -55,7 +55,15 @@ const TrnRent = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("Open", "Close", "OverDue", "Invalid"),
+      type: DataTypes.ENUM(
+        "Waiting Approval",
+        "Rejected Approval",
+        "Waiting Payment",
+        "Open",
+        "Close",
+        "OverDue",
+        "Invalid"
+      ),
       allowNull: true,
       defaultValue: "Open",
     },
@@ -75,6 +83,10 @@ const TrnRent = sequelize.define(
     },
     updated_by: {
       type: DataTypes.STRING(16),
+      allowNull: true,
+    },
+    notes: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
   },

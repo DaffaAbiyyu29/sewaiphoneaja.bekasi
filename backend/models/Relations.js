@@ -1,6 +1,7 @@
 const MstUnit = require("./MstUnit");
 const MstVariantUnit = require("./MstVariantUnit");
 const MstPriceUnit = require("./MstPriceUnit");
+const TrnDetailRent = require("./TrnDetailRental");
 
 // ====== RELASI antar model ======
 
@@ -28,4 +29,16 @@ MstPriceUnit.belongsTo(MstUnit, {
   as: "unit",
 });
 
-module.exports = { MstUnit, MstVariantUnit, MstPriceUnit };
+// detail rental milik satu unit
+TrnDetailRent.belongsTo(MstUnit, {
+  foreignKey: "unit_code",
+  as: "unit",
+});
+
+// detail rental milik satu variant unit
+TrnDetailRent.belongsTo(MstVariantUnit, {
+  foreignKey: "variant_unit_code",
+  as: "variant",
+});
+
+module.exports = { MstUnit, MstVariantUnit, MstPriceUnit, TrnDetailRent };

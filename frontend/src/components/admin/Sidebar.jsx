@@ -19,7 +19,7 @@ const generalItems = [{ name: "Dashboard", path: "/dashboard", icon: faHome }];
 
 const masterItems = [
   { name: "Unit", path: "/menu/unit", icon: faMobile },
-  { name: "Customer", path: "/customer", icon: faUser },
+  { name: "Customer", path: "/menu/customer", icon: faUser },
 ];
 
 const transactionItems = [
