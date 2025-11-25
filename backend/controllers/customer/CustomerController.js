@@ -246,7 +246,7 @@ const createCustomer = async (req, res) => {
       social_media_username,
       ktp_image: ktpName || req.body.ktp_image,
       status,
-      created_by: "SYSTEM",
+      created_by: "ADMIN",
     });
 
     return resSuccess(res, "Customer berhasil dibuat", newCustomer, null, 201);

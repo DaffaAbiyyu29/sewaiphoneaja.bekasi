@@ -4,6 +4,8 @@ const sequelize = require("../../models/index");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstCustomer = require("../../models/MstCustomer");
 const { generateIncrementId } = require("../../helpers/generateID");
+>>>>>>> 50d47c8f394dd62c8cd8e1604503911403de78ec
+
 
 const createRent = async (req, res) => {
   try {
