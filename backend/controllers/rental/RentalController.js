@@ -36,35 +36,7 @@ const createRent = async (req, res) => {
       );
 
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
-
-
-    // generate invoice number based on rent table so sequence increments per rental
-    const invoiceNo = await generateInvoiceNumber('trn_rent');
-
-    const newRent = await TrnRent.create({
-      rent_id,
-      customer_id,
-      start_rent_date: start_rent_date || new Date(),
-      end_rent_date: end_rent_date || null,
-      collect_date: collect_date || null,
-      return_date: return_date || null,
-      total_price: Number(total_price),
-      total_paid:
-        total_paid !== undefined && total_paid !== null && total_paid !== ""
-          ? Number(total_paid)
-          : 0,
-      balance:
-        balance !== undefined && balance !== null && balance !== ""
-          ? Number(balance)
-          : Number(total_price) - (total_paid || 0),
-      is_approval: is_approval !== undefined ? Number(is_approval) : 0,
-      approval_by: approval_by || null,
-      approval_date: approval_date || null,
-      status: status || "Waiting Approval",
-      invoice_number: invoiceNo,
-      created_at: new Date(),
-      created_by: created_by || null,
-    });
+    const invoiceNo = await generateInvoiceNumber("trn_rent");
 
     // Use transaction so rental and approval history are created atomically
     const t = await sequelize.transaction();
@@ -96,7 +68,6 @@ const createRent = async (req, res) => {
         },
         { transaction: t }
       );
-
 
       // No separate approval history table anymore. Notes and status
       // will be stored directly on the `trn_rent` record.
@@ -240,7 +211,6 @@ const getRents = async (req, res) => {
       "total_paid",
       "balance",
       "status",
-      "invoice_number",
       "created_at",
       "updated_at",
     ];
