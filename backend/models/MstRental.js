@@ -59,6 +59,10 @@ const TrnRent = sequelize.define(
       allowNull: true,
       defaultValue: "Open",
     },
+    invoice_number: {
+      type: DataTypes.STRING(16),
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: true,

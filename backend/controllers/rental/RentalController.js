@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const TrnRent = require("../../models/MstRental");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstCustomer = require("../../models/MstCustomer");
-const { generateIncrementId } = require("../../helpers/generateID");
+const { generateIncrementId, generateInvoiceNumber } = require("../../helpers/generateID");
 
 
 
@@ -38,6 +38,9 @@ const createRent = async (req, res) => {
 
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
 
+    // generate invoice number based on rent table so sequence increments per rental
+    const invoiceNo = await generateInvoiceNumber('trn_rent');
+
     const newRent = await TrnRent.create({
       rent_id,
       customer_id,
@@ -57,7 +60,8 @@ const createRent = async (req, res) => {
       is_approval: is_approval !== undefined ? Number(is_approval) : 0,
       approval_by: approval_by || null,
       approval_date: approval_date || null,
-      status: status || "Open",
+      status: status || "Waiting Approval",
+      invoice_number: invoiceNo,
       created_at: new Date(),
       created_by: created_by || null,
     });
@@ -126,6 +130,7 @@ const getRents = async (req, res) => {
       "total_paid",
       "balance",
       "status",
+      "invoice_number",
       "created_at",
       "updated_at",
     ];
