@@ -1,44 +1,63 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
-import Swal from "sweetalert2";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("id-ID", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
 const getStatusBadgeColor = (status) => {
   switch (status) {
-    case "Available":
+    case "Active":
       return "bg-green-100 text-green-800";
-    case "Unavailable":
+    case "Inactive":
       return "bg-red-100 text-red-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
 };
 
-export const UnitColumns = (onDeleteClick) => [
+export const CustomerColumns = (onDeleteClick) => [
   {
     header: "No",
     render: (_, index) => index + 1,
   },
   {
-    header: "Kode Unit",
-    accessor: "unit_code",
+    header: "ID Customer",
+    accessor: "customer_id",
     sortable: true,
+    render: (row) => (
+      <span className="font-mono text-sm">{row.customer_id}</span>
+    ),
   },
   {
-    header: "Nama Unit",
-    accessor: "unit_name",
+    header: "Nama Lengkap",
+    accessor: "fullname",
     sortable: true,
+    render: (row) => row.fullname,
   },
   {
-    header: "Brand",
-    accessor: "brand",
+    header: "NIK",
+    accessor: "nik",
     sortable: true,
+    render: (row) => <span className="font-mono text-sm">{row.nik}</span>,
   },
   {
-    header: "Deskripsi",
-    accessor: "description",
+    header: "Email",
+    accessor: "email",
+    sortable: true,
+    render: (row) => <span className="text-sm">{row.email}</span>,
+  },
+  {
+    header: "Telepon",
+    accessor: "telp",
+    sortable: true,
+    render: (row) => row.telp,
   },
   {
     header: "Status",
@@ -50,61 +69,40 @@ export const UnitColumns = (onDeleteClick) => [
           row.status
         )}`}
       >
-        {row.status || "Available"}
+        {row.status || "Active"}
       </span>
     ),
   },
   {
-    header: "Foto",
-    accessor: "photo",
+    header: "Tanggal Daftar",
+    accessor: "created_at",
     sortable: true,
-    render: (row) => (
-      <div className="flex justify-center items-center">
-        {row.photo ? (
-          <img
-            src={`${API_URL}/get-image/${row.photo}`}
-            alt={row.unit_name}
-            className="max-w-20 max-h-20 object-cover min-w-20 min-h-20"
-          />
-        ) : (
-          <div
-            className="w-full h-full border-2 border-dashed border-gray-200 rounded-lg 
-                     flex items-center justify-center text-gray-500 text-xs 
-                     max-w-20 max-h-20 min-w-20 min-h-20"
-          >
-            Tidak Ada Foto
-          </div>
-        )}
-      </div>
-    ),
+    render: (row) => formatDate(row.created_at),
   },
   {
     header: "Aksi",
     render: (row) => (
       <div className="flex gap-2 justify-center items-center">
-        {/* Tombol View */}
         <button
-          onClick={() => getPage("/menu/unit/" + row.unit_code)}
+          onClick={() => getPage("/menu/customer/" + row.customer_id)}
           className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
-          title="Lihat Detail Unit"
+          title="Lihat Detail Customer"
         >
           <FontAwesomeIcon icon={faEye} />
         </button>
 
-        {/* Tombol Edit */}
         <button
-          onClick={() => getPage("/menu/unit/update/" + row.unit_code)}
+          onClick={() => getPage("/menu/customer/update/" + row.customer_id)}
           className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150"
-          title="Edit Data Unit"
+          title="Edit Data Customer"
         >
           <FontAwesomeIcon icon={faEdit} />
         </button>
 
-        {/* Tombol Delete */}
         <button
-          onClick={() => onDeleteClick(row.unit_code)} // ⬅️ panggil fungsi dari index.jsx
+          onClick={() => onDeleteClick(row.customer_id)}
           className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150"
-          title="Hapus Unit"
+          title="Hapus Customer"
         >
           <FontAwesomeIcon icon={faTrash} />
         </button>

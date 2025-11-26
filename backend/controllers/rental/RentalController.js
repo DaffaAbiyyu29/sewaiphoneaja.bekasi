@@ -1,10 +1,9 @@
 const { Op } = require("sequelize");
-const TrnRent = require("../../models/MstRental");
+const TrnRent = require("../../models/TrnRental");
+const sequelize = require("../../models/index");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstCustomer = require("../../models/MstCustomer");
 const { generateIncrementId, generateInvoiceNumber } = require("../../helpers/generateID");
-
-
 
 const createRent = async (req, res) => {
   try {
@@ -38,6 +37,7 @@ const createRent = async (req, res) => {
 
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
 
+
     // generate invoice number based on rent table so sequence increments per rental
     const invoiceNo = await generateInvoiceNumber('trn_rent');
 
@@ -66,9 +66,119 @@ const createRent = async (req, res) => {
       created_by: created_by || null,
     });
 
-    return resSuccess(res, "Rental berhasil dibuat", newRent, null, 201);
+    // Use transaction so rental and approval history are created atomically
+    const t = await sequelize.transaction();
+    try {
+      const newRent = await TrnRent.create(
+        {
+          rent_id,
+          customer_id,
+          start_rent_date: start_rent_date || new Date(),
+          end_rent_date: end_rent_date || null,
+          collect_date: collect_date || null,
+          return_date: return_date || null,
+          total_price: Number(total_price),
+          total_paid:
+            total_paid !== undefined && total_paid !== null && total_paid !== ""
+              ? Number(total_paid)
+              : 0,
+          balance:
+            balance !== undefined && balance !== null && balance !== ""
+              ? Number(balance)
+              : Number(total_price) - (total_paid || 0),
+          is_approval: is_approval !== undefined ? Number(is_approval) : 0,
+          approval_by: approval_by || null,
+          approval_date: approval_date || null,
+          status: status || "Waiting Approval",
+          invoice_number: invoiceNo,
+          created_at: new Date(),
+          created_by: created_by || null,
+        },
+        { transaction: t }
+      );
+
+
+      // No separate approval history table anymore. Notes and status
+      // will be stored directly on the `trn_rent` record.
+
+      await t.commit();
+
+      return resSuccess(res, "Rental berhasil dibuat", newRent, null, 201);
+    } catch (txErr) {
+      await t.rollback();
+      console.error(
+        "Transaction failed creating rent and approval history:",
+        txErr
+      );
+      return resError(
+        res,
+        "Gagal membuat rental (transaction)",
+        txErr.message,
+        500
+      );
+    }
   } catch (err) {
     return resError(res, "Gagal membuat rental", err.message, 500);
+  }
+};
+
+const approveRent = async (req, res) => {
+  try {
+    const { rentId } = req.params;
+    const { approval_by, notes, updated_by } = req.body;
+
+    const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
+    if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+
+    await rent.update({
+      status: "Waiting Payment",
+      approval_by: approval_by || updated_by || rent.approval_by,
+      approval_date: new Date(),
+      updated_at: new Date(),
+      updated_by: updated_by || rent.updated_by,
+    });
+
+    // We store notes (if any) directly on the rental record.
+    try {
+      await rent.update({ notes: notes || rent.notes });
+    } catch (noteErr) {
+      console.error("Failed to save notes on approve:", noteErr);
+    }
+
+    return resSuccess(res, "Rental berhasil di-approve", rent);
+  } catch (err) {
+    console.error(err);
+    return resError(res, "Gagal approve rental", err.message, 500);
+  }
+};
+
+const rejectRent = async (req, res) => {
+  try {
+    const { rentId } = req.params;
+    const { approval_by, notes, updated_by } = req.body;
+
+    const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
+    if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+
+    await rent.update({
+      status: "Rejected Approval",
+      approval_by: approval_by || updated_by || rent.approval_by,
+      approval_date: new Date(),
+      updated_at: new Date(),
+      updated_by: updated_by || rent.updated_by,
+    });
+
+    // Save rejection notes directly on the rental record.
+    try {
+      await rent.update({ notes: notes || rent.notes });
+    } catch (noteErr) {
+      console.error("Failed to save notes on reject:", noteErr);
+    }
+
+    return resSuccess(res, "Rental berhasil ditolak", rent);
+  } catch (err) {
+    console.error(err);
+    return resError(res, "Gagal menolak rental", err.message, 500);
   }
 };
 
@@ -219,6 +329,7 @@ const updateRent = async (req, res) => {
       approval_date,
       status,
       updated_by,
+      notes,
     } = req.body;
 
     const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
@@ -247,6 +358,7 @@ const updateRent = async (req, res) => {
       approval_by: approval_by ?? rent.approval_by,
       approval_date: approval_date ?? rent.approval_date,
       status: status ?? rent.status,
+      notes: notes ?? rent.notes,
       updated_at: new Date(),
       updated_by: updated_by || rent.updated_by,
     });
@@ -275,4 +387,6 @@ module.exports = {
   getRentById,
   updateRent,
   deleteRent,
+  approveRent,
+  rejectRent,
 };

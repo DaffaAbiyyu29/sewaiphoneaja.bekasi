@@ -99,7 +99,7 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: "Total Revenue",
+      title: "Total Pendapatan",
       value: "Rp72.5 Juta",
       change: "+12.5%",
       icon: faDollarSign,

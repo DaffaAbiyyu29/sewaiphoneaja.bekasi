@@ -1,4 +1,4 @@
-const TrnPayment = require("../../models/MstPayment");
+const TrnPayment = require("../../models/TrnPayment");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const { generateIncrementId } = require("../../helpers/generateID");
 

@@ -691,7 +691,7 @@ const RentalForm = ({ onClose }) => {
         balance: selectedPrice?.price_per_day
           ? selectedPrice.price_per_day * quantity
           : 0,
-        status: "Open",
+        status: "Waiting Approval",
         created_by: formData.fullname || "SYSTEM",
       };
       const responseRent = await axios.post(

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -127,44 +128,157 @@ export default function RentalDetailPage() {
   const [error, setError] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
+  const handleApproveRental = async (rentId) => {
+    if (!rentId) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Approve Pengajuan?",
+      text: "Pengajuan penyewaan akan disetujui dan status diubah menjadi Waiting Payment",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Approve",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      const token = getToken();
+      const res = await axios.put(
+        `${API_URL}/api/rental/${rentId}/approve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Pengajuan penyewaan telah disetujui.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // Update local rental state
+      setRental((prev) => ({
+        ...prev,
+        status: "Waiting Payment",
+        approval_date: new Date().toISOString(),
+      }));
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: err.response?.data?.message || "Terjadi kesalahan saat approve.",
+      });
+    }
+  };
+
+  const handleRejectRental = async (rentId) => {
+    if (!rentId) return;
+
+    const { value: notes } = await Swal.fire({
+      title: "Reject Pengajuan",
+      input: "textarea",
+      inputPlaceholder: "Masukkan alasan penolakan (opsional)...",
+      showCancelButton: true,
+      confirmButtonText: "Kirim",
+      cancelButtonText: "Batal",
+      inputAttributes: {
+        "aria-label": "Alasan penolakan",
+      },
+    });
+
+    if (notes === undefined) return; // canceled
+
+    const confirmed = await Swal.fire({
+      title: "Konfirmasi Reject",
+      text: "Apakah Anda yakin ingin menolak pengajuan ini?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Tolak",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    try {
+      const token = getToken();
+      await axios.put(
+        `${API_URL}/api/rental/${rentId}/reject`,
+        { notes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Pengajuan penyewaan telah ditolak.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // Update local rental state
+      setRental((prev) => ({ ...prev, status: "Rejected Approval" }));
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: err.response?.data?.message || "Terjadi kesalahan saat reject.",
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      if (!rentId || !API_URL) return;
+
       try {
         const token = getToken();
+        if (!token) {
+          setError("Token tidak ditemukan. Silakan login kembali.");
+          setLoading(false);
+          return;
+        }
 
-        // Fetch rental data
-        const rentalRes = await axios.get(`${API_URL}/api/rental/${rentId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Fetch rental, detail, dan payment secara parallel untuk lebih efisien
+        const [rentalRes, detailRes, paymentRes] = await Promise.all([
+          axios.get(`${API_URL}/api/rental/${rentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/api/detailrental?rent_id=${rentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/api/payment?rent_id=${rentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
         const rentalData = rentalRes.data.data;
         setRental(rentalData);
-
-        // Fetch customer data
-        const customerRes = await axios.get(
-          `${API_URL}/api/customer/${rentalData.customer_id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setCustomer(customerRes.data.data);
-
-        // Fetch detail rental data
-        const detailRes = await axios.get(
-          `${API_URL}/api/detailrental?rent_id=${rentId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
         setDetails(detailRes.data.data || []);
-
-        // Fetch payment history
-        const paymentRes = await axios.get(
-          `${API_URL}/api/payment?rent_id=${rentId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
         setPayments(paymentRes.data.data || []);
+
+        // Fetch customer data setelah rental data siap
+        if (rentalData?.customer_id) {
+          try {
+            const customerRes = await axios.get(
+              `${API_URL}/api/customer/${rentalData.customer_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            setCustomer(customerRes.data.data);
+          } catch (customerErr) {
+            console.error("Error fetching customer:", customerErr);
+            // Lanjutkan tanpa data customer
+          }
+        }
       } catch (err) {
         console.error(err);
         setError(
@@ -176,9 +290,7 @@ export default function RentalDetailPage() {
       }
     };
 
-    if (rentId) {
-      fetchData();
-    }
+    fetchData();
   }, [rentId, API_URL]);
 
   if (loading) {
@@ -261,14 +373,34 @@ export default function RentalDetailPage() {
                 </h1>
                 <p className="text-sm text-gray-500">ID: {rental.rent_id}</p>
               </div>
-              <div
-                className={`${getStatusColor(
-                  rental.status
-                )} px-4 py-2 rounded-lg inline-flex items-center justify-center self-start sm:self-auto`}
-              >
-                <p className="text-white font-semibold text-sm">
-                  {rental.status}
-                </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`${getStatusColor(
+                    rental.status
+                  )} px-4 py-2 rounded-lg inline-flex items-center justify-center self-start sm:self-auto`}
+                >
+                  <p className="text-white font-semibold text-sm">
+                    {rental.status}
+                  </p>
+                </div>
+
+                {/* Show approve/reject only when waiting approval */}
+                {rental.status === "Waiting Approval" && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApproveRental(rental?.rent_id)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
+                    >
+                      ✓ Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectRental(rental?.rent_id)}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
+                    >
+                      ✕ Reject
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -283,14 +415,9 @@ export default function RentalDetailPage() {
                 {details && details.length > 0 ? (
                   <>
                     <img
-                      src={`${API_URL}/images/${
-                        details[mainImageIndex]?.unit_code || "placeholder"
-                      }.jpg`}
+                      src={`${API_URL}/get-image/${details[mainImageIndex]?.variant_photo}`}
                       alt="Unit"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.src = `${API_URL}/images/default.png`;
-                      }}
                     />
                     {details.length > 1 && (
                       <>
@@ -341,16 +468,17 @@ export default function RentalDetailPage() {
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Kode Unit</p>
+                      <p className="text-xs text-gray-500 mb-1">Nama Unit</p>
                       <p className="text-sm font-semibold text-gray-900">
-                        {details[mainImageIndex]?.unit_code}
+                        {details[mainImageIndex]?.unit_name ||
+                          details[mainImageIndex]?.unit_code}
                       </p>
                     </div>
-                    {details[mainImageIndex]?.variant_unit_code && (
+                    {details[mainImageIndex]?.variant_name && (
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Varian</p>
                         <p className="text-sm font-semibold text-gray-900">
-                          {details[mainImageIndex]?.variant_unit_code}
+                          {details[mainImageIndex]?.variant_name}
                         </p>
                       </div>
                     )}
@@ -521,6 +649,10 @@ export default function RentalDetailPage() {
                       {customer?.address || "-"}
                     </p>
                   </div>
+
+                  {/* Divider */}
+                  <div className="md:col-span-2 border-t border-gray-200 my-2"></div>
+
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-1">
                       <FontAwesomeIcon
@@ -549,6 +681,8 @@ export default function RentalDetailPage() {
                       {customer?.closest_contact_telp || "-"}
                     </p>
                   </div>
+
+                  {/* Action buttons moved to header */}
                 </div>
               </div>
             </div>
@@ -628,17 +762,17 @@ export default function RentalDetailPage() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                         <div className="flex-1">
                           <p className="text-xs text-gray-500 mb-1">
-                            Kode Unit
+                            Nama Unit
                           </p>
                           <p className="text-base font-semibold text-gray-900">
-                            {detail.unit_code}
+                            {detail.unit_name || detail.unit_code}
                           </p>
                         </div>
-                        {detail.variant_unit_code && (
+                        {detail.variant_name && (
                           <div className="flex-1">
                             <p className="text-xs text-gray-500 mb-1">Varian</p>
                             <p className="text-base font-semibold text-gray-900">
-                              {detail.variant_unit_code}
+                              {detail.variant_name}
                             </p>
                           </div>
                         )}
@@ -819,7 +953,7 @@ export default function RentalDetailPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+        {/* <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
           <button
             onClick={() => navigate("/menu/rental")}
             className="bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow"
@@ -832,7 +966,7 @@ export default function RentalDetailPage() {
           >
             Edit Rental
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
