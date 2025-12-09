@@ -158,7 +158,7 @@ const returnUnit = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { rentId } = req.params;
-    const { return_date, total_paid, notes, updated_by, force_close } = req.body;
+    const { return_date, notes, updated_by } = req.body;
 
     if (!rentId) {
       await t.rollback();
@@ -175,7 +175,6 @@ const returnUnit = async (req, res) => {
       return resError(res, "Rental tidak ditemukan", "Not Found", 404);
     }
 
-    // kalau sudah close, jangan bisa return lagi
     if (rent.status === "Close") {
       await t.rollback();
       return resError(
@@ -186,31 +185,9 @@ const returnUnit = async (req, res) => {
       );
     }
 
-    // hitung ulang total_paid & balance jika user kirim total_paid terbaru
-    let newTotalPaid = rent.total_paid;
-    let newBalance = rent.balance;
-
-    if (total_paid !== undefined && total_paid !== null && total_paid !== "") {
-      newTotalPaid = Number(total_paid);
-      newBalance = Number(rent.total_price) - newTotalPaid;
-    }
-
-    // kalau masih ada balance dan tidak force_close -> tolak close
-    if (newBalance > 0 && force_close !== true && force_close !== "true") {
-      await t.rollback();
-      return resError(
-        res,
-        "Pembayaran belum lunas, tidak bisa return unit",
-        `Balance masih tersisa: ${newBalance}`,
-        409
-      );
-    }
-
     await rent.update(
       {
         return_date: return_date || new Date(),
-        total_paid: newTotalPaid,
-        balance: newBalance < 0 ? 0 : newBalance,
         status: "Close",
         notes: notes || rent.notes,
         updated_at: new Date(),
@@ -227,6 +204,7 @@ const returnUnit = async (req, res) => {
     return resError(res, "Gagal return unit", err.message, 500);
   }
 };
+
 
 const getRents = async (req, res) => {
   try {
