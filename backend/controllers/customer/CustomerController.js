@@ -283,6 +283,30 @@ const updateCustomer = async (req, res) => {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
+    //jadi admin bisa blokir/inactive customer melalui update
+     const allowedStatus = ["Active", "Inactive", "Blocked"];
+
+    // support admin action via query (?action=block / inactive / activate)
+    if (req.query.action) {
+      const action = req.query.action.toLowerCase();
+
+      if (action === "block") req.body.status = "Blocked";
+      else if (action === "inactive") req.body.status = "Inactive";
+      else if (action === "activate" || action === "unblock")
+        req.body.status = "Active";
+    }
+
+    // if status is sent manually, validate it
+    if (req.body.status && !allowedStatus.includes(req.body.status)) {
+      if (newKtpPath) deletePhoto(newKtpPath);
+      return resError(
+        res,
+        `Status tidak valid. Gunakan salah satu: ${allowedStatus.join(", ")}`,
+        "Validation Error",
+        400
+      );
+    }
+
     // Cek email unik (jika email diubah)
     if (req.body.email && req.body.email !== customer.email) {
       const existingEmail = await MstCustomer.findOne({

@@ -153,6 +153,81 @@ const rejectRent = async (req, res) => {
   }
 };
 
+// ini untuk RETURN UNIT / CLOSE RENTAL ke customer
+const returnUnit = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { rentId } = req.params;
+    const { return_date, total_paid, notes, updated_by, force_close } = req.body;
+
+    if (!rentId) {
+      await t.rollback();
+      return resError(res, "rentId diperlukan", "Bad Request", 400);
+    }
+
+    const rent = await TrnRent.findOne({
+      where: { rent_id: rentId },
+      transaction: t,
+    });
+
+    if (!rent) {
+      await t.rollback();
+      return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+    }
+
+    // kalau sudah close, jangan bisa return lagi
+    if (rent.status === "Close") {
+      await t.rollback();
+      return resError(
+        res,
+        "Rental sudah ditutup / unit sudah dikembalikan",
+        "Conflict",
+        409
+      );
+    }
+
+    // hitung ulang total_paid & balance jika user kirim total_paid terbaru
+    let newTotalPaid = rent.total_paid;
+    let newBalance = rent.balance;
+
+    if (total_paid !== undefined && total_paid !== null && total_paid !== "") {
+      newTotalPaid = Number(total_paid);
+      newBalance = Number(rent.total_price) - newTotalPaid;
+    }
+
+    // kalau masih ada balance dan tidak force_close -> tolak close
+    if (newBalance > 0 && force_close !== true && force_close !== "true") {
+      await t.rollback();
+      return resError(
+        res,
+        "Pembayaran belum lunas, tidak bisa return unit",
+        `Balance masih tersisa: ${newBalance}`,
+        409
+      );
+    }
+
+    await rent.update(
+      {
+        return_date: return_date || new Date(),
+        total_paid: newTotalPaid,
+        balance: newBalance < 0 ? 0 : newBalance,
+        status: "Close",
+        notes: notes || rent.notes,
+        updated_at: new Date(),
+        updated_by: updated_by || rent.updated_by,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return resSuccess(res, "Unit berhasil dikembalikan / rental ditutup", rent);
+  } catch (err) {
+    await t.rollback();
+    console.error(err);
+    return resError(res, "Gagal return unit", err.message, 500);
+  }
+};
+
 const getRents = async (req, res) => {
   try {
     let {
@@ -359,4 +434,5 @@ module.exports = {
   deleteRent,
   approveRent,
   rejectRent,
+  returnUnit,
 };
