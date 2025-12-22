@@ -5,7 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 const navigation = [
   { name: "Dashboard", href: "/" },
   { name: "Unit", href: "/unit" },
-  { name: "Contact", href: "/contact" },
+  { name: "Pesanan", href: "/pesanan" },
 ];
 
 export default function Header() {

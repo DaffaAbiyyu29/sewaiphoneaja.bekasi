@@ -21,6 +21,12 @@ const formatCurrency = (value) => {
 };
 
 const getStatusBadgeColor = (status) => {
+  const lower = status.toLowerCase();
+
+  if (lower.includes("waiting")) {
+    return "bg-yellow-100 text-yellow-800";
+  }
+
   switch (status) {
     case "Open":
       return "bg-blue-100 text-blue-800";
@@ -45,6 +51,12 @@ export const RentalColumns = (onDeleteClick) => [
     accessor: "customer_id",
     sortable: true,
     render: (row) => row.customer_name,
+  },
+  {
+    header: "Invoice Number",
+    accessor: "invoice_number",
+    sortable: true,
+    render: (row) => row.invoice_number,
   },
   {
     header: "Tanggal Mulai",

@@ -1,16 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const PaymentController = require("../../controllers/payment/PaymentController");
+const {
+  createPayment,
+  getPayments,
+  getPaymentById,
+  deletePayment,
+  updatePayment,
+} = require("../../controllers/payment/PaymentController");
+const { verifyToken } = require("../../middleware/middleware");
+const { uploadPhoto } = require("../../middleware/upload");
 
 // create
-router.post("/", PaymentController.createPayment);
-// list
-router.get("/", PaymentController.getPayments);
-// detail
-router.get("/:paymentId", PaymentController.getPaymentById);
+router.post("/", uploadPhoto, createPayment);
 // update
-router.put("/:paymentId", PaymentController.updatePayment);
+router.put("/:paymentId", uploadPhoto, updatePayment);
+// list
+router.get("/", verifyToken, getPayments);
+// detail
+router.get("/:paymentId", verifyToken, getPaymentById);
 // delete
-router.delete("/:paymentId", PaymentController.deletePayment);
+router.delete("/:paymentId", verifyToken, deletePayment);
 
 module.exports = router;

@@ -2,7 +2,7 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/customer/LandingPage";
 import LandingPage2 from "./pages/customer/Dashboard";
-import Contact from "./pages/customer/Contact";
+import Pesanan from "./pages/customer/Pesanan";
 import Catalog from "./pages/customer/Unit";
 import { Loader } from "./components/Loader";
 import LoginPage from "./pages/auth/Login";
@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/" element={<LayoutCustomer />}>
           <Route index element={<LandingPage2 />} />
           <Route path="unit" element={<Catalog />} />
-          <Route path="contact" element={<Contact />} />
+          <Route path="pesanan" element={<Pesanan />} />
         </Route>
 
         <Route

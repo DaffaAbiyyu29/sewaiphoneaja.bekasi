@@ -1,11 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const DetailController = require("../../controllers/rental/DetailRentalController");
+const {
+  createDetail,
+//   getDetails,
+  getDetailById,
+  deleteDetail,
+  updateDetail,
+} = require("../../controllers/rental/DetailRentalController");
+const { verifyToken } = require("../../middleware/middleware");
 
-router.post("/", DetailController.createDetail);
-router.get("/", DetailController.getDetails);
-router.get("/:detailId", DetailController.getDetailById);
-router.put("/:detailId", DetailController.updateDetail);
-router.delete("/:detailId", DetailController.deleteDetail);
+router.post("/", verifyToken, createDetail);
+// router.get("/", verifyToken, getDetails);
+router.get("/:detailId", verifyToken, getDetailById);
+router.put("/:detailId", verifyToken, updateDetail);
+router.delete("/:detailId", verifyToken, deleteDetail);
 
 module.exports = router;

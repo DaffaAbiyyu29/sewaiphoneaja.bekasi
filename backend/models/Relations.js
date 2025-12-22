@@ -2,6 +2,8 @@ const MstUnit = require("./MstUnit");
 const MstVariantUnit = require("./MstVariantUnit");
 const MstPriceUnit = require("./MstPriceUnit");
 const TrnDetailRent = require("./TrnDetailRental");
+const TrnRent = require("./TrnRental");
+const MstCustomer = require("./MstCustomer");
 
 // ====== RELASI antar model ======
 
@@ -41,4 +43,21 @@ TrnDetailRent.belongsTo(MstVariantUnit, {
   as: "variant",
 });
 
-module.exports = { MstUnit, MstVariantUnit, MstPriceUnit, TrnDetailRent };
+TrnRent.belongsTo(MstCustomer, {
+  as: "customer",
+  foreignKey: "customer_id",
+});
+
+MstCustomer.hasMany(TrnRent, {
+  as: "rents",
+  foreignKey: "customer_id",
+});
+
+module.exports = {
+  MstUnit,
+  MstVariantUnit,
+  MstPriceUnit,
+  TrnDetailRent,
+  TrnRent,
+  MstCustomer,
+};

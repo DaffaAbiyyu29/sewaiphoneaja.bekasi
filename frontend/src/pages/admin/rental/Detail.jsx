@@ -23,6 +23,12 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { getToken } from "../../../helpers/GetToken";
+import DetailPaymentDialog from "../../../components/admin/DetailPaymentDialog";
+import {
+  formatCurrency,
+  formatDate,
+  formatTime,
+} from "../../../helpers/Format";
 
 // Helper SVG Components
 const SVGLoader = ({ className, size = 20 }) => (
@@ -60,45 +66,39 @@ const SVGAlertCircle = ({ className, size = 20 }) => (
   </svg>
 );
 
-// Formatting Helpers
-const formatDate = (dateString) => {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const formatTime = (dateString) => {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const formatCurrency = (value) => {
-  if (!value) return "Rp 0";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(value);
-};
+// const getStatusColor = (status) => {
+//   switch (status) {
+//     case "Open":
+//       return "bg-blue-900";
+//     case "Close":
+//       return "bg-green-500";
+//     case "OverDue":
+//       return "bg-red-500";
+//     case "Invalid":
+//       return "bg-gray-500";
+//     default:
+//       return "bg-gray-500";
+//   }
+// };
 
 const getStatusColor = (status) => {
+  const lower = status.toLowerCase();
+
+  if (lower.includes("waiting")) {
+    return "bg-yellow-100 text-yellow-800";
+  }
+
   switch (status) {
     case "Open":
-      return "bg-blue-900";
+      return "bg-blue-100 text-blue-800";
     case "Close":
-      return "bg-green-500";
+      return "bg-green-100 text-green-800";
     case "OverDue":
-      return "bg-red-500";
+      return "bg-red-100 text-red-800";
     case "Invalid":
-      return "bg-gray-500";
+      return "bg-gray-100 text-gray-800";
     default:
-      return "bg-gray-500";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -108,7 +108,7 @@ const getPaymentStatusColor = (status) => {
       return "bg-green-50 text-green-700 border-green-200";
     case "Pending":
       return "bg-yellow-50 text-yellow-700 border-yellow-200";
-    case "Failed":
+    case "Unpaid":
       return "bg-red-50 text-red-700 border-red-200";
     default:
       return "bg-gray-50 text-gray-700 border-gray-200";
@@ -127,6 +127,18 @@ export default function RentalDetailPage() {
   const [payments, setPayments] = useState([]);
   const [error, setError] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const openDetail = (payment) => {
+    console.log("Opening payment detail for:", payment);
+    setSelectedPayment(payment);
+    setShowDetail(true);
+
+    console.log(selectedPayment);
+    console.log(showDetail);
+  };
 
   const handleApproveRental = async (rentId) => {
     if (!rentId) return;
@@ -247,22 +259,17 @@ export default function RentalDetailPage() {
         }
 
         // Fetch rental, detail, dan payment secara parallel untuk lebih efisien
-        const [rentalRes, detailRes, paymentRes] = await Promise.all([
+        const [rentalRes] = await Promise.all([
           axios.get(`${API_URL}/api/rental/${rentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_URL}/api/detailrental?rent_id=${rentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_URL}/api/payment?rent_id=${rentId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
         const rentalData = rentalRes.data.data;
+
         setRental(rentalData);
-        setDetails(detailRes.data.data || []);
-        setPayments(paymentRes.data.data || []);
+        setDetails(rentalData.details || []);
+        setPayments(rentalData.payments || []);
 
         // Fetch customer data setelah rental data siap
         if (rentalData?.customer_id) {
@@ -291,7 +298,7 @@ export default function RentalDetailPage() {
     };
 
     fetchData();
-  }, [rentId, API_URL]);
+  }, [rentId, API_URL, refreshKey]);
 
   if (loading) {
     return (
@@ -371,7 +378,9 @@ export default function RentalDetailPage() {
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   Detail Penyewaan
                 </h1>
-                <p className="text-sm text-gray-500">ID: {rental.rent_id}</p>
+                <p className="text-sm text-blue-900 font-bold">
+                  {rental.invoice_number}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <div
@@ -379,9 +388,7 @@ export default function RentalDetailPage() {
                     rental.status
                   )} px-4 py-2 rounded-lg inline-flex items-center justify-center self-start sm:self-auto`}
                 >
-                  <p className="text-white font-semibold text-sm">
-                    {rental.status}
-                  </p>
+                  <p className="font-semibold text-sm">{rental.status}</p>
                 </div>
 
                 {/* Show approve/reject only when waiting approval */}
@@ -824,55 +831,71 @@ export default function RentalDetailPage() {
                     {payments.map((payment, idx) => (
                       <div
                         key={idx}
-                        className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                        className="flex items-center justify-between gap-4"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {payment.payment_id}
-                              </span>
-                              <span
-                                className={`text-xs px-2.5 py-1 rounded-full font-medium border ${getPaymentStatusColor(
-                                  payment.status
-                                )}`}
-                              >
-                                {payment.status}
-                              </span>
+                        {/* CARD */}
+                        <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {payment.payment_id}
+                                </span>
+                                <span
+                                  className={`text-xs px-2.5 py-1 rounded-full font-medium border ${getPaymentStatusColor(
+                                    payment.status
+                                  )}`}
+                                >
+                                  {payment.status}
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+                                <div className="flex items-center gap-1.5">
+                                  <FontAwesomeIcon
+                                    icon={faCalendar}
+                                    className="w-3 h-3"
+                                  />
+                                  {formatDate(payment.payment_date)}{" "}
+                                  {formatTime(payment.payment_date)}
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <FontAwesomeIcon
+                                    icon={faCreditCard}
+                                    className="w-3 h-3"
+                                  />
+                                  {payment.payment_method || "-"}
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <FontAwesomeIcon
+                                    icon={faUser}
+                                    className="w-3 h-3"
+                                  />
+                                  {payment.updated_by || "-"}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-                              <div className="flex items-center gap-1.5">
-                                <FontAwesomeIcon
-                                  icon={faCalendar}
-                                  className="w-3 h-3"
-                                />
-                                {formatDate(payment.payment_date)}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <FontAwesomeIcon
-                                  icon={faCreditCard}
-                                  className="w-3 h-3"
-                                />
-                                {payment.payment_method || "-"}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <FontAwesomeIcon
-                                  icon={faUser}
-                                  className="w-3 h-3"
-                                />
-                                {payment.created_by || "-"}
-                              </div>
+
+                            <div className="text-left sm:text-right">
+                              <p className="text-xs text-gray-500 mb-1">
+                                Jumlah Bayar
+                              </p>
+                              <p className="text-lg font-bold text-green-600">
+                                {formatCurrency(payment.total_payment)}
+                              </p>
                             </div>
-                          </div>
-                          <div className="text-left sm:text-right">
-                            <p className="text-xs text-gray-500 mb-1">
-                              Jumlah Bayar
-                            </p>
-                            <p className="text-lg font-bold text-green-600">
-                              {formatCurrency(payment.amount)}
-                            </p>
                           </div>
                         </div>
+
+                        {/* TOMBOL TENGAH KANAN */}
+                        <button
+                          onClick={() => openDetail(payment)}
+                          className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition shrink-0"
+                        >
+                          Detail
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -968,6 +991,15 @@ export default function RentalDetailPage() {
           </button>
         </div> */}
       </div>
+
+      <DetailPaymentDialog
+        isOpen={showDetail}
+        onClose={() => setShowDetail(false)}
+        payment={selectedPayment}
+        onSuccess={() => {
+          setRefreshKey((prev) => prev + 1);
+        }}
+      />
     </div>
   );
 }

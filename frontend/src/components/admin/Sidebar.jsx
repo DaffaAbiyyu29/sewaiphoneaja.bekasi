@@ -126,7 +126,7 @@ export default function Sidebar({
               collapsed ? "justify-center" : "justify-between"
             } p-4 border-b border-gray-200`}
           >
-            <div className="flex items-center">
+            <a href="/dashboard" className="flex items-center cursor-pointer">
               <img
                 src="/images/sewaiphoneaja.png"
                 alt="Logo"
@@ -142,7 +142,7 @@ export default function Sidebar({
                   </span>
                 </div>
               )}
-            </div>
+            </a>
           </div>
 
           <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">

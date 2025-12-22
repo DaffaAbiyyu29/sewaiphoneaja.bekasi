@@ -3,7 +3,16 @@ const TrnRent = require("../../models/TrnRental");
 const sequelize = require("../../models/index");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstCustomer = require("../../models/MstCustomer");
-const { generateIncrementId, generateInvoiceNumber } = require("../../helpers/generateID");
+const {
+  generateIncrementId,
+  generateInvoiceNumber,
+} = require("../../helpers/generateID");
+const TrnDetailRent = require("../../models/TrnDetailRental");
+const MstUnit = require("../../models/MstUnit");
+const MstVariantUnit = require("../../models/MstVariantUnit");
+const TrnPayment = require("../../models/TrnPayment");
+const MstPriceUnit = require("../../models/MstPriceUnit");
+const MstUser = require("../../models/MstUser");
 
 const createRent = async (req, res) => {
   try {
@@ -228,7 +237,12 @@ const getRents = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Field yang bisa dicari
-    const searchableFields = ["rent_id", "customer_id", "approval_by"];
+    const searchableFields = [
+      "rent_id",
+      "customer_id",
+      "approval_by",
+      "invoice_number",
+    ];
 
     // Build WHERE clause untuk search dan filter
     let whereClause = {};
@@ -255,6 +269,7 @@ const getRents = async (req, res) => {
     // Validasi orderBy - field yang tersedia di MstRental
     const validOrderBy = [
       "rent_id",
+      "invoice_number",
       "customer_id",
       "start_rent_date",
       "end_rent_date",
@@ -327,11 +342,235 @@ const getRents = async (req, res) => {
 const getRentById = async (req, res) => {
   try {
     const { rentId } = req.params;
+
+    // Ambil data rent
     const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
     if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
-    return resSuccess(res, "Data rental berhasil diambil", rent);
+
+    // Ambil detail rental + relasi
+    const details = await TrnDetailRent.findAll({
+      where: { rent_id: rentId },
+      order: [["created_at", "ASC"]],
+      include: [
+        {
+          model: MstUnit,
+          as: "unit",
+          attributes: ["unit_code", "unit_name"],
+          required: false,
+        },
+        {
+          model: MstVariantUnit,
+          as: "variant",
+          attributes: ["variant_unit_code", "color", "photo"],
+          required: false,
+        },
+      ],
+    });
+
+    const payments = await TrnPayment.findAll({
+      where: { rent_id: rentId },
+      order: [["created_at", "ASC"]],
+    });
+
+    const userIds = [
+      ...new Set(
+        payments
+          .flatMap((p) => [p.created_by, p.updated_by])
+          .filter((x) => x != null)
+      ),
+    ];
+
+    // Query user
+    const users = await MstUser.findAll({
+      where: { user_id: userIds },
+      attributes: ["user_id", "name"],
+    });
+
+    const userMap = {};
+    users.forEach((u) => {
+      userMap[u.user_id] = u.name;
+    });
+
+    const formattedPayments = payments.map((p) => {
+      const json = p.toJSON();
+      return {
+        ...json,
+        created_by: json.created_by ? userMap[json.created_by] || null : null,
+        updated_by: json.updated_by ? userMap[json.updated_by] || null : null,
+      };
+    });
+
+    // Format detail
+    const formattedDetails = details.map((item) => {
+      const json = item.toJSON();
+
+      const unit_name = json.unit?.unit_name || null;
+      const variant_name = json.variant?.color || null;
+      const variant_photo = json.variant?.photo || null;
+
+      delete json.unit;
+      delete json.variant;
+
+      return {
+        ...json,
+        unit_name,
+        variant_name,
+        variant_photo,
+      };
+    });
+
+    // Gabung rent + detail
+    const responseData = {
+      ...rent.toJSON(),
+      details: formattedDetails,
+      payments: formattedPayments,
+    };
+
+    return resSuccess(res, "Data rental berhasil diambil", responseData);
   } catch (err) {
-    return resError(res, "Gagal mengambil rental", err.message, 500);
+    return resError(
+      res,
+      "Gagal mengambil data rental beserta detailnya",
+      err.message,
+      500
+    );
+  }
+};
+
+const getRentByInvoiceOrNik = async (req, res) => {
+  try {
+    let { search } = req.params;
+
+    // Kalau search kosong
+    if (!search || search.trim() === "") {
+      return resSuccess(res, "Parameter pencarian wajib diisi", {});
+    }
+
+    // CARI BERDASARKAN INVOICE NUMBER
+    let rent = await TrnRent.findOne({
+      where: {
+        invoice_number: search,
+        status: { [Op.ne]: "Close" },
+      },
+      include: [
+        {
+          model: MstCustomer,
+          as: "customer",
+          attributes: ["customer_id", "fullname", "nik"],
+        },
+      ],
+    });
+
+    // JIKA TIDAK KETEMU, CARI BERDASARKAN NIK CUSTOMER
+    if (!rent) {
+      rent = await TrnRent.findOne({
+        where: {
+          status: { [Op.ne]: "Close" },
+        },
+        include: [
+          {
+            model: MstCustomer,
+            as: "customer",
+            attributes: ["customer_id", "fullname", "nik", "telp", "email"],
+            where: { nik: search },
+          },
+        ],
+      });
+    }
+
+    // KALO TETEP NGGAK KETEMU → success = true tapi data = {}
+    if (!rent) {
+      return resSuccess(res, "Data rental tidak ditemukan", {});
+    }
+
+    // GET RENT DETAIL + INCLUDE FULL UNIT (variants + prices)
+    const details = await TrnDetailRent.findAll({
+      where: { rent_id: rent.rent_id },
+      include: [
+        {
+          model: MstUnit,
+          as: "unit",
+          include: [
+            {
+              model: MstVariantUnit,
+              as: "variants",
+              attributes: [
+                "variant_unit_code",
+                "color",
+                "qty",
+                "status",
+                "photo",
+              ],
+              required: false,
+
+              // FILTER VARIANT BERDASARKAN VARIANT DARI DETAIL
+              where: {
+                variant_unit_code: {
+                  [Op.eq]: sequelize.col("trn_detail_rent.variant_unit_code"),
+                },
+              },
+            },
+            {
+              model: MstPriceUnit,
+              as: "prices",
+              attributes: ["price_id", "duration", "price_per_day", "status"],
+            },
+          ],
+        },
+      ],
+    });
+
+    // GET PAYMENTS
+    const payments = await TrnPayment.findAll({
+      where: { rent_id: rent.rent_id },
+      order: [["created_at", "ASC"]],
+    });
+
+    // FORMAT DETAIL → unit FULL MODEL
+    const formattedDetails = details.map((item) => {
+      const j = item.toJSON();
+      return {
+        detail_id: j.detail_id,
+        rent_id: j.rent_id,
+        qty: j.qty,
+        price: j.price,
+        subtotal: j.subtotal,
+
+        // FULL UNIT
+        unit: j.unit
+          ? {
+              unit_code: j.unit.unit_code,
+              unit_name: j.unit.unit_name,
+              brand: j.unit.brand,
+              description: j.unit.description,
+              status: j.unit.status,
+              photo: j.unit.photo,
+              created_at: j.unit.created_at,
+              created_by: j.unit.created_by,
+              updated_at: j.unit.updated_at,
+              updated_by: j.unit.updated_by,
+
+              // variants: j.unit.variants || [],
+              variant: j.unit.variants?.[0] || null,
+              prices: j.unit.prices || [],
+            }
+          : null,
+      };
+    });
+
+    // RETURN SUCCESS
+    return resSuccess(res, "Data rental berhasil diambil", {
+      ...rent.toJSON(),
+      details: formattedDetails,
+      payments,
+    });
+  } catch (err) {
+    return resError(
+      res,
+      "Gagal mengambil data rental beserta detailnya",
+      err.message,
+      500
+    );
   }
 };
 
@@ -408,6 +647,7 @@ module.exports = {
   createRent,
   getRents,
   getRentById,
+  getRentByInvoiceOrNik,
   updateRent,
   deleteRent,
   approveRent,

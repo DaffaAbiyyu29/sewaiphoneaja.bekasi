@@ -47,13 +47,17 @@ export default function ModalWrapper({
                 <h3 className="text-2xl font-semibold text-gray-900">
                   {title}
                 </h3>
+
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-full hover:bg-gray-100 transition"
+                  className="group p-2 rounded-full bg-gray-100 hover:bg-red-500 
+               transition-all duration-200 shadow-sm hover:shadow-md
+               flex items-center justify-center"
                 >
                   <FontAwesomeIcon
                     icon={faXmark}
-                    className="text-gray-600 hover:text-gray-900"
+                    className="text-gray-600 group-hover:text-white transition-all duration-200 
+                 group-hover:rotate-90"
                   />
                 </button>
               </div>

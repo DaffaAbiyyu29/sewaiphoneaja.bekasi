@@ -161,7 +161,7 @@ export default function Dashboard() {
             <div className="space-y-8">
               <div className="inline-block">
                 <span className="bg-blue-100 text-blue-900 px-4 py-2 rounded-full text-sm font-semibold">
-                  🎉 Promo Spesial - Diskon 20% untuk Sewa Mingguan!
+                  Promo spesial untuk pemesanan lebih dari 1 hari 
                 </span>
               </div>
 
