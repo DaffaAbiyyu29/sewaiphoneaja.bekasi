@@ -9,7 +9,6 @@ import {
   faArrowRight,
   faBoxesPacking,
   faClock,
-  faMobileScreen,
   faShield,
   faStar,
   faZap,
@@ -18,20 +17,15 @@ import {
 export default function Dashboard() {
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [selectedUnit, setSelectedUnit] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-
   // State untuk data API
   const [units, setUnits] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const openModal = (unit) => {
-    setSelectedUnit(unit);
-    setIsOpen(true);
+  const getDetail = (unit) => {
+    localStorage.setItem("search", unit.model);
+    window.location.href = `/unit/`;
   };
-
-  const closeModal = () => setIsOpen(false);
 
   // useEffect untuk smooth scroll (sudah bagus, dipertahankan)
   useEffect(() => {
@@ -161,7 +155,7 @@ export default function Dashboard() {
             <div className="space-y-8">
               <div className="inline-block">
                 <span className="bg-blue-100 text-blue-900 px-4 py-2 rounded-full text-sm font-semibold">
-                  Promo spesial untuk pemesanan lebih dari 1 hari 
+                  Promo spesial untuk pemesanan lebih dari 1 hari
                 </span>
               </div>
 
@@ -317,7 +311,7 @@ export default function Dashboard() {
               units.map((unit, i) => (
                 <div
                   key={i}
-                  onClick={() => openModal(unit)}
+                  onClick={() => getDetail(unit)}
                   className="group relative cursor-pointer bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
                 >
                   <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold z-10">
@@ -379,13 +373,6 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
-
-      {/* Modal */}
-      <DetailUnitDialog
-        isOpen={isOpen}
-        onClose={closeModal}
-        unit={selectedUnit}
-      />
 
       {/* Testimonials */}
       <section

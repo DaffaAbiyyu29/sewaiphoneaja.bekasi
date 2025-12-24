@@ -12,10 +12,14 @@ const getAllUnitCatalog = async (req, res) => {
       page = 1,
       limit = 9,
       search = "",
+      status = "all", // all | available | unavailable (FE)
       orderBy = "created_at",
       orderDir = "DESC",
     } = req.query;
 
+    // =====================
+    // Pagination
+    // =====================
     page = parseInt(page);
     limit = parseInt(limit);
 
@@ -24,6 +28,9 @@ const getAllUnitCatalog = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
+    // =====================
+    // Search
+    // =====================
     const searchableFields = [
       "unit_code",
       "unit_name",
@@ -32,15 +39,19 @@ const getAllUnitCatalog = async (req, res) => {
       "status",
     ];
 
-    const where =
-      search.trim() !== ""
+    const where = {
+      ...(search.trim() !== ""
         ? {
             [Op.or]: searchableFields.map((field) => ({
               [field]: { [Op.like]: `%${search}%` },
             })),
           }
-        : {};
+        : {}),
+    };
 
+    // =====================
+    // Sorting
+    // =====================
     const allowedOrderFields = [
       "unit_code",
       "unit_name",
@@ -54,8 +65,12 @@ const getAllUnitCatalog = async (req, res) => {
     const orderField = allowedOrderFields.includes(orderBy)
       ? orderBy
       : "created_at";
+
     const orderDirection = orderDir.toUpperCase() === "ASC" ? "ASC" : "DESC";
 
+    // =====================
+    // QUERY DATA
+    // =====================
     const { count, rows } = await MstUnit.findAndCountAll({
       where,
       limit,
@@ -74,14 +89,57 @@ const getAllUnitCatalog = async (req, res) => {
         },
       ],
       order: [[orderField, orderDirection]],
-      distinct: true, // biar count gak dobel karena join
+      distinct: true, // biar count gak dobel
     });
 
-    const totalData = count;
-    const totalPages = Math.ceil(count / limit);
+    // =====================
+    // OVERRIDE STATUS BERDASARKAN STOK VARIANT
+    // =====================
+    const processedRows = rows.map((unit) => {
+      const totalStock =
+        unit.variants?.reduce((sum, v) => sum + (v.qty || 0), 0) || 0;
 
-    // LOGIKA PENANGANAN DATA KOSONG
+      let finalStatus = unit.status;
+
+      // rule bisnis:
+      // unit Available tapi stok 0 => Unavailable
+      if (unit.status === "Available" && totalStock === 0) {
+        finalStatus = "Unavailable";
+      }
+
+      return {
+        ...unit.toJSON(),
+        status: finalStatus,
+        totalStock,
+      };
+    });
+
+    // =====================
+    // FILTER STATUS DARI FE
+    // =====================
+    let filteredRows = processedRows;
+
+    if (status === "available") {
+      filteredRows = processedRows.filter((u) => u.status === "Available");
+    }
+
+    if (status === "unavailable") {
+      filteredRows = processedRows.filter((u) => u.status === "Unavailable");
+    }
+
+    // =====================
+    // PAGINATION SETELAH FILTER
+    // =====================
+    const totalData = filteredRows.length;
+    const totalPages = Math.ceil(totalData / limit);
+
+    const paginatedRows = filteredRows.slice((page - 1) * limit, page * limit);
+
+    // =====================
+    // MESSAGE
+    // =====================
     let message = "Daftar unit berhasil diambil";
+
     if (totalData === 0) {
       if (search.trim() !== "") {
         message =
@@ -90,9 +148,11 @@ const getAllUnitCatalog = async (req, res) => {
         message = "Tidak ada data unit yang tersedia.";
       }
     }
-    // AKHIR LOGIKA
 
-    return resSuccess(res, message, rows, {
+    // =====================
+    // RESPONSE
+    // =====================
+    return resSuccess(res, message, paginatedRows, {
       totalData,
       currentPage: page,
       totalPages,
@@ -100,7 +160,7 @@ const getAllUnitCatalog = async (req, res) => {
       allowedPageSizes: allowedLimits,
     });
   } catch (err) {
-    // Ini menangani error saat koneksi database atau query gagal (bukan data kosong)
+    console.error("getAllUnitCatalog error:", err);
     return resError(res, "Gagal mengambil data unit", err.message, 500);
   }
 };

@@ -162,6 +162,54 @@ const rejectRent = async (req, res) => {
   }
 };
 
+const collectUnit = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { rentId } = req.params;
+    const { collect_date, notes, updated_by } = req.body;
+
+    if (!rentId) {
+      await t.rollback();
+      return resError(res, "rentId diperlukan", "Bad Request", 400);
+    }
+
+    const rent = await TrnRent.findOne({
+      where: { rent_id: rentId },
+      transaction: t,
+    });
+
+    if (!rent) {
+      await t.rollback();
+      return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+    }
+
+    // VALIDASI: Hanya bisa collect jika statusnya 'Open' atau setelah 'Waiting Payment'
+    // Tergantung flow Anda, biasanya unit diambil saat status sudah bukan 'Waiting Approval'
+    if (rent.status === "Close" || rent.status === "Rejected Approval") {
+      await t.rollback();
+      return resError(res, "Unit tidak bisa diambil (Status: " + rent.status + ")", "Conflict", 409);
+    }
+
+    await rent.update(
+      {
+        collect_date: collect_date || new Date(), // Gunakan collect_date, bukan return_date
+        status: "Open", // Pastikan status menjadi Open (sedang disewa)
+        notes: notes || rent.notes,
+        updated_at: new Date(),
+        updated_by: updated_by || rent.updated_by,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return resSuccess(res, "Unit berhasil diambil oleh pelanggan", rent);
+  } catch (err) {
+    await t.rollback();
+    console.error(err);
+    return resError(res, "Gagal proses collect unit", err.message, 500);
+  }
+};
+
 // ini untuk RETURN UNIT / CLOSE RENTAL ke customer
 const returnUnit = async (req, res) => {
   const t = await sequelize.transaction();
@@ -213,7 +261,6 @@ const returnUnit = async (req, res) => {
     return resError(res, "Gagal return unit", err.message, 500);
   }
 };
-
 
 const getRents = async (req, res) => {
   try {
@@ -652,5 +699,6 @@ module.exports = {
   deleteRent,
   approveRent,
   rejectRent,
+  collectUnit,
   returnUnit,
 };

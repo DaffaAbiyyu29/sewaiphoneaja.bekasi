@@ -10,18 +10,11 @@ const {
   updateRent,
   approveRent,
   rejectRent,
+  collectUnit,
+  returnUnit
 } = require("../../controllers/rental/RentalController");
 const { verifyToken } = require("../../middleware/middleware");
 const { resError, resSuccess } = require("../../helpers/sendResponse");
-
-router.post("/", RentalController.createRent);
-router.get("/", RentalController.getRents);
-router.get("/:rentId", RentalController.getRentById);
-router.put("/:rentId", RentalController.updateRent);
-router.put("/:rentId/approve", RentalController.approveRent);
-router.put("/:rentId/reject", RentalController.rejectRent);
-router.put("/:rentId/return", RentalController.returnUnit);
-router.delete("/:rentId", RentalController.deleteRent);
 
 router.get("/pesanan", (req, res) => {
   return resSuccess(res, "Data rental berhasil diambil", {});
@@ -35,6 +28,8 @@ router.get("/:rentId", verifyToken, getRentById);
 router.put("/:rentId", verifyToken, updateRent);
 router.put("/:rentId/approve", verifyToken, approveRent);
 router.put("/:rentId/reject", verifyToken, rejectRent);
+router.put("/:rentId/collect", verifyToken, collectUnit);
+router.put("/:rentId/return", verifyToken, returnUnit);
 router.delete("/:rentId", verifyToken, deleteRent);
 
 module.exports = router;

@@ -21,6 +21,7 @@ import RentalForm from "./pages/customer/RentalForm";
 import RentalPage from "./pages/admin/rental";
 import RentalDetail from "./pages/admin/rental/Detail";
 import CustomerPage from "./pages/admin/customer/Index";
+import ProfileUserPage from "./pages/admin/profile";
 
 export default function App() {
   // const [loading, setLoading] = useState(true);
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="menu/customer" element={<CustomerPage />} />
           <Route path="menu/rental" element={<RentalPage />} />
           <Route path="menu/rental/:rentId" element={<RentalDetail />} />
+          <Route path="menu/profile" element={<ProfileUserPage />} />
         </Route>
 
         <Route

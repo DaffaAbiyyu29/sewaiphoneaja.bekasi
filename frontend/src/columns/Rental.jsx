@@ -116,22 +116,22 @@ export const RentalColumns = (onDeleteClick) => [
         </button>
 
         {/* Tombol Edit */}
-        <button
+        {/* <button
           onClick={() => getPage("/menu/rental/update/" + row.rent_id)}
           className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150"
           title="Edit Data Rental"
         >
           <FontAwesomeIcon icon={faEdit} />
-        </button>
+        </button> */}
 
         {/* Tombol Delete */}
-        <button
+        {/* <button
           onClick={() => onDeleteClick(row.rent_id)}
           className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150"
           title="Hapus Rental"
         >
           <FontAwesomeIcon icon={faTrash} />
-        </button>
+        </button> */}
       </div>
     ),
   },

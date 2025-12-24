@@ -29,9 +29,9 @@ export default function Header({ onMenuClick }) {
     { name: "Update Unit", path: "/menu/unit/update/" + unitCode },
     { name: "Unit", path: "/menu/unit" },
     { name: "Penyewaan", path: "/menu/rental" },
-    { name: "Detail Penyewaan", path: "/menu/rental/"+ rentId },
+    { name: "Detail Penyewaan", path: "/menu/rental/" + rentId },
 
-    { name: "Customer", path: "/customer" },
+    { name: "Manajemen Customer", path: "/menu/customer" },
     { name: "Sewa Aktif", path: "/sewa-aktif" },
     { name: "Pembayaran", path: "/pembayaran" },
     { name: "Booking Request", path: "/booking-request" },
@@ -131,7 +131,7 @@ export default function Header({ onMenuClick }) {
 
               <button
                 className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                onClick={() => alert("Go to Profile")}
+                onClick={() => (window.location.href = "/menu/profile")}
               >
                 <FontAwesomeIcon
                   icon={faUserCircle}

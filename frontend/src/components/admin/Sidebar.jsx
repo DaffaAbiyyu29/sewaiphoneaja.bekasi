@@ -149,7 +149,7 @@ export default function Sidebar({
             {renderNavSection("Umum", generalItems, collapsed)}
             {renderNavSection("Master Data", masterItems, collapsed)}
             {renderNavSection("Transaksi", transactionItems, collapsed)}
-            {renderNavSection("Pengaturan", settingItems, collapsed, false)}
+            {/* {renderNavSection("Pengaturan", settingItems, collapsed, false)} */}
           </nav>
 
           <div className="p-3 border-t border-gray-200">

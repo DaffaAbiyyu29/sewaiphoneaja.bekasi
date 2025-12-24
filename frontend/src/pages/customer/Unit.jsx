@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
@@ -7,7 +7,9 @@ import DetailUnitDialog from "../../components/DetailUnitDialog";
 const Unit = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [units, setUnits] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem("search") || ""
+  );
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -17,28 +19,37 @@ const Unit = () => {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 9;
 
-  const fetchUnits = async (page) => {
-    setLoading(true);
-    try {
-      // Menambahkan query parameter untuk pagination
-      const res = await axios.get(
-        `${API_URL}/api/unit/catalog?page=${page}&pageSize=${pageSize}&search=${searchTerm}`
-      );
-      if (res.data.success) {
-        setUnits(res.data.data);
-        setCurrentPage(res.data.currentPage);
-        setTotalPages(res.data.totalPages);
+  const fetchUnits = useCallback(
+    async (page) => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${API_URL}/api/unit/catalog?page=${page}&pageSize=${pageSize}&search=${searchTerm}&status=${filterStatus}`
+        );
+        if (res.data.success) {
+          setUnits(res.data.data);
+          setCurrentPage(res.data.currentPage);
+          setTotalPages(res.data.totalPages);
+          localStorage.removeItem("search");
+        }
+      } catch (err) {
+        console.error("Gagal ambil data unit:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Gagal ambil data unit:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [searchTerm, filterStatus, API_URL]
+  );
 
   useEffect(() => {
-    fetchUnits(1);
-  }, [searchTerm, filterStatus]);
+    // Gunakan timer agar tidak langsung nembak API saat user masih mengetik
+    const delaySearch = setTimeout(() => {
+      fetchUnits(1);
+    }, 100);
+
+    // Bersihkan timer jika searchTerm atau filterStatus berubah lagi sebelum 500ms
+    return () => clearTimeout(delaySearch);
+  }, [fetchUnits]); // Sekarang sudah sesuai standar ESLint
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -53,6 +64,7 @@ const Unit = () => {
   };
 
   const handleFilterChange = (status) => {
+    console.log("Filter changed to:", status);
     setFilterStatus(status);
     // Kita panggil fetchUnits di useEffect dengan dependency searchTerm/filterStatus
   };

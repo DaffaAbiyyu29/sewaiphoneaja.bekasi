@@ -284,7 +284,7 @@ const updateCustomer = async (req, res) => {
     }
 
     //jadi admin bisa blokir/inactive customer melalui update
-     const allowedStatus = ["Active", "Inactive", "Blocked"];
+    const allowedStatus = ["Active", "Inactive", "Blocked"];
 
     // support admin action via query (?action=block / inactive / activate)
     if (req.query.action) {
@@ -358,6 +358,50 @@ const updateCustomer = async (req, res) => {
     console.error(err);
     if (newKtpPath) deletePhoto(newKtpPath);
     return resError(res, "Gagal memperbarui customer", err.message, 500);
+  }
+};
+
+const updateCustomerStatus = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    if (!customerId) {
+      return resError(res, "Customer ID diperlukan", "Bad Request", 400);
+    }
+
+    const customer = await MstCustomer.findOne({
+      where: { customer_id: customerId },
+    });
+
+    if (!customer) {
+      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+    }
+
+    let newStatus;
+
+    if (customer.status === "Active") {
+      newStatus = "Inactive";
+    } else if (customer.status === "Inactive") {
+      newStatus = "Active";
+    } else {
+      return resError(
+        res,
+        "Status customer tidak valid",
+        "Validation Error",
+        400
+      );
+    }
+
+    // update hanya field status
+    await customer.update({ status: newStatus });
+
+    return resSuccess(res, "Status customer berhasil diubah", {
+      customer_id: customerId,
+      status: newStatus,
+    });
+  } catch (err) {
+    console.error(err);
+    return resError(res, "Gagal update status customer", err.message, 500);
   }
 };
 
@@ -439,6 +483,7 @@ module.exports = {
   getAllCustomers,
   getCustomerByID,
   checkCustomerByNIK,
+  updateCustomerStatus,
   createCustomer,
   updateCustomer,
   deleteCustomer,

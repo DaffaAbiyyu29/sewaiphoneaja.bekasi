@@ -8,6 +8,7 @@ const {
   deleteCustomer,
   searchCustomerByEmail,
   checkCustomerByNIK,
+  updateCustomerStatus,
 } = require("../../controllers/customer/CustomerController");
 const { uploadPhoto } = require("../../middleware/upload");
 const router = express.Router();
@@ -43,6 +44,8 @@ router.post("/", uploadPhoto, createCustomer);
 // UPDATE CUSTOMER
 // PUT /api/customer/:customerId
 router.put("/:customerId", uploadPhoto, updateCustomer);
+
+router.put("/status/:customerId", updateCustomerStatus);
 
 // DELETE CUSTOMER
 // DELETE /api/customer/:customerId

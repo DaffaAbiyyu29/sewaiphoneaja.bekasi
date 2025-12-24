@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
+import { Switch } from "@headlessui/react";
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";
@@ -22,18 +23,10 @@ const getStatusBadgeColor = (status) => {
   }
 };
 
-export const CustomerColumns = (onDeleteClick) => [
+export const CustomerColumns = (onStatusChange) => [
   {
     header: "No",
     render: (_, index) => index + 1,
-  },
-  {
-    header: "ID Customer",
-    accessor: "customer_id",
-    sortable: true,
-    render: (row) => (
-      <span className="font-mono text-sm">{row.customer_id}</span>
-    ),
   },
   {
     header: "Nama Lengkap",
@@ -81,32 +74,43 @@ export const CustomerColumns = (onDeleteClick) => [
   },
   {
     header: "Aksi",
-    render: (row) => (
-      <div className="flex gap-2 justify-center items-center">
-        <button
-          onClick={() => getPage("/menu/customer/" + row.customer_id)}
-          className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
-          title="Lihat Detail Customer"
-        >
-          <FontAwesomeIcon icon={faEye} />
-        </button>
+    render: (row) => {
+      let isActive = row.status === "Active";
 
-        <button
-          onClick={() => getPage("/menu/customer/update/" + row.customer_id)}
-          className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150"
-          title="Edit Data Customer"
-        >
-          <FontAwesomeIcon icon={faEdit} />
-        </button>
+      return (
+        <div className="flex gap-2 justify-center items-center">
+          {/* Tombol Lihat Detail */}
+          <button
+            onClick={() => getPage("/menu/customer/" + row.customer_id)}
+            className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
+            title="Lihat Detail Customer"
+          >
+            <FontAwesomeIcon icon={faEye} />
+          </button>
 
-        <button
-          onClick={() => onDeleteClick(row.customer_id)}
-          className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150"
-          title="Hapus Customer"
-        >
-          <FontAwesomeIcon icon={faTrash} />
-        </button>
-      </div>
-    ),
+          {/* Switch Status */}
+          <div className="flex justify-center items-center">
+            <label className="flex items-center cursor-pointer gap-2">
+              {/* <input
+                type="checkbox"
+                checked={isActive}
+                onChange={() => onStatusChange(row.customer_id, !isActive)}
+                className="sr-only peer"
+              /> */}
+              <Switch
+                checked={isActive}
+                onChange={() => onStatusChange(row.customer_id, !isActive)}
+                className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-checked:bg-blue-600"
+              >
+                <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6" />
+              </Switch>
+              {/* <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 relative transition">
+                <div className="absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow transition peer-checked:translate-x-5"></div>
+              </div> */}
+            </label>
+          </div>
+        </div>
+      );
+    },
   },
 ];

@@ -158,7 +158,7 @@ export default function RentalDetailPage() {
 
     try {
       const token = getToken();
-      const res = await axios.put(
+      await axios.put(
         `${API_URL}/api/rental/${rentId}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
@@ -242,6 +242,100 @@ export default function RentalDetailPage() {
         icon: "error",
         title: "Gagal!",
         text: err.response?.data?.message || "Terjadi kesalahan saat reject.",
+      });
+    }
+  };
+
+  const handleCollectUnit = async (rentId) => {
+    if (!rentId) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Collect Unit?",
+      text: "Unit akan ditandai sebagai sudah di-collect.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Collect",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      const token = getToken();
+      const res = await axios.put(
+        `${API_URL}/api/rental/${rentId}/collect`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Unit berhasil di-collect.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // update state lokal (biar tombol langsung berubah)
+      setRental((prev) => ({
+        ...prev,
+        collect_date: res.data?.collect_date || new Date().toISOString(),
+      }));
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: err.response?.data?.message || "Gagal collect unit.",
+      });
+    }
+  };
+
+  const handleReturnUnit = async (rentId) => {
+    if (!rentId) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Return Unit?",
+      text: "Unit akan dikembalikan dan status diset ke Close.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Return",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      const token = getToken();
+      const res = await axios.put(
+        `${API_URL}/api/rental/${rentId}/return`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Unit berhasil dikembalikan.",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      setRental((prev) => ({
+        ...prev,
+        status: "Close",
+        return_date: res.data?.return_date || new Date().toISOString(),
+      }));
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: err.response?.data?.message || "Gagal return unit.",
       });
     }
   };
@@ -398,16 +492,33 @@ export default function RentalDetailPage() {
                       onClick={() => handleApproveRental(rental?.rent_id)}
                       className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
                     >
-                      ✓ Approve
+                      Approve
                     </button>
                     <button
                       onClick={() => handleRejectRental(rental?.rent_id)}
                       className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
                     >
-                      ✕ Reject
+                      Reject
                     </button>
                   </div>
                 )}
+
+                {rental.status === "Open" &&
+                  (rental.collect_date === null ? (
+                    <button
+                      onClick={() => handleCollectUnit(rental?.rent_id)}
+                      className="bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-sm"
+                    >
+                      Collect Unit
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleReturnUnit(rental?.rent_id)}
+                      className="bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-sm"
+                    >
+                      Return Unit
+                    </button>
+                  ))}
               </div>
             </div>
           </div>
@@ -892,7 +1003,7 @@ export default function RentalDetailPage() {
                         {/* TOMBOL TENGAH KANAN */}
                         <button
                           onClick={() => openDetail(payment)}
-                          className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition shrink-0"
+                          className="text-xs px-3 py-1.5 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition shrink-0"
                         >
                           Detail
                         </button>
@@ -946,7 +1057,7 @@ export default function RentalDetailPage() {
                       Tanggal Dibuat
                     </p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {formatDate(rental.created_at)}
+                      {formatDate(rental.created_at) || "-"}
                     </p>
                   </div>
                   {rental.approval_date && (
@@ -964,32 +1075,32 @@ export default function RentalDetailPage() {
                           Tanggal Persetujuan
                         </p>
                         <p className="text-sm font-semibold text-gray-900">
-                          {formatDate(rental.approval_date)}
+                          {formatDate(rental.approval_date) || "-"}
                         </p>
                       </div>
                     </>
                   )}
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 font-medium">
+                      Tanggal Pengambilan
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatDate(rental.collect_date) || "-"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 font-medium">
+                      Tanggal Pengembalian
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatDate(rental.return_date) || "-"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        {/* <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-          <button
-            onClick={() => navigate("/menu/rental")}
-            className="bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow"
-          >
-            Kembali
-          </button>
-          <button
-            onClick={() => navigate(`/menu/rental/update/${rental.rent_id}`)}
-            className="bg-blue-900 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow"
-          >
-            Edit Rental
-          </button>
-        </div> */}
       </div>
 
       <DetailPaymentDialog
