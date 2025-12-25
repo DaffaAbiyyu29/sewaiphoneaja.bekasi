@@ -124,7 +124,13 @@ const checkCustomerByNIK = async (req, res) => {
     }
 
     // Jika customer ditemukan tetapi status bukan Active (mis. Inactive), blokir peminjaman
-    if (customer.status && customer.status !== "Active") {
+    const isCustomerActive = (customer) => {
+      const s = String(customer.status || "")
+        .trim()
+        .toLowerCase();
+      return s === "active";
+    };
+    if (!isCustomerActive(customer)) {
       return resError(
         res,
         "Customer tidak aktif sehingga tidak dapat melakukan peminjaman",
@@ -166,8 +172,13 @@ const checkCustomerByNIK = async (req, res) => {
 // ===
 // CREATE CUSTOMER
 // ===
+// helper normalize status
+const isCustomerActive = (customer) => {
+  const s = String(customer.status || "").trim().toLowerCase();
+  return s === "active";
+};
+
 const createCustomer = async (req, res) => {
-  // Handle uploaded KTP file via multer (if any)
   const ktpPath = req.file ? req.file.path : null;
   const ktpName = req.file ? req.file.filename : null;
 
@@ -185,6 +196,36 @@ const createCustomer = async (req, res) => {
       status,
     } = req.body;
 
+    // ✅ 1) CEK NIK sudah ada?
+    if (nik) {
+      const existing = await MstCustomer.findOne({ where: { nik } });
+
+      if (existing) {
+        // kalau ada file upload tapi customer sudah ada, jangan simpan file baru (biar ga numpuk)
+        if (ktpPath) deletePhoto(ktpPath);
+
+        // ✅ kalau customer INACTIVE, tetap block
+        if (!isCustomerActive(existing)) {
+          return resError(
+            res,
+            "Customer tidak aktif, tidak bisa digunakan untuk peminjaman",
+            "Conflict",
+            409
+          );
+        }
+
+        // ✅ customer sudah ada dan ACTIVE → return sukses (tanpa insert)
+        return resSuccess(
+          res,
+          "Customer sudah terdaftar (tidak dibuat ulang)",
+          existing,
+          null,
+          200
+        );
+      }
+    }
+
+    // ✅ 2) kalau nik belum ada, boleh lanjut create (kode anda lanjut di bawah)
     // Validasi field required — ktp_image dapat berasal dari file upload
     const requiredFields = [
       "fullname",
@@ -218,21 +259,15 @@ const createCustomer = async (req, res) => {
     // Generate customer ID
     const customer_id = await generateCustomerID();
 
-    // Cek email sudah ada atau belum
-    const existingEmail = await MstCustomer.findOne({ where: { email } });
-    if (existingEmail) {
-      if (ktpPath) deletePhoto(ktpPath);
-      return resError(res, "Email sudah terdaftar", "Conflict", 409);
+    // ✅ OPTIONAL: Cek email sudah ada (agar tidak duplicate email juga)
+    if (email) {
+      const existingEmail = await MstCustomer.findOne({ where: { email } });
+      if (existingEmail) {
+        if (ktpPath) deletePhoto(ktpPath);
+        return resError(res, "Email sudah terdaftar", "Conflict", 409);
+      }
     }
 
-    // Cek NIK sudah ada atau belum
-    const existingNIK = await MstCustomer.findOne({ where: { nik } });
-    if (existingNIK) {
-      if (ktpPath) deletePhoto(ktpPath);
-      return resError(res, "NIK sudah terdaftar", "Conflict", 409);
-    }
-
-    // Create customer (store ktp_image as filename)
     const newCustomer = await MstCustomer.create({
       customer_id,
       fullname,
@@ -251,12 +286,11 @@ const createCustomer = async (req, res) => {
 
     return resSuccess(res, "Customer berhasil dibuat", newCustomer, null, 201);
   } catch (err) {
-    console.error(err);
-    // cleanup uploaded file on error
     if (ktpPath) deletePhoto(ktpPath);
     return resError(res, "Gagal membuat customer", err.message, 500);
   }
 };
+
 
 // ===
 // UPDATE CUSTOMER
@@ -284,7 +318,7 @@ const updateCustomer = async (req, res) => {
     }
 
     //jadi admin bisa blokir/inactive customer melalui update
-    const allowedStatus = ["Active", "Inactive"];
+    const allowedStatus = ["Active","inactive","Inactive"]; 
 
     // support admin action via query (?action=block / inactive / activate)
     if (req.query.action) {
@@ -305,28 +339,6 @@ const updateCustomer = async (req, res) => {
         "Validation Error",
         400
       );
-    }
-
-    // Cek email unik (jika email diubah)
-    if (req.body.email && req.body.email !== customer.email) {
-      const existingEmail = await MstCustomer.findOne({
-        where: { email: req.body.email },
-      });
-      if (existingEmail) {
-        if (newKtpPath) deletePhoto(newKtpPath);
-        return resError(res, "Email sudah terdaftar", "Conflict", 409);
-      }
-    }
-
-    // Cek NIK unik (jika NIK diubah)
-    if (req.body.nik && req.body.nik !== customer.nik) {
-      const existingNIK = await MstCustomer.findOne({
-        where: { nik: req.body.nik },
-      });
-      if (existingNIK) {
-        if (newKtpPath) deletePhoto(newKtpPath);
-        return resError(res, "NIK sudah terdaftar", "Conflict", 409);
-      }
     }
 
     // Prepare update payload

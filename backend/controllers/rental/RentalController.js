@@ -21,11 +21,16 @@ const isCustomerActive = (customer) => {
   // - Bisa string: "Active"/"inactive"
   // - Bisa int: 1/0
   // - Bisa boolean: true/false
-  const s = customer.status;
 
-  if (typeof s === "string") return s.trim().toLowerCase() === "Active";
-  if (typeof s === "number") return s === 1;
-  if (typeof s === "boolean") return s === true;
+  const s = String(customer.status || "").trim().toLowerCase();
+
+  // semua variasi "active" dianggap aktif
+  if (s === "active") return true;
+
+  // semua variasi "inactive" dianggap tidak aktif
+  if (s === "inactive") return false;
+
+  // kalau ada nilai lain (mis "blocked") => anggap tidak aktif
 
   return false;
 };
@@ -33,7 +38,8 @@ const isCustomerActive = (customer) => {
 const createRent = async (req, res) => {
   try {
     const {
-      customer_id,
+      customer_id: bodyCustomerId,
+      nik, // ✅ tambah ini
       start_rent_date,
       end_rent_date,
       collect_date,
@@ -48,19 +54,38 @@ const createRent = async (req, res) => {
       created_by,
     } = req.body;
 
+    // ✅ resolve customer_id: prioritas customer_id, kalau tidak ada cari dari NIK
+    let customer_id = bodyCustomerId;
+
+    if (!customer_id && nik) {
+      const c = await MstCustomer.findOne({
+        where: { nik: String(nik).trim() },
+        attributes: ["customer_id", "nik", "status"],
+      });
+
+      if (!c) {
+        return resError(res, "Customer tidak ditemukan", "NIK tidak terdaftar", 404);
+      }
+
+      customer_id = c.customer_id;
+    }
+
+    // validasi required
     const missing = [];
-    if (!customer_id) missing.push("customer_id");
+    if (!customer_id) missing.push("customer_id (atau kirim nik)");
     if (total_price === undefined || total_price === null || total_price === "")
       missing.push("total_price");
-    if (missing.length)
+
+    if (missing.length) {
       return resError(
         res,
         "Data rental tidak lengkap",
         `Missing fields: ${missing.join(", ")}`,
         400
       );
+    }
 
-    // --- VALIDASI CUSTOMER ACTIVE (berdasarkan customer_id) ---
+    // --- VALIDASI CUSTOMER ACTIVE ---
     const customer = await MstCustomer.findOne({
       where: { customer_id },
       attributes: ["customer_id", "fullname", "nik", "status"],
@@ -78,24 +103,28 @@ const createRent = async (req, res) => {
         403
       );
     }
-    if (nik && customer.nik && String(nik) !== String(customer.nik)) {
-      return resError(
-        res,
-        "NIK tidak sesuai",
-        "NIK pada request tidak cocok dengan NIK customer terdaftar",
-        400
-      );
-    }
-    // Setelah rent ketemu (invoice atau nik):
-    if (rent?.customer && !isCustomerActive(rent.customer)) {
-      return resError(
-        res,
-        "Customer tidak bisa menyewa",
-        `Customer (${rent.customer.nik || "-"}) berstatus INACTIVE`,
-        403
-      );
-    }
 
+    // ✅ opsional: cegah sewa baru kalau masih ada rental belum close
+    const ongoingRent = await TrnRent.findOne({
+      where: {
+        customer_id,
+        status: { [Op.ne]: "Close" },
+        return_date: null,
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    if (ongoingRent) {
+      return resError(
+        res,
+        "Customer masih memiliki rental aktif",
+        "Masih ada peminjaman yang belum ditutup",
+        409
+      );
+    }
+// --- END VALIDASI CUSTOMER ACTIVE ---
+
+    // generate rent_id dan invoice_number
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
     const invoiceNo = await generateInvoiceNumber("trn_rent");
 
