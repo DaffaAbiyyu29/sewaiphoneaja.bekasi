@@ -3,6 +3,7 @@ const { verifyToken } = require("../../middleware/middleware");
 const {
   getAllCustomers,
   getCustomerByID,
+  getCustomerDetail,
   createCustomer,
   updateCustomer,
   deleteCustomer,
@@ -46,6 +47,9 @@ router.post("/", uploadPhoto, createCustomer);
 router.put("/:customerId", uploadPhoto, updateCustomer);
 
 router.put("/status/:customerId", updateCustomerStatus);
+
+// Route untuk endpoint detail versi “getCustomerDetail” untuk liat detail customer
+router.get("/:customerId/detail", getCustomerDetail);
 
 // DELETE CUSTOMER
 // DELETE /api/customer/:customerId

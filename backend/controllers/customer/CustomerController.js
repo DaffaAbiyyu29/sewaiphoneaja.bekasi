@@ -103,6 +103,57 @@ const getCustomerByID = async (req, res) => {
 };
 
 // ===
+// GET CUSTOMER DETAIL (dengan URL KTP dan rental aktif)
+// ===
+
+const getCustomerDetail = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    if (!customerId) {
+      return resError(res, "Customer ID diperlukan", "Bad Request", 400);
+    }
+
+    const customer = await MstCustomer.findOne({
+      where: { customer_id: customerId },
+    });
+
+    if (!customer) {
+      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+    }
+
+    // OPTIONAL: rental aktif customer (kalau mau ditampilkan di detail)
+    const ongoingRent = await TrnRent.findOne({
+      where: {
+        customer_id: customer.customer_id,
+        status: { [Op.ne]: "Close" },
+        return_date: null,
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    // bikin URL image KTP supaya FE tinggal render
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const ktp_url = customer.ktp_image
+      ? `${baseUrl}/uploads/${customer.ktp_image}` // sesuaikan folder static kamu
+      : null;
+
+    return resSuccess(res, "Detail customer berhasil diambil", {
+      ...customer.toJSON(),
+      ktp_url,
+      ongoing_rent: ongoingRent || null,
+    });
+  } catch (err) {
+    console.error(err);
+    return resError(res, "Gagal mengambil detail customer", err.message, 500);
+  }
+};
+//
+//END OF getCustomerDetail
+//
+
+
+// ===
 // CHECK CUSTOMER BY NIK
 // ===
 const checkCustomerByNIK = async (req, res) => {
@@ -499,6 +550,7 @@ const searchCustomerByEmail = async (req, res) => {
 module.exports = {
   getAllCustomers,
   getCustomerByID,
+  getCustomerDetail,
   checkCustomerByNIK,
   updateCustomerStatus,
   createCustomer,
