@@ -14,6 +14,22 @@ const TrnPayment = require("../../models/TrnPayment");
 const MstPriceUnit = require("../../models/MstPriceUnit");
 const MstUser = require("../../models/MstUser");
 
+const isCustomerActive = (customer) => {
+  if (!customer) return false;
+
+  // Sesuaikan dengan tipe field status di DB kamu:
+  // - Bisa string: "Active"/"inactive"
+  // - Bisa int: 1/0
+  // - Bisa boolean: true/false
+  const s = customer.status;
+
+  if (typeof s === "string") return s.trim().toLowerCase() === "Active";
+  if (typeof s === "number") return s === 1;
+  if (typeof s === "boolean") return s === true;
+
+  return false;
+};
+
 const createRent = async (req, res) => {
   try {
     const {
@@ -43,6 +59,42 @@ const createRent = async (req, res) => {
         `Missing fields: ${missing.join(", ")}`,
         400
       );
+
+    // --- VALIDASI CUSTOMER ACTIVE (berdasarkan customer_id) ---
+    const customer = await MstCustomer.findOne({
+      where: { customer_id },
+      attributes: ["customer_id", "fullname", "nik", "status"],
+    });
+
+    if (!customer) {
+      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+    }
+
+    if (!isCustomerActive(customer)) {
+      return resError(
+        res,
+        "Customer tidak bisa menyewa",
+        `Customer (${customer.nik || "-"}) berstatus INACTIVE`,
+        403
+      );
+    }
+    if (nik && customer.nik && String(nik) !== String(customer.nik)) {
+      return resError(
+        res,
+        "NIK tidak sesuai",
+        "NIK pada request tidak cocok dengan NIK customer terdaftar",
+        400
+      );
+    }
+    // Setelah rent ketemu (invoice atau nik):
+    if (rent?.customer && !isCustomerActive(rent.customer)) {
+      return resError(
+        res,
+        "Customer tidak bisa menyewa",
+        `Customer (${rent.customer.nik || "-"}) berstatus INACTIVE`,
+        403
+      );
+    }
 
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
     const invoiceNo = await generateInvoiceNumber("trn_rent");
@@ -187,7 +239,12 @@ const collectUnit = async (req, res) => {
     // Tergantung flow Anda, biasanya unit diambil saat status sudah bukan 'Waiting Approval'
     if (rent.status === "Close" || rent.status === "Rejected Approval") {
       await t.rollback();
-      return resError(res, "Unit tidak bisa diambil (Status: " + rent.status + ")", "Conflict", 409);
+      return resError(
+        res,
+        "Unit tidak bisa diambil (Status: " + rent.status + ")",
+        "Conflict",
+        409
+      );
     }
 
     await rent.update(
@@ -643,6 +700,27 @@ const updateRent = async (req, res) => {
 
     const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
     if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+
+    // 2️⃣ VALIDASI: jika customer_id DIUBAH, pastikan customer AKTIF
+    if (customer_id && customer_id !== rent.customer_id) {
+      const customer = await MstCustomer.findOne({
+        where: { customer_id },
+        attributes: ["customer_id", "nik", "status"],
+      });
+
+      if (!customer) {
+        return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+      }
+
+      if (!isCustomerActive(customer)) {
+        return resError(
+          res,
+          "Customer tidak bisa menyewa",
+          `Customer (${customer.nik || "-"}) berstatus INACTIVE`,
+          403
+        );
+      }
+    }
 
     await rent.update({
       customer_id: customer_id ?? rent.customer_id,

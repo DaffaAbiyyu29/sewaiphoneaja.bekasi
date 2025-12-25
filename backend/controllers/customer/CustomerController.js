@@ -284,7 +284,7 @@ const updateCustomer = async (req, res) => {
     }
 
     //jadi admin bisa blokir/inactive customer melalui update
-    const allowedStatus = ["Active", "Inactive", "Blocked"];
+    const allowedStatus = ["Active", "Inactive"];
 
     // support admin action via query (?action=block / inactive / activate)
     if (req.query.action) {
@@ -292,7 +292,7 @@ const updateCustomer = async (req, res) => {
 
       if (action === "block") req.body.status = "Blocked";
       else if (action === "inactive") req.body.status = "Inactive";
-      else if (action === "activate" || action === "unblock")
+      else if (action === "Active" || action === "unblock")
         req.body.status = "Active";
     }
 
@@ -377,22 +377,27 @@ const updateCustomerStatus = async (req, res) => {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
+    // ✅ NORMALISASI: apapun bentuknya (Active/active/Inactive/inactive)
+    // kita buat pembandingnya jadi lowercase
+    const current = String(customer.status || "")
+      .trim()
+      .toLowerCase();
+
     let newStatus;
 
-    if (customer.status === "Active") {
-      newStatus = "Inactive";
-    } else if (customer.status === "Inactive") {
+    if (current === "active") {
+      newStatus = "inactive";
+    } else if (current === "inactive") {
       newStatus = "Active";
     } else {
       return resError(
         res,
         "Status customer tidak valid",
-        "Validation Error",
+        `Validation Error (current status: ${customer.status})`,
         400
       );
     }
 
-    // update hanya field status
     await customer.update({ status: newStatus });
 
     return resSuccess(res, "Status customer berhasil diubah", {
