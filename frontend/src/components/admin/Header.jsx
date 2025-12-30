@@ -9,15 +9,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useLocation, useParams } from "react-router-dom";
 import { getUserInfo } from "../../helpers/GetUserInfo";
+import axios from "axios";
+import { getToken } from "../../helpers/GetToken";
 
 export default function Header({ onMenuClick }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userName, setUserName] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [userPhoto, setUserPhoto] = useState(null);
   const dropdownRef = useRef(null);
   const location = useLocation();
 
   const { unitCode } = useParams();
+  const { nik } = useParams();
   const { variantUnitCode } = useParams();
   const { rentId } = useParams();
 
@@ -32,6 +36,11 @@ export default function Header({ onMenuClick }) {
     { name: "Detail Penyewaan", path: "/menu/rental/" + rentId },
 
     { name: "Manajemen Customer", path: "/menu/customer" },
+    { name: "Manajemen User", path: "/menu/user" },
+    { name: "Tambah User", path: "/menu/user/create" },
+    { name: "Detail User", path: "/menu/user/" + nik },
+    { name: "Update User", path: "/menu/user/update/" + nik },
+    { name: "Profile Pengguna", path: "/menu/profile" },
     { name: "Sewa Aktif", path: "/sewa-aktif" },
     { name: "Pembayaran", path: "/pembayaran" },
     { name: "Booking Request", path: "/booking-request" },
@@ -51,10 +60,31 @@ export default function Header({ onMenuClick }) {
   const currentPage = navItems.find((item) => item.path === location.pathname);
   const pageTitle = currentPage ? currentPage.name : "Halaman Tidak Ditemukan";
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const fetchUserData = async () => {
+    try {
+      const user = getUserInfo();
+      const token = getToken();
+
+      const response = await axios.get(`${API_URL}/api/user/${user.nik}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        setUserName(response.data.data.name);
+        setUserRole(response.data.data.role);
+        setUserPhoto(response.data.data.profile_picture);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const user = getUserInfo();
-    setUserName(user?.name);
-    setUserRole(user?.email);
+    fetchUserData();
 
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -101,7 +131,7 @@ export default function Header({ onMenuClick }) {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             <img
-              src="/images/sewaiphoneaja.png"
+              src={`${API_URL}/get-image/${userPhoto}`}
               alt="avatar"
               className="w-8 h-8 rounded-full object-cover"
             />
@@ -117,9 +147,9 @@ export default function Header({ onMenuClick }) {
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-30">
               <div className="flex items-center p-3 border-b border-gray-100">
                 <img
-                  src="/images/sewaiphoneaja.png"
+                  src={`${API_URL}/get-image/${userPhoto}`}
                   alt="avatar"
-                  className="w-10 h-10 rounded-full mr-3"
+                  className="w-10 h-10 rounded-full mr-3 object-cover"
                 />
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">

@@ -41,7 +41,7 @@ export default function ProfileUserPage() {
       const user = getUserInfo();
       const token = getToken();
 
-      const response = await axios.get(`${API_URL}/api/user/${user.user_id}`, {
+      const response = await axios.get(`${API_URL}/api/user/${user.nik}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -80,10 +80,10 @@ export default function ProfileUserPage() {
 
     try {
       // **TODO: Ganti dengan endpoint PUT/PATCH API yang sebenarnya**
-      // const token = getToken();
-      // await axios.put(`${API_URL}/api/user/${userData.user_id}`, formEditData, {
-      // headers: { Authorization: `Bearer ${token}` },
-      // });
+      const token = getToken();
+      await axios.put(`${API_URL}/api/user/${userData.nik}`, formEditData, {
+      headers: { Authorization: `Bearer ${token}` },
+      });
 
       // Mock success: Update userData state dengan formEditData
       setUserData(formEditData);
@@ -328,12 +328,12 @@ export default function ProfileUserPage() {
                 </p>
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${
-                    displayData?.status === "active"
+                    displayData?.status === "Active"
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {displayData?.status === "active" ? "Aktif" : "Tidak Aktif"}
+                  {displayData?.status === "Active" ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>

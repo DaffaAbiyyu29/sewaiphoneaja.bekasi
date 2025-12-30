@@ -51,8 +51,8 @@ const MstUser = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive"),
-      defaultValue: "active",
+      type: DataTypes.ENUM("Active", "Inactive"),
+      defaultValue: "Active",
       allowNull: false,
     },
     created_at: {

@@ -387,34 +387,6 @@ export default function DetailUnitPage() {
             />
           </div>
         </div>
-
-        {/* Refresh Button */}
-        <div className="flex justify-center">
-          <button
-            className="px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => {
-              setRefreshKeyPrice((prev) => prev + 1);
-              setRefreshKeyVariant((prev) => prev + 1);
-            }}
-          >
-            <span className="flex items-center">
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Refresh Tabel
-            </span>
-          </button>
-        </div>
       </div>
 
       <AddVariantDialog

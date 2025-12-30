@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faEye, } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
 import { Switch } from "@headlessui/react";
 

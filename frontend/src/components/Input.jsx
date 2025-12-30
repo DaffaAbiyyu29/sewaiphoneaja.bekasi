@@ -10,6 +10,7 @@ export default function Input({
   error = "",
   rows = 3,
   maxLength = 255,
+  disabled = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -56,6 +57,7 @@ export default function Input({
             placeholder={placeholder}
             rows={rows}
             className={baseClass}
+            disabled={disabled}
           />
         ) : (
           <>
@@ -69,6 +71,7 @@ export default function Input({
                   ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   : ""
               }`}
+              disabled={disabled}
             />
 
             {type === "password" && showPasswordToggle && (

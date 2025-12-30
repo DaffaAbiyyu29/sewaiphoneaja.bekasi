@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
 
 const formatDate = (dateString) => {
@@ -41,7 +41,7 @@ const getStatusBadgeColor = (status) => {
   }
 };
 
-export const RentalColumns = (onDeleteClick) => [
+export const RentalColumns = () => [
   {
     header: "No",
     render: (_, index) => index + 1,

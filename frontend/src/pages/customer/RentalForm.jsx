@@ -58,7 +58,7 @@ const initialUnit = {
 // Main Component
 // ===
 
-const RentalForm = ({ onClose }) => {
+const RentalForm = () => {
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -867,6 +867,14 @@ const RentalForm = ({ onClose }) => {
                   Upload Foto KTP
                 </label>
 
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleImageChange(e.target.files[0])}
+                  className="hidden"
+                />
+
                 {!imagePreview ? (
                   <div
                     className={`relative border-3 border-dashed rounded-xl cursor-pointer transition-all duration-300 p-10 min-h-[300px] flex items-center justify-center group ${
@@ -880,7 +888,10 @@ const RentalForm = ({ onClose }) => {
                     onDragOver={handleDrag}
                     onDragLeave={handleDrag}
                     onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
                   >
                     <div className="text-center">
                       <div className="relative inline-block mb-6">
@@ -911,14 +922,6 @@ const RentalForm = ({ onClose }) => {
                         PNG, JPG, WEBP • Maks. 5MB
                       </p>
                     </div>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => handleImageChange(e.target.files[0])}
-                      className="hidden"
-                    />
                   </div>
                 ) : (
                   <div className="space-y-4">

@@ -408,6 +408,14 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
                 Upload Bukti Transfer / Pembayaran
               </label>
 
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => handleImageChange(e.target.files[0])}
+                className="hidden"
+              />
+
               {!imagePreview ? (
                 <div
                   className={`relative border-3 border-dashed rounded-xl cursor-pointer transition-all duration-300 p-10 min-h-[300px] flex items-center justify-center group ${
@@ -452,14 +460,6 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
                       PNG, JPG, WEBP • Maks. 5MB
                     </p>
                   </div>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => handleImageChange(e.target.files[0])}
-                    className="hidden"
-                  />
                 </div>
               ) : (
                 <div className="space-y-4">

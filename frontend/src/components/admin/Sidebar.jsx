@@ -11,6 +11,7 @@ import {
   faAngleDoubleLeft,
   faAngleDoubleRight,
   faXmark,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { createPortal } from "react-dom";
 
@@ -19,7 +20,8 @@ const generalItems = [{ name: "Dashboard", path: "/dashboard", icon: faHome }];
 
 const masterItems = [
   { name: "Unit", path: "/menu/unit", icon: faMobile },
-  { name: "Customer", path: "/menu/customer", icon: faUser },
+  { name: "Customer", path: "/menu/customer", icon: faUsers },
+  { name: "User", path: "/menu/user", icon: faUser },
 ];
 
 const transactionItems = [
@@ -36,7 +38,7 @@ function Tooltip({ text, position }) {
   if (!position) return null;
   return createPortal(
     <div
-      className="fixed z-[9999] bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none"
+      className="fixed z-9999 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-md pointer-events-none"
       style={{
         top: position.y,
         left: position.x + 10,

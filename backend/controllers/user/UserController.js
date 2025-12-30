@@ -1,6 +1,7 @@
 const MstUser = require("../../models/MstUser");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const bcrypt = require("bcrypt");
+const { deletePhoto } = require("../../middleware/upload");
 
 const { generateIncrementId } = require("../../helpers/generateID");
 
@@ -19,6 +20,11 @@ const createUser = async (req, res) => {
       profile_picture,
       created_by,
     } = req.body;
+
+    // If a file was uploaded by multer, use its filename as profile_picture
+    if (req.file && req.file.filename) {
+      profile_picture = req.file.filename;
+    }
 
     const missing = [];
     if (!nik) missing.push("nik");
@@ -58,7 +64,7 @@ const createUser = async (req, res) => {
       birth_place: birth_place || null,
       birth_date: birth_date || null,
       profile_picture: profile_picture || null,
-      status: "active",
+      status: "Active",
       created_at: new Date(),
       created_by: created_by || null,
     });
@@ -99,8 +105,9 @@ const getUsers = async (req, res) => {
 
 const getUserById = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const user = await MstUser.findOne({ where: { user_id: userId } });
+    const { nik } = req.params;
+
+    const user = await MstUser.findOne({ where: { nik: nik } });
     if (!user) return resError(res, "User tidak ditemukan", "Not Found", 404);
     const data = user.toJSON();
     delete data.password;
@@ -112,19 +119,17 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    // accept user_id from URL param (user_id or userId) or from body
-    const user_id = req.params.user_id || req.params.userId || req.body.user_id;
-    if (!user_id)
-      return resError(res, "Parameter user_id diperlukan", "Bad Request", 400);
-    // debug log to help when testing
-    console.log(
-      "updateUser params:",
-      req.params,
-      "body keys:",
-      Object.keys(req.body)
-    );
+    // 🔹 ambil nik dari URL param atau body
+    const nik = req.params.nik || req.body.nik;
+    if (!nik) {
+      return resError(res, "Parameter nik diperlukan", "Bad Request", 400);
+    }
+
+    console.log("updateUser nik:", nik);
+    console.log("body keys:", Object.keys(req.body));
+    console.log("req.file:", req.file);
+
     const {
-      nik,
       name,
       email,
       password,
@@ -133,17 +138,27 @@ const updateUser = async (req, res) => {
       gender,
       birth_place,
       birth_date,
-      profile_picture,
       status,
-      created_by,
       updated_by,
     } = req.body;
 
-    const user = await MstUser.findOne({ where: { user_id } });
-    if (!user) return resError(res, "User tidak ditemukan", "Not Found", 404);
+    // 🔹 cari user berdasarkan NIK
+    const user = await MstUser.findOne({ where: { nik } });
+    if (!user) {
+      return resError(res, "User tidak ditemukan", "Not Found", 404);
+    }
 
+    // 🔹 handle foto
+    let newProfilePicture = user.profile_picture;
+    if (req.file && req.file.filename) {
+      if (user.profile_picture) {
+        deletePhoto(user.profile_picture);
+      }
+      newProfilePicture = req.file.filename;
+    }
+
+    // 🔹 data update
     const updateData = {
-      nik: nik ?? user.nik,
       name: name ?? user.name,
       email: email ?? user.email,
       telp: telp ?? user.telp,
@@ -151,37 +166,49 @@ const updateUser = async (req, res) => {
       gender: gender ?? user.gender,
       birth_place: birth_place ?? user.birth_place,
       birth_date: birth_date ?? user.birth_date,
-      profile_picture: profile_picture ?? user.profile_picture,
+      profile_picture: newProfilePicture,
       status: status ?? user.status,
-      created_by: created_by || user.created_by,
       updated_at: new Date(),
       updated_by: updated_by || user.updated_by,
     };
 
+    // 🔹 update password (kalau dikirim)
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
     await user.update(updateData);
+
     const data = user.toJSON();
     delete data.password;
+
     return resSuccess(res, "User berhasil diperbarui", data);
   } catch (err) {
+    console.error(err);
     return resError(res, "Gagal memperbarui user", err.message, 500);
   }
 };
 
 const deleteUser = async (req, res) => {
   try {
-    const user_id = req.params.user_id || req.params.userId || req.body.user_id;
-    if (!user_id)
-      return resError(res, "Parameter user_id diperlukan", "Bad Request", 400);
-    console.log("deleteUser params:", req.params);
-    const deleted = await MstUser.destroy({ where: { user_id } });
-    if (!deleted)
+    // 🔹 ambil nik dari param atau body
+    const nik = req.params.nik || req.body.nik;
+    if (!nik) {
+      return resError(res, "Parameter nik diperlukan", "Bad Request", 400);
+    }
+
+    console.log("deleteUser nik:", nik);
+
+    // 🔹 hapus user berdasarkan NIK
+    const deleted = await MstUser.destroy({ where: { nik } });
+
+    if (!deleted) {
       return resError(res, "User tidak ditemukan", "Not Found", 404);
+    }
+
     return resSuccess(res, "User berhasil dihapus");
   } catch (err) {
+    console.error(err);
     return resError(res, "Gagal menghapus user", err.message, 500);
   }
 };

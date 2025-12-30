@@ -21,6 +21,10 @@ import RentalForm from "./pages/customer/RentalForm";
 import RentalPage from "./pages/admin/rental";
 import RentalDetail from "./pages/admin/rental/Detail";
 import CustomerPage from "./pages/admin/customer/Index";
+import UserPage from "./pages/admin/user/Index";
+import CreateUserPage from "./pages/admin/user/Create";
+import DetailUserPage from "./pages/admin/user/Detail";
+import UpdateUserPage from "./pages/admin/user/Update";
 import ProfileUserPage from "./pages/admin/profile";
 
 export default function App() {
@@ -66,6 +70,10 @@ export default function App() {
           />
           <Route path="menu/unit/:unitCode" element={<DetailUnit />} />
           <Route path="menu/customer" element={<CustomerPage />} />
+          <Route path="menu/user" element={<UserPage />} />
+          <Route path="menu/user/create" element={<CreateUserPage />} />
+          <Route path="menu/user/:nik" element={<DetailUserPage />} />
+          <Route path="menu/user/update/:nik" element={<UpdateUserPage />} />
           <Route path="menu/rental" element={<RentalPage />} />
           <Route path="menu/rental/:rentId" element={<RentalDetail />} />
           <Route path="menu/profile" element={<ProfileUserPage />} />
