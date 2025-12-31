@@ -21,6 +21,7 @@ import RentalForm from "./pages/customer/RentalForm";
 import RentalPage from "./pages/admin/rental";
 import RentalDetail from "./pages/admin/rental/Detail";
 import CustomerPage from "./pages/admin/customer/Index";
+import CustomerDetailPage from "./pages/admin/customer/Detail";
 import UserPage from "./pages/admin/user/Index";
 import CreateUserPage from "./pages/admin/user/Create";
 import DetailUserPage from "./pages/admin/user/Detail";
@@ -70,6 +71,7 @@ export default function App() {
           />
           <Route path="menu/unit/:unitCode" element={<DetailUnit />} />
           <Route path="menu/customer" element={<CustomerPage />} />
+          <Route path="menu/customer/:customerId" element={<CustomerDetailPage />} />
           <Route path="menu/user" element={<UserPage />} />
           <Route path="menu/user/create" element={<CreateUserPage />} />
           <Route path="menu/user/:nik" element={<DetailUserPage />} />

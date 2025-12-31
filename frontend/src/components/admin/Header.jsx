@@ -11,6 +11,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { getUserInfo } from "../../helpers/GetUserInfo";
 import axios from "axios";
 import { getToken } from "../../helpers/GetToken";
+import Avatar from "../Avatar";
 
 export default function Header({ onMenuClick }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -22,6 +23,7 @@ export default function Header({ onMenuClick }) {
 
   const { unitCode } = useParams();
   const { nik } = useParams();
+  const { customerId } = useParams();
   const { variantUnitCode } = useParams();
   const { rentId } = useParams();
 
@@ -36,6 +38,7 @@ export default function Header({ onMenuClick }) {
     { name: "Detail Penyewaan", path: "/menu/rental/" + rentId },
 
     { name: "Manajemen Customer", path: "/menu/customer" },
+    { name: "Detail Customer", path: "/menu/customer/" + customerId },
     { name: "Manajemen User", path: "/menu/user" },
     { name: "Tambah User", path: "/menu/user/create" },
     { name: "Detail User", path: "/menu/user/" + nik },
@@ -120,9 +123,9 @@ export default function Header({ onMenuClick }) {
 
       {/* Kanan */}
       <div className="flex items-center space-x-4">
-        <button className="text-gray-500 hover:text-sky-600 transition p-2 rounded-full hover:bg-gray-100">
+        {/* <button className="text-gray-500 hover:text-sky-600 transition p-2 rounded-full hover:bg-gray-100">
           <FontAwesomeIcon icon={faBell} className="w-5 h-5" />
-        </button>
+        </button> */}
 
         {/* Profil */}
         <div className="relative" ref={dropdownRef}>
@@ -130,11 +133,12 @@ export default function Header({ onMenuClick }) {
             className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <img
+            {/* <img
               src={`${API_URL}/get-image/${userPhoto}`}
               alt="avatar"
               className="w-8 h-8 rounded-full object-cover"
-            />
+            /> */}
+            <Avatar image={userPhoto} name={userName} size={10} />
             <FontAwesomeIcon
               icon={faCaretDown}
               className={`w-3 h-3 text-gray-400 transition-transform ${
@@ -145,12 +149,8 @@ export default function Header({ onMenuClick }) {
 
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-30">
-              <div className="flex items-center p-3 border-b border-gray-100">
-                <img
-                  src={`${API_URL}/get-image/${userPhoto}`}
-                  alt="avatar"
-                  className="w-10 h-10 rounded-full mr-3 object-cover"
-                />
+              <div className="flex items-center gap-3 p-3 border-b border-gray-100">
+                <Avatar image={userPhoto} name={userName} />
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">
                     {userName}

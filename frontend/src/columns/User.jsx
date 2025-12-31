@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
 import { Switch } from "@headlessui/react";
+import Avatar from "../components/Avatar";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,23 +46,7 @@ export const UserColumns = (onDeleteClick) => [
   {
     header: "Photo",
     render: (row) => {
-      const initial = row.name ? row.name.charAt(0).toUpperCase() : "?";
-
-      return (
-        <div className="flex justify-center items-center">
-          {row.profile_picture ? (
-            <img
-              src={`${API_URL}/get-image/${row.profile_picture}`}
-              alt={row.name}
-              className="w-10 h-10 rounded-full object-cover border"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center font-semibold text-white">
-              {initial}
-            </div>
-          )}
-        </div>
-      );
+      return <Avatar image={row.profile_picture} name={row.name} size={10} />;
     },
   },
   {

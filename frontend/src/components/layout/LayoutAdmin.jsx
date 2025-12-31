@@ -17,7 +17,7 @@ export default function LayoutAdmin() {
 
   return (
     <>
-      <div className="h-screen flex bg-gray-50 overflow-hidden">
+      <div className="h-screen flex bg-gray-50">
         {/* === SIDEBAR DESKTOP === */}
         <div
           className={`hidden md:block fixed top-0 left-0 h-full bg-white shadow-md transition-all duration-300 z-30 ${
@@ -38,7 +38,7 @@ export default function LayoutAdmin() {
 
         {/* === MAIN CONTENT === */}
         <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
+          className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
             collapsed ? "md:ml-20" : "md:ml-64"
           }`}
         >

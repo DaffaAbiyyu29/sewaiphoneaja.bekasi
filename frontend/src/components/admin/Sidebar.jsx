@@ -28,11 +28,6 @@ const transactionItems = [
   { name: "Penyewaan", path: "/menu/rental", icon: faClipboardList },
 ];
 
-const settingItems = [
-  { name: "Settings", path: "/settings", icon: faCogs },
-  { name: "Manajemen Akses", path: "/access-management", icon: faUserCog },
-];
-
 // ===== Tooltip Component (pakai portal biar gak ke-clip) =====
 function Tooltip({ text, position }) {
   if (!position) return null;
@@ -151,7 +146,6 @@ export default function Sidebar({
             {renderNavSection("Umum", generalItems, collapsed)}
             {renderNavSection("Master Data", masterItems, collapsed)}
             {renderNavSection("Transaksi", transactionItems, collapsed)}
-            {/* {renderNavSection("Pengaturan", settingItems, collapsed, false)} */}
           </nav>
 
           <div className="p-3 border-t border-gray-200">
@@ -210,7 +204,6 @@ export default function Sidebar({
             {renderNavSection("Umum", generalItems, false)}
             {renderNavSection("Master Data", masterItems, false)}
             {renderNavSection("Transaksi", transactionItems, false)}
-            {renderNavSection("Pengaturan", settingItems, false, false)}
           </div>
         </div>
       </div>
