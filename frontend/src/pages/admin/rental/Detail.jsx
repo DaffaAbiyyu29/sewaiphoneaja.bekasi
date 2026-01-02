@@ -29,6 +29,7 @@ import {
   formatDate,
   formatTime,
 } from "../../../helpers/Format";
+import { getUserInfo } from "../../../helpers/GetUserInfo";
 
 // Helper SVG Components
 const SVGLoader = ({ className, size = 20 }) => (
@@ -88,6 +89,10 @@ const getStatusColor = (status) => {
     return "bg-yellow-100 text-yellow-800";
   }
 
+  if (lower.includes("rejected")) {
+    return "bg-red-100 text-red-800";
+  }
+
   switch (status) {
     case "Open":
       return "bg-blue-100 text-blue-800";
@@ -140,6 +145,9 @@ export default function RentalDetailPage() {
     console.log(showDetail);
   };
 
+  const user = getUserInfo();
+  console.log(user.name);
+
   const handleApproveRental = async (rentId) => {
     if (!rentId) return;
 
@@ -160,7 +168,7 @@ export default function RentalDetailPage() {
       const token = getToken();
       await axios.put(
         `${API_URL}/api/rental/${rentId}/approve`,
-        {},
+        { approval_by: user.name, updated_by: user.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -178,6 +186,10 @@ export default function RentalDetailPage() {
         status: "Waiting Payment",
         approval_date: new Date().toISOString(),
       }));
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (err) {
       console.error(err);
       Swal.fire({
@@ -222,7 +234,7 @@ export default function RentalDetailPage() {
       const token = getToken();
       await axios.put(
         `${API_URL}/api/rental/${rentId}/reject`,
-        { notes },
+        { notes, updated_by: user.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -236,6 +248,10 @@ export default function RentalDetailPage() {
 
       // Update local rental state
       setRental((prev) => ({ ...prev, status: "Rejected Approval" }));
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (err) {
       console.error(err);
       Swal.fire({

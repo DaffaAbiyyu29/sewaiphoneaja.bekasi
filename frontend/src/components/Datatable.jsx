@@ -30,6 +30,7 @@ const useDebounce = (value, delay) => {
 export default function Datatable({
   key,
   apiUrl,
+  dataValue,
   columns,
   allowAdd = false,
   onAddClick,
@@ -51,27 +52,37 @@ export default function Datatable({
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const res = await axios.get(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-        params: { page, limit, search: debouncedSearch, orderBy, orderDir },
-      });
+    if (!dataValue) {
+      try {
+        const res = await axios.get(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+          params: { page, limit, search: debouncedSearch, orderBy, orderDir },
+        });
 
-      const apiData = res.data;
-      setData(apiData.data || []);
-      setTotalPages(apiData.totalPages || 1);
-      setTotalDataCount(apiData.totalData || 0);
-    } catch (err) {
-      console.error(err);
-      setData([]);
-      setTotalPages(1);
-      setTotalDataCount(0);
-    } finally {
-      setIsLoading(false);
+        const apiData = res.data;
+        setData(apiData.data || []);
+        setTotalPages(apiData.totalPages || 1);
+        setTotalDataCount(apiData.totalData || 0);
+      } catch (err) {
+        console.error(err);
+        setData([]);
+        setTotalPages(1);
+        setTotalDataCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setData(dataValue.data || []);
+      setTotalPages(dataValue.pagination?.totalPages || 1);
+      setTotalDataCount(dataValue.pagination?.totalData || 0);
+
+      if (dataValue.data && dataValue.pagination) {
+        setIsLoading(false);
+      }
     }
-  }, [key, apiUrl, page, limit, debouncedSearch, orderBy, orderDir]);
+  }, [key, apiUrl, dataValue, page, limit, debouncedSearch, orderBy, orderDir]);
 
   useEffect(() => {
     fetchData();

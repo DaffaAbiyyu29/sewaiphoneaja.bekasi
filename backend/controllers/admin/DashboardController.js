@@ -119,6 +119,7 @@ const getDashboardAdmin = async (req, res) => {
             literal("(DATEDIFF(end_rent_date, start_rent_date) + 1)"),
             "duration",
           ],
+          "invoice_number",
           "total_price",
           "status",
           "created_at",
@@ -143,7 +144,8 @@ const getDashboardAdmin = async (req, res) => {
 
     // Mapping Data
     const formattedRecentOrders = recentOrdersResult.rows.map((order) => ({
-      order_id: order.get("order_id"),
+      rent_id: order.get("order_id"),
+      invoice_number: order.invoice_number,
       customer_name: order.customer?.fullname || "-",
       device_name:
         order.details
