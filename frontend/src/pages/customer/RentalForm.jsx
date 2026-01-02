@@ -140,7 +140,18 @@ const RentalForm = () => {
         mappedUnit.prices?.filter((p) => p.status === "Active") || [];
       if (activePrices.length > 0) setSelectedPrice(activePrices[0]);
 
-      if (mappedUnit.variants.length > 0) {
+      console.log(mappedUnit.variants[0]);
+
+      const vForm = JSON.parse(sessionStorage.getItem("selectedUnit"));
+      console.log(vForm.unitVariant);
+
+      if (vForm.unitVariant) {
+        setSelectedVariant(vForm.unitVariant);
+        setMainImage({
+          id: vForm.unitVariant.variant_unit_code,
+          src: vForm.unitVariant.photo,
+        });
+      } else if (mappedUnit.variants.length > 0) {
         setSelectedVariant(mappedUnit.variants[0]);
         setMainImage({
           id: mappedUnit.variants[0].variant_unit_code,

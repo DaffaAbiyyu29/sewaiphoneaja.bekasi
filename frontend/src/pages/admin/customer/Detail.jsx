@@ -65,7 +65,7 @@ export default function DetailCustomerPage() {
 
                       <div className="relative aspect-[1.6/1] rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
                         <img
-                          src={`${API_URL}/public/images/${customerData.ktp_image}`}
+                          src={`${API_URL}/get-image/${customerData.ktp_image}`}
                           alt={customerData.fullname}
                           onError={() => setImageError(true)}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition duration-300"

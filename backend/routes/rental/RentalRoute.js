@@ -11,7 +11,7 @@ const {
   approveRent,
   rejectRent,
   collectUnit,
-  returnUnit
+  returnUnit,
 } = require("../../controllers/rental/RentalController");
 const { verifyToken } = require("../../middleware/middleware");
 const { resError, resSuccess } = require("../../helpers/sendResponse");
@@ -22,7 +22,7 @@ router.get("/pesanan", (req, res) => {
 
 router.get("/pesanan/:search", getRentByInvoiceOrNik);
 
-router.post("/", verifyToken, createRent);
+router.post("/", createRent);
 router.get("/", verifyToken, getRents);
 router.get("/:rentId", verifyToken, getRentById);
 router.put("/:rentId", verifyToken, updateRent);
