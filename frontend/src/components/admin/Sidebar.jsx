@@ -188,10 +188,16 @@ export default function Sidebar({
                 alt="Logo"
                 className="w-10 h-10 mr-2"
               />
-              <span className="font-bold text-sky-900 text-lg">
-                SewaIphoneAja.Bekasi
-              </span>
+              <div className="flex flex-col text-sm leading-tight">
+                <span className="font-bold text-sky-900">
+                  SewaIphoneAja.Bekasi
+                </span>
+                <span className="text-xs text-gray-500">
+                  Penyewaan iPhone Bekasi
+                </span>
+              </div>
             </div>
+
             <button
               onClick={() => setMobileOpen(false)}
               className="text-gray-600 hover:text-red-500 transition"

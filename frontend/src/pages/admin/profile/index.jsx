@@ -1,5 +1,5 @@
 // src/pages/ProfileUserPage.jsx
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -27,9 +27,11 @@ export default function ProfileUserPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false); // State untuk modal foto profil
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchUserData();
@@ -76,13 +78,47 @@ export default function ProfileUserPage() {
   };
 
   const handleSave = async () => {
+    console.log(imageFile);
     console.log("Data yang akan disimpan:", formEditData);
-
+    setFormEditData((prevData) => ({
+      ...prevData,
+      photo: imageFile,
+    }));
     try {
-      // **TODO: Ganti dengan endpoint PUT/PATCH API yang sebenarnya**
       const token = getToken();
-      await axios.put(`${API_URL}/api/user/${userData.nik}`, formEditData, {
-      headers: { Authorization: `Bearer ${token}` },
+
+      const userPayload = new FormData();
+
+      userPayload.append("user_id", formEditData.user_id || "");
+      userPayload.append("nik", formEditData.nik || "");
+      userPayload.append("name", formEditData.name || "");
+      userPayload.append("email", formEditData.email || "");
+      userPayload.append("telp", formEditData.telp || "");
+      userPayload.append("address", formEditData.address || "");
+      userPayload.append("gender", formEditData.gender || "");
+      userPayload.append("birth_place", formEditData.birth_place || "");
+      userPayload.append("birth_date", formEditData.birth_date || "");
+      userPayload.append("status", formEditData.status || "active");
+
+      userPayload.append("created_at", formEditData.created_at || "");
+      userPayload.append("created_by", formEditData.created_by || "");
+      userPayload.append("updated_at", new Date().toISOString());
+      userPayload.append("updated_by", formEditData.updated_by || "");
+
+      // handle foto
+      if (imageFile) {
+        userPayload.append("profile_picture", imageFile.name);
+        userPayload.append("photo", imageFile);
+      } else {
+        userPayload.append(
+          "profile_picture",
+          formEditData.profile_picture || ""
+        );
+        userPayload.append("photo", "");
+      }
+
+      await axios.put(`${API_URL}/api/user/${userData.nik}`, userPayload, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       // Mock success: Update userData state dengan formEditData
@@ -93,6 +129,73 @@ export default function ProfileUserPage() {
       console.error("Gagal menyimpan data:", err);
       //setError(err.response?.data?.message || "Gagal menyimpan perubahan");
       alert("Gagal menyimpan perubahan. Cek console log.");
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleImageChange = (file) => {
+    if (!file) {
+      removeImage();
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError("Foto harus jpg, png, atau webp");
+      removeImage();
+      return;
+    }
+
+    const maxSizeMB = 5;
+    if (file.size / 1024 / 1024 > maxSizeMB) {
+      setError(`Ukuran foto maksimal ${maxSizeMB}MB`);
+      removeImage();
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleImageChange(file);
+
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      try {
+        const response = await fetch(`${API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error("Failed to upload photo");
+        }
+        const data = await response.json();
+        console.log("Photo uploaded successfully:", data);
+
+        // Update userData dengan photo yang baru
+        setFormEditData((prevData) => ({
+          ...prevData,
+          profile_picture: data.filename || data.photo,
+        }));
+
+        setError((prev) => ({ ...prev, photo: "" }));
+      } catch (error) {
+        console.error("Error uploading photo:", error);
+        setError((prev) => ({
+          ...prev,
+          photo: error.message || "Gagal mengunggah foto",
+        }));
+      }
     }
   };
 
@@ -233,17 +336,18 @@ export default function ProfileUserPage() {
 
             {/* Aksi Button: Edit / Simpan & Batal (Ditempatkan di header kartu) */}
             {isEditing ? (
-              <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
                 <button
                   onClick={handleSave}
-                  className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2 shadow-md text-sm"
+                  className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md text-sm w-25"
                 >
                   <FontAwesomeIcon icon={faSave} size="1x" />
                   Simpan
                 </button>
+
                 <button
                   onClick={handleEditToggle}
-                  className="bg-gray-400 text-white px-4 py-2 rounded-xl hover:bg-gray-500 transition-colors flex items-center gap-2 shadow-md text-sm"
+                  className="bg-gray-400 text-white px-4 py-2 rounded-xl hover:bg-gray-500 transition-colors flex items-center justify-center gap-2 shadow-md text-sm w-25"
                 >
                   <FontAwesomeIcon icon={faTimes} size="1x" />
                   Batal
@@ -264,7 +368,13 @@ export default function ProfileUserPage() {
             {/* Profile Picture & Inisial/Foto (Kiri) */}
             <div className="relative mb-6 md:mb-0 md:mr-8 flex flex-col items-center">
               <div className="w-32 h-32 rounded-full border-4 border-blue-500 shadow-lg overflow-hidden bg-gray-200">
-                {displayData?.profile_picture ? (
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt={displayData.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                ) : displayData?.profile_picture ? (
                   <img
                     src={profilePictureUrl}
                     alt={displayData.name}
@@ -281,7 +391,7 @@ export default function ProfileUserPage() {
               {displayData?.profile_picture && isEditing && (
                 <button
                   // Jika mode edit, tampilkan alert. Jika mode view, buka modal.
-                  onClick={() => alert("Fungsi ganti foto...")}
+                  onClick={() => fileInputRef.current?.click()}
                   title={isEditing ? "Ganti Foto Profil" : "Lihat Foto Profil"}
                   className="absolute bottom-1 right-1 bg-white text-blue-600 p-2 rounded-full shadow-xl border border-gray-100 hover:bg-blue-50 transition-colors"
                 >
@@ -292,9 +402,6 @@ export default function ProfileUserPage() {
 
             {/* Nama, NIK, dan Status (Kanan) */}
             <div className="text-center md:text-left flex-1 w-full">
-              <h2 className="text-xl font-semibold text-gray-500 mb-2">
-                Nama Lengkap
-              </h2>
               {isEditing ? (
                 <Input
                   type="text"
@@ -315,7 +422,7 @@ export default function ProfileUserPage() {
               )}
 
               {/* NIK dan Status Sejajar */}
-              <div className="flex items-center justify-center md:justify-start flex-wrap mt-3 gap-x-4 gap-y-2">
+              <div className="flex items-center justify-center md:justify-start flex-wrap mt-6 md:mt-3 gap-x-4 gap-y-2">
                 <p className="text-gray-500 text-sm flex items-center">
                   <FontAwesomeIcon
                     icon={faIdCard}
@@ -363,7 +470,6 @@ export default function ProfileUserPage() {
                 {/* Jenis Kelamin */}
                 <div className={isEditing ? "col-span-1" : "col-span-2"}>
                   <DetailItem
-                    icon={faUser}
                     label="Jenis Kelamin"
                     name="gender"
                     value={displayData?.gender}
@@ -379,7 +485,6 @@ export default function ProfileUserPage() {
                 {/* Tempat Lahir */}
                 <div className={isEditing ? "col-span-1" : "col-span-2"}>
                   <DetailItem
-                    icon={faCalendarDays}
                     label="Tempat Lahir"
                     name="birth_place"
                     value={displayData?.birth_place}
@@ -390,7 +495,6 @@ export default function ProfileUserPage() {
                 {/* Tanggal Lahir */}
                 <div className={isEditing ? "col-span-1" : "col-span-2"}>
                   <DetailItem
-                    icon={faCalendarDays}
                     label="Tanggal Lahir"
                     name="birth_date"
                     value={displayData?.birth_date} // YYYY-MM-DD
@@ -398,6 +502,7 @@ export default function ProfileUserPage() {
                     type="date"
                   />
                 </div>
+                <div></div>
               </div>
             </div>
 
@@ -468,7 +573,6 @@ export default function ProfileUserPage() {
               <div className="space-y-6">
                 {/* Email */}
                 <DetailItem
-                  icon={faEnvelope}
                   label="Email"
                   name="email"
                   value={displayData?.email}
@@ -478,7 +582,6 @@ export default function ProfileUserPage() {
 
                 {/* Nomor Telepon */}
                 <DetailItem
-                  icon={faPhone}
                   label="Nomor Telepon"
                   name="telp"
                   value={displayData?.telp}
@@ -488,17 +591,27 @@ export default function ProfileUserPage() {
 
                 {/* Alamat (Menggunakan isMultiline=true untuk Input/Textarea) */}
                 <DetailItem
-                  icon={faMapLocationDot}
                   label="Alamat"
                   name="address"
                   value={displayData?.address}
                   isEditing={isEditing}
                   isMultiline={true}
                 />
+                <div></div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Input file untuk memilih foto */}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          // onChange={handlePhotoChange}
+          onChange={(e) => handleImageChange(e.target.files[0])}
+          className="hidden"
+          ref={fileInputRef}
+        />
       </div>
     </div>
   );

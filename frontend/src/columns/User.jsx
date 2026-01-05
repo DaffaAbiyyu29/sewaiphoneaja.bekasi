@@ -64,15 +64,19 @@ export const UserColumns = (onDeleteClick) => [
   {
     header: "Alamat",
     accessor: "address",
+    sortable: true,
     render: (row) => row.address || "-",
   },
   {
     header: "Gender",
     accessor: "gender",
+    sortable: true,
     render: (row) => (row.gender === "M" ? "Laki-laki" : "Perempuan"),
   },
   {
     header: "TTL",
+    accessor: "birth_place",
+    sortable: true,
     render: (row) => `${row.birth_place || "-"}, ${formatDate(row.birth_date)}`,
   },
   {

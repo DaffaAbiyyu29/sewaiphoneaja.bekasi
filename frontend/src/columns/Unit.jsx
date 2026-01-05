@@ -22,11 +22,6 @@ export const UnitColumns = (onDeleteClick) => [
     render: (_, index) => index + 1,
   },
   {
-    header: "Kode Unit",
-    accessor: "unit_code",
-    sortable: true,
-  },
-  {
     header: "Nama Unit",
     accessor: "unit_name",
     sortable: true,

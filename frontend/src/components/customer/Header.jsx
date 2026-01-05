@@ -1,5 +1,6 @@
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
-import { Dialog, DialogPanel } from "@headlessui/react";
 import { Link, useLocation } from "react-router-dom";
 
 const navigation = [
@@ -13,60 +14,35 @@ export default function Header() {
   const location = useLocation();
 
   return (
-    // <header className="absolute inset-x-0 top-0 z-50">
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <nav
-        aria-label="Global"
-        className="flex items-center justify-between p-6 lg:px-8"
-      >
-        <div className="flex items-center lg:flex-1 gap-2">
-          <a href="/" className="flex items-center gap-2">
-            <img
-              alt="Logo Sewa iPhone"
-              src="/images/sewaiphoneaja.png"
-              className="h-8 w-auto"
-            />
-            <span className="font-semibold text-gray-900 text-sm sm:text-base">
-              sewaiphoneaja.bekasi
+      <nav className="relative flex items-center justify-between px-4 py-3 lg:px-8">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src="/images/sewaiphoneaja.png"
+            alt="Logo"
+            className="w-10 h-10 object-contain"
+          />
+          <div className="flex flex-col text-sm leading-tight">
+            <span className="font-bold text-sky-900">SewaIphoneAja.Bekasi</span>
+            <span className="text-xs text-gray-500">
+              Penyewaan iPhone Bekasi
             </span>
-          </a>
-        </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-          >
-            <span className="sr-only">Open main menu</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              />
-            </svg>
-          </button>
-        </div>
+          </div>
+        </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden lg:flex lg:gap-x-12">
+        {/* Desktop Menu - CENTER */}
+        <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-x-12">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-sm/6 font-semibold text-gray-900 pb-1 border-b-2 ${
+                className={`text-sm font-semibold pb-1 border-b-2 transition ${
                   isActive
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent hover:border-gray-300"
+                    ? "border-blue-900 text-blue-900"
+                    : "border-transparent hover:border-gray-300 text-gray-900"
                 }`}
               >
                 {item.name}
@@ -75,86 +51,84 @@ export default function Header() {
           })}
         </div>
 
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          {/* <a href="#" className="text-sm/6 font-semibold text-gray-900">
-            Log in <span aria-hidden="true">&rarr;</span>
-          </a> */}
-        </div>
+        {/* Mobile Button */}
+        <button
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <FontAwesomeIcon icon={faBars} className="w-5 h-5 text-gray-700" />
+        </button>
       </nav>
 
-      {/* Mobile Menu */}
-      <Dialog
-        open={mobileMenuOpen}
-        onClose={setMobileMenuOpen}
-        className="lg:hidden"
+      {/* Mobile Overlay */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          mobileMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
       >
-        <div className="fixed inset-0 z-50" />
-        <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-          <div className="flex items-center justify-between">
-            <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Your Company</span>
+        {/* Mobile Drawer */}
+        <div
+          className={`absolute top-0 left-0 h-full w-full bg-white rounded-b-2xl shadow-xl transform transition-transform duration-300 ${
+            mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
               <img
-                alt=""
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                className="h-8 w-auto"
+                src="/images/sewaiphoneaja.png"
+                alt="Logo"
+                className="w-9 h-9"
               />
-            </a>
+              <div className="flex flex-col text-sm leading-tight">
+                <span className="font-bold text-sky-900">
+                  SewaIphoneAja.Bekasi
+                </span>
+                <span className="text-xs text-gray-500">
+                  Penyewaan iPhone Bekasi
+                </span>
+              </div>
+            </div>
             <button
-              type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="-m-2.5 rounded-md p-2.5 text-gray-700"
+              className="text-gray-600 hover:text-red-500 transition"
             >
-              <span className="sr-only">Close menu</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="size-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18 18 6M6 6l12 12"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faXmark} className="w-6 h-6" />
             </button>
           </div>
 
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="space-y-2 py-6">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold ${
-                        isActive
-                          ? "text-blue-600 border-b-2 border-blue-600"
-                          : "text-gray-900 hover:bg-gray-50"
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="py-6">
-                {/* <a
-                  href="#"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                >
-                  Log in
-                </a> */}
-              </div>
+          {/* Drawer Menu */}
+          <div className="p-4">
+            <p className="text-xs font-bold uppercase text-sky-900 tracking-wide mb-2">
+              Menu Utama
+            </p>
+
+            <div className="flex flex-col gap-1">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-4 py-3 rounded-lg text-sm transition ${
+                      isActive
+                        ? "bg-sky-100 text-sky-900 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
             </div>
           </div>
-        </DialogPanel>
-      </Dialog>
+        </div>
+      </div>
     </header>
   );
 }

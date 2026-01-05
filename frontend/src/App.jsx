@@ -1,7 +1,6 @@
 // import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/customer/LandingPage";
-import LandingPage2 from "./pages/customer/Dashboard";
+import DashboardCust from "./pages/customer/Dashboard";
 import Pesanan from "./pages/customer/Pesanan";
 import Catalog from "./pages/customer/Unit";
 import { Loader } from "./components/Loader";
@@ -45,7 +44,7 @@ export default function App() {
     <PageLoader>
       <Routes>
         <Route path="/" element={<LayoutCustomer />}>
-          <Route index element={<LandingPage2 />} />
+          <Route index element={<DashboardCust />} />
           <Route path="unit" element={<Catalog />} />
           <Route path="pesanan" element={<Pesanan />} />
         </Route>
@@ -71,7 +70,10 @@ export default function App() {
           />
           <Route path="menu/unit/:unitCode" element={<DetailUnit />} />
           <Route path="menu/customer" element={<CustomerPage />} />
-          <Route path="menu/customer/:customerId" element={<CustomerDetailPage />} />
+          <Route
+            path="menu/customer/:customerId"
+            element={<CustomerDetailPage />}
+          />
           <Route path="menu/user" element={<UserPage />} />
           <Route path="menu/user/create" element={<CreateUserPage />} />
           <Route path="menu/user/:nik" element={<DetailUserPage />} />

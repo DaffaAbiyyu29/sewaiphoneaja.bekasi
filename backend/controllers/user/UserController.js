@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const { deletePhoto } = require("../../middleware/upload");
 
 const { generateIncrementId } = require("../../helpers/generateID");
+const { Op } = require("sequelize");
 
 const createUser = async (req, res) => {
   try {
@@ -81,23 +82,82 @@ const createUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const { user_id, nik, name, status } = req.query;
-    const where = {};
-    if (user_id) where.user_id = user_id;
-    if (nik) where.nik = nik;
-    if (name) where.name = name;
-    if (status) where.status = status;
+    let {
+      page = 1,
+      limit = 10,
+      search = "",
+      orderBy = "created_at",
+      orderDir = "DESC",
+    } = req.query;
 
-    const users = await MstUser.findAll({
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const allowedLimits = [10, 25, 50, 100];
+    if (!allowedLimits.includes(limit)) limit = 10;
+
+    const offset = (page - 1) * limit;
+
+    /** ================= SEARCH (GLOBAL) ================= */
+    const searchableFields = [
+      "user_id",
+      "nik",
+      "name",
+      "email",
+      "telp",
+      "address",
+      "gender",
+      "status",
+      "birth_place",
+    ];
+
+    const where =
+      search.trim() !== ""
+        ? {
+            [Op.or]: searchableFields.map((field) => ({
+              [field]: { [Op.like]: `%${search}%` },
+            })),
+          }
+        : {};
+
+    /** ================= ORDER ================= */
+    const allowedOrderFields = [
+      "user_id",
+      "nik",
+      "name",
+      "email",
+      "telp",
+      "address",
+      "gender",
+      "status",
+      "birth_place",
+      "birth_date",
+      "created_at",
+      "updated_at",
+    ];
+
+    const orderField = allowedOrderFields.includes(orderBy)
+      ? orderBy
+      : "created_at";
+
+    const orderDirection = orderDir.toUpperCase() === "ASC" ? "ASC" : "DESC";
+
+    /** ================= QUERY ================= */
+    const { count, rows } = await MstUser.findAndCountAll({
       where,
-      order: [["created_at", "DESC"]],
+      limit,
+      offset,
+      order: [[orderField, orderDirection]],
+      attributes: { exclude: ["password"] },
     });
-    const data = users.map((u) => {
-      const x = u.toJSON();
-      delete x.password;
-      return x;
+
+    return resSuccess(res, "Daftar user berhasil diambil", rows, {
+      totalData: count,
+      currentPage: page,
+      totalPages: Math.ceil(count / limit),
+      pageSize: limit,
+      allowedPageSizes: allowedLimits,
     });
-    return resSuccess(res, "Daftar user berhasil diambil", data);
   } catch (err) {
     return resError(res, "Gagal mengambil daftar user", err.message, 500);
   }
@@ -124,10 +184,6 @@ const updateUser = async (req, res) => {
     if (!nik) {
       return resError(res, "Parameter nik diperlukan", "Bad Request", 400);
     }
-
-    console.log("updateUser nik:", nik);
-    console.log("body keys:", Object.keys(req.body));
-    console.log("req.file:", req.file);
 
     const {
       name,
@@ -196,8 +252,6 @@ const deleteUser = async (req, res) => {
     if (!nik) {
       return resError(res, "Parameter nik diperlukan", "Bad Request", 400);
     }
-
-    console.log("deleteUser nik:", nik);
 
     // 🔹 hapus user berdasarkan NIK
     const deleted = await MstUser.destroy({ where: { nik } });

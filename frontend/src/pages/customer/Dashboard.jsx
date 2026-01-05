@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SkeletonCard from "../../components/SkeletonCard";
-import DetailUnitDialog from "../../components/DetailUnitDialog";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,6 +16,7 @@ import {
 
 export default function Dashboard() {
   const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   // State untuk data API
   const [units, setUnits] = useState([]);
@@ -459,10 +460,18 @@ export default function Dashboard() {
                 terjangkau
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl">
+                <button
+                  className="bg-white text-blue-900 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  onClick={() =>
+                    window.open("https://wa.me/6285891089058", "_blank")
+                  }
+                >
                   WhatsApp Admin
                 </button>
-                <button className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-4 rounded-xl font-bold transition-all duration-300">
+                <button
+                  className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-4 rounded-xl font-bold transition-all duration-300"
+                  onClick={() => navigate("/unit")}
+                >
                   Lihat Katalog
                 </button>
               </div>

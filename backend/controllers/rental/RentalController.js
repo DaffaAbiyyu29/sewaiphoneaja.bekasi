@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, col, where, cast } = require("sequelize");
 const TrnRent = require("../../models/TrnRental");
 const sequelize = require("../../models/index");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
@@ -22,7 +22,9 @@ const isCustomerActive = (customer) => {
   // - Bisa int: 1/0
   // - Bisa boolean: true/false
 
-  const s = String(customer.status || "").trim().toLowerCase();
+  const s = String(customer.status || "")
+    .trim()
+    .toLowerCase();
 
   // semua variasi "active" dianggap aktif
   if (s === "active") return true;
@@ -64,7 +66,12 @@ const createRent = async (req, res) => {
       });
 
       if (!c) {
-        return resError(res, "Customer tidak ditemukan", "NIK tidak terdaftar", 404);
+        return resError(
+          res,
+          "Customer tidak ditemukan",
+          "NIK tidak terdaftar",
+          404
+        );
       }
 
       customer_id = c.customer_id;
@@ -122,7 +129,7 @@ const createRent = async (req, res) => {
         409
       );
     }
-// --- END VALIDASI CUSTOMER ACTIVE ---
+    // --- END VALIDASI CUSTOMER ACTIVE ---
 
     // generate rent_id dan invoice_number
     const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
@@ -382,11 +389,33 @@ const getRents = async (req, res) => {
 
     // Search functionality
     if (search && search.trim() !== "") {
-      whereClause = {
-        [Op.or]: searchableFields.map((field) => ({
-          [field]: { [Op.like]: `%${search}%` },
-        })),
-      };
+      whereClause[Op.or] = [
+        // Nama Customer
+        where(col("customer.fullname"), {
+          [Op.like]: `%${search}%`,
+        }),
+
+        // Invoice
+        { invoice_number: { [Op.like]: `%${search}%` } },
+
+        // Status
+        // { status: { [Op.like]: `%${search}%` } },
+
+        // Total Harga
+        where(cast(col("total_price"), "CHAR"), {
+          [Op.like]: `%${search}%`,
+        }),
+
+        // Total Bayar
+        where(cast(col("total_paid"), "CHAR"), {
+          [Op.like]: `%${search}%`,
+        }),
+
+        // Sisa Bayar
+        where(cast(col("balance"), "CHAR"), {
+          [Op.like]: `%${search}%`,
+        }),
+      ];
     }
 
     // Filter by customer_id (jika ada)
