@@ -8,8 +8,7 @@ const {
   getRentByInvoiceOrNik,
   deleteRent,
   updateRent,
-  approveRent,
-  rejectRent,
+  cancelRent,
   collectUnit,
   returnUnit,
 } = require("../../controllers/rental/RentalController");
@@ -26,10 +25,10 @@ router.post("/", createRent);
 router.get("/", verifyToken, getRents);
 router.get("/:rentId", verifyToken, getRentById);
 router.put("/:rentId", verifyToken, updateRent);
-router.put("/:rentId/approve", verifyToken, approveRent);
-router.put("/:rentId/reject", verifyToken, rejectRent);
 router.put("/:rentId/collect", verifyToken, collectUnit);
 router.put("/:rentId/return", verifyToken, returnUnit);
+router.put("/:rentId/cancel", verifyToken, cancelRent);
 router.delete("/:rentId", verifyToken, deleteRent);
+
 
 module.exports = router;

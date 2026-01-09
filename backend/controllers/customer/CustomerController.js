@@ -126,7 +126,7 @@ const getCustomerDetail = async (req, res) => {
     const ongoingRent = await TrnRent.findOne({
       where: {
         customer_id: customer.customer_id,
-        status: { [Op.ne]: "Close" },
+        status: { [Op.notIn]: ["Close", "Cancelled"] },
         return_date: null,
       },
       order: [["created_at", "DESC"]],
@@ -194,7 +194,7 @@ const checkCustomerByNIK = async (req, res) => {
     const ongoingRent = await TrnRent.findOne({
       where: {
         customer_id: customer.customer_id,
-        status: { [Op.ne]: "Close" },
+        status: { [Op.notIn]: ["Close", "Cancelled"] },
         return_date: null,
       },
       order: [["created_at", "DESC"]],
@@ -369,7 +369,7 @@ const updateCustomer = async (req, res) => {
     }
 
     //jadi admin bisa blokir/inactive customer melalui update
-    const allowedStatus = ["Active","inactive","Inactive"]; 
+    const allowedStatus = ["Active","Inactive"]; 
 
     // support admin action via query (?action=block / inactive / activate)
     if (req.query.action) {

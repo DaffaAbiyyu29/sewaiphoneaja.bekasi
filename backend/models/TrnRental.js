@@ -41,19 +41,6 @@ const TrnRent = sequelize.define(
       type: DataTypes.DECIMAL(15, 2),
       allowNull: true,
     },
-    is_approval: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0,
-    },
-    approval_by: {
-      type: DataTypes.STRING(16),
-      allowNull: true,
-    },
-    approval_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
     status: {
       type: DataTypes.ENUM(
         "Waiting Approval",
@@ -62,7 +49,8 @@ const TrnRent = sequelize.define(
         "Open",
         "Close",
         "OverDue",
-        "Invalid"
+        "Invalid",
+        "Cancelled"
       ),
       allowNull: true,
       defaultValue: "Open",

@@ -49,9 +49,6 @@ const createRent = async (req, res) => {
       total_price,
       total_paid,
       balance,
-      is_approval,
-      approval_by,
-      approval_date,
       status,
       created_by,
     } = req.body;
@@ -115,7 +112,7 @@ const createRent = async (req, res) => {
     const ongoingRent = await TrnRent.findOne({
       where: {
         customer_id,
-        status: { [Op.ne]: "Close" },
+        status: { [Op.notIn]: ["Close", "Cancelled"] },
         return_date: null,
       },
       order: [["created_at", "DESC"]],
@@ -155,10 +152,7 @@ const createRent = async (req, res) => {
             balance !== undefined && balance !== null && balance !== ""
               ? Number(balance)
               : Number(total_price) - (total_paid || 0),
-          is_approval: is_approval !== undefined ? Number(is_approval) : 0,
-          approval_by: approval_by || null,
-          approval_date: approval_date || null,
-          status: status || "Waiting Approval",
+          status: status || "Waiting Payment",
           invoice_number: invoiceNo,
           created_at: new Date(),
           created_by: created_by || null,
@@ -190,66 +184,68 @@ const createRent = async (req, res) => {
   }
 };
 
-const approveRent = async (req, res) => {
+const cancelRent = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { rentId } = req.params;
-    const { approval_by, notes, updated_by } = req.body;
+    const { notes } = req.body;
 
-    const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
-    if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
-
-    await rent.update({
-      status: "Waiting Payment",
-      approval_by: approval_by || updated_by || rent.approval_by,
-      approval_date: new Date(),
-      updated_at: new Date(),
-      updated_by: updated_by || rent.updated_by,
-    });
-
-    // We store notes (if any) directly on the rental record.
-    try {
-      await rent.update({ notes: notes || rent.notes });
-    } catch (noteErr) {
-      console.error("Failed to save notes on approve:", noteErr);
+    // ✅ TANPA ROLE: done yah king dayu buat request sudah login (verifyToken sudah set req.user)
+    if (!req.user) {
+      await t.rollback();
+      return resError(res, "Akses ditolak", "Token tidak valid / belum login", 401);
     }
 
-    return resSuccess(res, "Rental berhasil di-approve", rent);
+    const rent = await TrnRent.findOne({
+      where: { rent_id: rentId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!rent) {
+      await t.rollback();
+      return resError(res, "Rental tidak ditemukan", "Not Found", 404);
+    }
+
+    // ❌ tidak boleh cancel kalau sudah close
+    if (rent.status === "Close") {
+      await t.rollback();
+      return resError(res, "Rental sudah ditutup", "Conflict", 409);
+    }
+
+    // ❌ tidak boleh cancel kalau sudah cancelled
+    if (rent.status === "Cancelled") {
+      await t.rollback();
+      return resError(res, "Rental sudah dibatalkan", "Conflict", 409);
+    }
+
+    // ❌ tidak boleh cancel kalau sudah Open (unit sudah diambil)
+    if (rent.status === "Open") {
+      await t.rollback();
+      return resError(res, "Tidak bisa cancel, unit sudah diambil", "Conflict", 409);
+    }
+
+    await rent.update(
+      {
+        status: "Cancelled",
+        notes: notes ?? rent.notes,
+        updated_at: new Date(),
+        // ✅ otomatis isi dari user yang login (kalau ada user_id di token)
+        updated_by: req.user.user_id || req.user.email || "ADMIN",
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return resSuccess(res, "Rental berhasil dibatalkan", rent);
   } catch (err) {
+    await t.rollback();
     console.error(err);
-    return resError(res, "Gagal approve rental", err.message, 500);
+    return resError(res, "Gagal cancel rental", err.message, 500);
   }
 };
 
-const rejectRent = async (req, res) => {
-  try {
-    const { rentId } = req.params;
-    const { approval_by, notes, updated_by } = req.body;
-
-    const rent = await TrnRent.findOne({ where: { rent_id: rentId } });
-    if (!rent) return resError(res, "Rental tidak ditemukan", "Not Found", 404);
-
-    await rent.update({
-      status: "Rejected Approval",
-      approval_by: approval_by || updated_by || rent.approval_by,
-      approval_date: new Date(),
-      updated_at: new Date(),
-      updated_by: updated_by || rent.updated_by,
-    });
-
-    // Save rejection notes directly on the rental record.
-    try {
-      await rent.update({ notes: notes || rent.notes });
-    } catch (noteErr) {
-      console.error("Failed to save notes on reject:", noteErr);
-    }
-
-    return resSuccess(res, "Rental berhasil ditolak", rent);
-  } catch (err) {
-    console.error(err);
-    return resError(res, "Gagal menolak rental", err.message, 500);
-  }
-};
-
+//buat ambil unit oleh customer
 const collectUnit = async (req, res) => {
   const t = await sequelize.transaction();
   try {
@@ -273,7 +269,7 @@ const collectUnit = async (req, res) => {
 
     // VALIDASI: Hanya bisa collect jika statusnya 'Open' atau setelah 'Waiting Payment'
     // Tergantung flow Anda, biasanya unit diambil saat status sudah bukan 'Waiting Approval'
-    if (rent.status === "Close" || rent.status === "Rejected Approval") {
+    if (["Close", "Cancelled"].includes(rent.status)) {
       await t.rollback();
       return resError(
         res,
@@ -748,9 +744,6 @@ const updateRent = async (req, res) => {
       total_price,
       total_paid,
       balance,
-      is_approval,
-      approval_by,
-      approval_date,
       status,
       updated_by,
       notes,
@@ -798,10 +791,6 @@ const updateRent = async (req, res) => {
         balance !== undefined && balance !== null && balance !== ""
           ? Number(balance)
           : rent.balance,
-      is_approval:
-        is_approval !== undefined ? Number(is_approval) : rent.is_approval,
-      approval_by: approval_by ?? rent.approval_by,
-      approval_date: approval_date ?? rent.approval_date,
       status: status ?? rent.status,
       notes: notes ?? rent.notes,
       updated_at: new Date(),
@@ -833,8 +822,7 @@ module.exports = {
   getRentByInvoiceOrNik,
   updateRent,
   deleteRent,
-  approveRent,
-  rejectRent,
+  cancelRent,
   collectUnit,
   returnUnit,
 };
