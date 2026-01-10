@@ -53,6 +53,11 @@ TrnRent.hasMany(TrnDetailRent, {
   as: "details", // Kita beri alias 'details'
 });
 
+TrnDetailRent.belongsTo(TrnRent, {
+  foreignKey: "rent_id",
+  as: "rent",
+});
+
 MstCustomer.hasMany(TrnRent, {
   as: "rents",
   foreignKey: "customer_id",

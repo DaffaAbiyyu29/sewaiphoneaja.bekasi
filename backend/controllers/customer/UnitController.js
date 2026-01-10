@@ -4,7 +4,10 @@ const {
   MstUnit,
   MstVariantUnit,
   MstPriceUnit,
+  TrnRent,
+  TrnDetailRent,
 } = require("../../models/Relations");
+const sequelize = require("../../models/index");
 
 const getAllUnitCatalog = async (req, res) => {
   try {
@@ -15,6 +18,8 @@ const getAllUnitCatalog = async (req, res) => {
       status = "all", // all | available | unavailable (FE)
       orderBy = "created_at",
       orderDir = "DESC",
+      start_date,
+      end_date,
     } = req.query;
 
     // =====================
@@ -93,17 +98,60 @@ const getAllUnitCatalog = async (req, res) => {
     });
 
     // =====================
-    // OVERRIDE STATUS BERDASARKAN STOK VARIANT
+    // HITUNG STOK TERPAKAI BERDASARKAN TANGGAL
+    // =====================
+    let rentedMap = {};
+
+    if (start_date && end_date) {
+      const rentedVariants = await TrnDetailRent.findAll({
+        attributes: [
+          "variant_unit_code",
+          [sequelize.fn("SUM", sequelize.col("qty")), "total_rented"],
+        ],
+        include: [
+          {
+            model: TrnRent,
+            as: "rent",
+            attributes: [],
+            where: {
+              status: { [Op.notIn]: ["Cancelled", "Close"] },
+              start_rent_date: { [Op.lte]: end_date },
+              end_rent_date: { [Op.gte]: start_date },
+            },
+          },
+        ],
+        group: ["variant_unit_code"],
+        raw: true,
+      });
+
+      rentedVariants.forEach((r) => {
+        rentedMap[r.variant_unit_code] = Number(r.total_rented);
+      });
+    }
+
+    // =====================
+    // OVERRIDE STATUS BERDASARKAN STOK + TANGGAL
     // =====================
     const processedRows = rows.map((unit) => {
-      const totalStock =
-        unit.variants?.reduce((sum, v) => sum + (v.qty || 0), 0) || 0;
+      let totalStock = 0;
+      let availableStock = 0;
+
+      const variants = unit.variants || [];
+
+      variants.forEach((v) => {
+        const rentedQty = rentedMap[v.variant_unit_code] || 0;
+        const availableQty = Math.max((v.qty || 0) - rentedQty, 0);
+
+        totalStock += v.qty || 0;
+        availableStock += availableQty;
+
+        // expose ke FE
+        v.available_qty = availableQty;
+      });
 
       let finalStatus = unit.status;
 
-      // rule bisnis:
-      // unit Available tapi stok 0 => Unavailable
-      if (unit.status === "Available" && totalStock === 0) {
+      if (availableStock === 0) {
         finalStatus = "Unavailable";
       }
 
@@ -111,6 +159,8 @@ const getAllUnitCatalog = async (req, res) => {
         ...unit.toJSON(),
         status: finalStatus,
         totalStock,
+        availableStock,
+        variants,
       };
     });
 
@@ -233,5 +283,6 @@ const getCatalogByInvoiceOrNik = async (req, res) => {
 
 module.exports = {
   getAllUnitCatalog,
+  getCatalogByInvoiceOrNik,
   getCatalogByUnitCode,
 };

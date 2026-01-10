@@ -245,6 +245,77 @@ const cancelRent = async (req, res) => {
   }
 };
 
+//buat Rental aktif berdasarkan tanggal
+// GET /api/rent/active-by-customer/:customerId?date=2026-01-10
+const getActiveRentByCustomerAndDate = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { date } = req.query;
+
+    if (!customerId) {
+      return resError(res, "customerId wajib", "Bad Request", 400);
+    }
+
+    if (!date) {
+      return resError(res, "query date wajib (YYYY-MM-DD)", "Bad Request", 400);
+    }
+
+    const targetDate = new Date(date);
+
+    const rent = await TrnRent.findOne({
+      where: {
+        customer_id: customerId,
+        status: { [Op.notIn]: ["Close", "Cancelled"] },
+        start_rent_date: { [Op.lte]: targetDate },
+        end_rent_date: { [Op.gte]: targetDate },
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    return resSuccess(res, "Cek rental customer berhasil", {
+      has_active_rent: !!rent,
+      rent: rent || null,
+    });
+  } catch (err) {
+    return resError(res, "Gagal cek rental customer", err.message, 500);
+  }
+};
+
+//List rental yang overlap di rentang tanggal
+// GET /api/rent?start=2026-01-09&end=2026-01-10&customer_id=CUST0001
+const getRentsByDateRange = async (req, res) => {
+  try {
+    const { start, end, customer_id } = req.query;
+
+    if (!start || !end) {
+      return resError(res, "start dan end wajib (YYYY-MM-DD)", "Bad Request", 400);
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    // overlap rule:
+    // rentalStart <= endDate AND rentalEnd >= startDate
+    const whereClause = {
+      status: { [Op.notIn]: ["Close", "Cancelled"] },
+      start_rent_date: { [Op.lte]: endDate },
+      end_rent_date: { [Op.gte]: startDate },
+      ...(customer_id ? { customer_id } : {}),
+    };
+
+    const rows = await TrnRent.findAll({
+      where: whereClause,
+      order: [["created_at", "DESC"]],
+    });
+
+    return resSuccess(res, "Rental berdasarkan rentang tanggal berhasil diambil", rows);
+  } catch (err) {
+    return resError(res, "Gagal mengambil rental", err.message, 500);
+  }
+};
+
+
+
 //buat ambil unit oleh customer
 const collectUnit = async (req, res) => {
   const t = await sequelize.transaction();
@@ -820,6 +891,8 @@ module.exports = {
   getRents,
   getRentById,
   getRentByInvoiceOrNik,
+  getActiveRentByCustomerAndDate,
+  getRentsByDateRange,
   updateRent,
   deleteRent,
   cancelRent,

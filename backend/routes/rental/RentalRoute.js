@@ -6,6 +6,8 @@ const {
   getRents,
   getRentById,
   getRentByInvoiceOrNik,
+  getActiveRentByCustomerAndDate,
+  getRentsByDateRange,
   deleteRent,
   updateRent,
   cancelRent,
@@ -20,6 +22,15 @@ router.get("/pesanan", (req, res) => {
 });
 
 router.get("/pesanan/:search", getRentByInvoiceOrNik);
+
+router.get("/checkAvailableUnit", verifyToken, getRentsByDateRange);
+
+router.get(
+  "/active-by-customer/:customerId",
+  verifyToken,
+  getActiveRentByCustomerAndDate
+);
+
 
 router.post("/", createRent);
 router.get("/", verifyToken, getRents);
