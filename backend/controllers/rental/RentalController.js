@@ -3,6 +3,7 @@ const TrnRent = require("../../models/TrnRental");
 const sequelize = require("../../models/index");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const MstCustomer = require("../../models/MstCustomer");
+const Sequelize = require("sequelize");
 const {
   generateIncrementId,
   generateInvoiceNumber,
@@ -375,16 +376,18 @@ const returnUnit = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { rentId } = req.params;
-    const { return_date, notes, updated_by } = req.body;
+    const { return_date, notes } = req.body;
 
     if (!rentId) {
       await t.rollback();
       return resError(res, "rentId diperlukan", "Bad Request", 400);
     }
 
+    // lock rental biar aman dari double request
     const rent = await TrnRent.findOne({
       where: { rent_id: rentId },
       transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
     if (!rent) {
@@ -392,6 +395,7 @@ const returnUnit = async (req, res) => {
       return resError(res, "Rental tidak ditemukan", "Not Found", 404);
     }
 
+    // kalau sudah close, jangan tambah stok lagi
     if (rent.status === "Close") {
       await t.rollback();
       return resError(
@@ -402,13 +406,65 @@ const returnUnit = async (req, res) => {
       );
     }
 
+    // ambil detail item yang disewa
+    const details = await TrnDetailRent.findAll({
+      where: { rent_id: rentId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    // kalau tidak ada detail, tetap boleh close (opsional)
+    // tapi biasanya harus ada detail
+    // if (!details.length) { ... }
+
+    // ✅ KEMBALIKAN STOK VARIANT
+    for (const d of details) {
+      if (!d.variant_unit_code) continue;
+
+      const qtyBack = Number(d.qty || 0);
+      if (qtyBack <= 0) continue;
+
+      // increment qty variant
+      await MstVariantUnit.update(
+        {
+          qty: Sequelize.literal(`qty + ${qtyBack}`),
+          status: "Available", // optional: kalau kamu pakai status per variant
+          updated_at: new Date(),
+        },
+        {
+          where: { variant_unit_code: d.variant_unit_code },
+          transaction: t,
+        }
+      );
+    }
+
+    // ✅ OPTIONAL: update status unit berdasarkan total stok variant
+    // (kalau unit_code di detail selalu ada)
+    const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+
+    for (const unit_code of unitCodes) {
+      const variants = await MstVariantUnit.findAll({
+        where: { unit_code },
+        attributes: ["qty"],
+        transaction: t,
+      });
+
+      const totalStock = variants.reduce((sum, v) => sum + Number(v.qty || 0), 0);
+
+      await MstUnit.update(
+        { status: totalStock > 0 ? "Available" : "Unavailable", updated_at: new Date() },
+        { where: { unit_code }, transaction: t }
+      );
+    }
+
+    // ✅ UPDATE RENTAL JADI CLOSE
     await rent.update(
       {
         return_date: return_date || new Date(),
         status: "Close",
         notes: notes || rent.notes,
         updated_at: new Date(),
-        updated_by: updated_by || rent.updated_by,
+        updated_by: req.user?.user_id || req.user?.email || rent.updated_by || null,
       },
       { transaction: t }
     );
@@ -421,6 +477,7 @@ const returnUnit = async (req, res) => {
     return resError(res, "Gagal return unit", err.message, 500);
   }
 };
+
 
 const getRents = async (req, res) => {
   try {
