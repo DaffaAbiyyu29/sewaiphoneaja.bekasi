@@ -140,7 +140,7 @@ export default function Footer() {
                   href="tel:+6281234567890"
                   className="hover:text-white transition-colors duration-200 text-sm"
                 >
-                  +62 812-3456-7890
+                  +62 851-7419-4500
                 </a>
               </li>
               <li className="flex items-start space-x-2">

@@ -18,6 +18,10 @@ const MstUser = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
+    role: {
+      type: DataTypes.ENUM("Admin", "Manager"),
+      allowNull: false,
+    },
     email: {
       type: DataTypes.STRING(100),
       allowNull: true,

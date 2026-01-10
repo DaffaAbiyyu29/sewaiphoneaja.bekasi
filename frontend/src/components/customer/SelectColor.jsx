@@ -30,7 +30,7 @@ export default function SelectColor({
         />
         <h3 className="text-base font-semibold text-gray-900">Pilih Warna</h3>
       </div>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="flex flex-wrap gap-3 md:grid md:grid-cols-4">
         {variants.map((variant, index) => {
           const isSelected =
             selectedVariant?.variant_unit_code === variant.variant_unit_code;
@@ -41,7 +41,7 @@ export default function SelectColor({
               key={variant.variant_unit_code}
               onClick={() => handleSelectVariant(variant, index)}
               disabled={isOutOfStock}
-              className={`px-4 py-3 border-2 rounded-lg text-sm font-medium transition-all ${
+              className={`lg:w-full md:w-fit px-4 py-3 border-2 rounded-lg text-sm font-medium transition-all ${
                 isSelected
                   ? "bg-blue-900 text-white border-blue-900 shadow-md scale-105"
                   : isOutOfStock
@@ -49,7 +49,10 @@ export default function SelectColor({
                   : "bg-white text-gray-700 border-gray-300 hover:border-blue-900 hover:shadow-sm"
               }`}
             >
-              <div>{variant.color || "Tanpa Warna"}</div>
+              <div className="whitespace-nowrap">
+                {variant.color || "Tanpa Warna"}
+              </div>
+
               {isOutOfStock && (
                 <div className="text-xs mt-1 text-red-500 font-semibold">
                   Habis

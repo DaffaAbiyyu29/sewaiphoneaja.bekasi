@@ -57,7 +57,7 @@ export default function LoginPage() {
         localStorage.setItem("token", response.data.data.token);
       }
 
-      alert("Login berhasil!");
+      localStorage.setItem("login", "success");
       navigate("/dashboard"); // <-- pakai navigate, bukan Route()
     } catch (err) {
       console.error(err);

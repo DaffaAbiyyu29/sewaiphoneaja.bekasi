@@ -16,7 +16,7 @@ input[type="password"]::-webkit-password-toggle-button {
     opacity: 0.7;
   }
   25% {
-    transform: translateY(-8px) scale(1.1); /* Sedikit naik dan membesar */
+    transform: translateY(-8px) scale(1.1);
     opacity: 1;
   }
   50% {
@@ -25,7 +25,72 @@ input[type="password"]::-webkit-password-toggle-button {
   }
 }
 
+.rounded-swal {
+  border-radius: 24px !important;
+  padding: 2rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
+}
 
+#swal-avatar-root {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.confirm-swal {
+  border-radius: 9999px !important;
+  padding: 0.6rem 1.8rem !important;
+  font-weight: 600 !important;
+
+  background: linear-gradient(135deg, #3b82f6, #1e40af) !important;
+
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35) !important;
+
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.confirm-swal:hover {
+  box-shadow: 0 14px 32px rgba(59, 130, 246, 0.5) !important;
+}
+
+.cancel-swal {
+  border-radius: 9999px !important;
+  padding: 0.6rem 1.8rem !important;
+  font-weight: 600 !important;
+
+  background: linear-gradient(
+    135deg,
+    #ef4444,
+    #991b1b
+  ) !important; /* red-500 → red-800 */
+
+  color: #fff !important;
+
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.35) !important;
+
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.cancel-swal:hover {
+  box-shadow: 0 14px 32px rgba(239, 68, 68, 0.55) !important;
+}
+
+.swal-loader {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.swal-loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border-radius: 9999px;
+  transition: width 0.1s linear;
+}
 
 /* @keyframes dotWave {
   0%,
@@ -74,11 +139,12 @@ input[type="password"]::-webkit-password-toggle-button {
 
 /* Untuk Firefox */
 * {
+  font-family: "Poppins", sans-serif;
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
-/* 
+/*
 a {
   font-weight: 500;
   color: #646cff;

@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faEye } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
 
 const formatDate = (dateString) => {
@@ -80,19 +80,43 @@ export const RentalColumns = () => [
     header: "Total Harga",
     accessor: "total_price",
     sortable: true,
-    render: (row) => formatCurrency(row.total_price),
+    render: (row) => (
+      <span className="font-bold">{formatCurrency(row.total_price)}</span>
+    ),
   },
   {
     header: "Total Bayar",
     accessor: "total_paid",
     sortable: true,
-    render: (row) => formatCurrency(row.total_paid),
+    render: (row) => {
+      const isPaidOff = row.total_paid >= row.total_price;
+
+      return (
+        <span
+          className={`font-bold ${
+            isPaidOff ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {formatCurrency(row.total_paid)}
+        </span>
+      );
+    },
   },
   {
     header: "Sisa Bayar",
     accessor: "balance",
     sortable: true,
-    render: (row) => formatCurrency(row.balance),
+    render: (row) => {
+      const isZero = row.balance <= 0;
+
+      return (
+        <span
+          className={`font-bold ${isZero ? "text-green-600" : "text-red-600"}`}
+        >
+          {formatCurrency(row.balance)}
+        </span>
+      );
+    },
   },
   {
     header: "Status",
@@ -121,23 +145,13 @@ export const RentalColumns = () => [
           <FontAwesomeIcon icon={faEye} />
         </button>
 
-        {/* Tombol Edit */}
-        {/* <button
-          onClick={() => getPage("/menu/rental/update/" + row.rent_id)}
-          className="p-2 bg-yellow-600 text-white rounded-md shadow-md hover:bg-yellow-500 transition duration-150"
-          title="Edit Data Rental"
+        <button
+          // onClick={() => getPage("/menu/rental/" + row.rent_id)}
+          className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
+          title="Unduh Invoice"
         >
-          <FontAwesomeIcon icon={faEdit} />
-        </button> */}
-
-        {/* Tombol Delete */}
-        {/* <button
-          onClick={() => onDeleteClick(row.rent_id)}
-          className="p-2 bg-red-700 text-white rounded-md shadow-md hover:bg-red-600 transition duration-150"
-          title="Hapus Rental"
-        >
-          <FontAwesomeIcon icon={faTrash} />
-        </button> */}
+          <FontAwesomeIcon icon={faDownload} />
+        </button>
       </div>
     ),
   },

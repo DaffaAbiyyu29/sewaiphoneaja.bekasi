@@ -44,6 +44,12 @@ export const UserColumns = (onDeleteClick) => [
     render: (row) => row.name,
   },
   {
+    header: "Role",
+    accessor: "role",
+    sortable: true,
+    render: (row) => row.role,
+  },
+  {
     header: "Photo",
     render: (row) => {
       return <Avatar image={row.profile_picture} name={row.name} size={10} />;

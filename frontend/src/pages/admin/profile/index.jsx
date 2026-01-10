@@ -20,6 +20,9 @@ import { getToken } from "../../../helpers/GetToken";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
 import { formatDate } from "../../../helpers/Format";
 import Input from "../../../components/Input";
+import Avatar from "../../../components/Avatar";
+import Swal from "sweetalert2";
+import "animate.css";
 
 export default function ProfileUserPage() {
   const [userData, setUserData] = useState(null);
@@ -78,8 +81,6 @@ export default function ProfileUserPage() {
   };
 
   const handleSave = async () => {
-    console.log(imageFile);
-    console.log("Data yang akan disimpan:", formEditData);
     setFormEditData((prevData) => ({
       ...prevData,
       photo: imageFile,
@@ -124,11 +125,57 @@ export default function ProfileUserPage() {
       // Mock success: Update userData state dengan formEditData
       setUserData(formEditData);
       setIsEditing(false);
-      alert("Profile berhasil diperbarui (Mock Save)");
+
+      let timerInterval;
+
+      Swal.fire({
+        title: "Berhasil memperbarui data",
+        icon: "success",
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        timer: 2000,
+
+        html: `
+          <div class="swal-loader">
+            <div class="swal-loader-bar" id="swal-loader-bar"></div>
+          </div>
+        `,
+
+        customClass: {
+          popup: "rounded-swal",
+        },
+
+        didOpen: () => {
+          const bar = document.getElementById("swal-loader-bar");
+          let start = Date.now();
+          const duration = 2000;
+
+          timerInterval = setInterval(() => {
+            const elapsed = Date.now() - start;
+            const progress = Math.min((elapsed / duration) * 100, 100);
+            bar.style.width = progress + "%";
+          }, 16);
+        },
+
+        willClose: () => {
+          clearInterval(timerInterval);
+        },
+
+        showClass: {
+          popup: "animate__animated animate__fadeInDown",
+          backdrop: "animate__animated animate__fadeIn",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOutUp",
+          backdrop: "animate__animated animate__fadeOut",
+        },
+      }).then(() => {
+        window.location.reload();
+      });
     } catch (err) {
       console.error("Gagal menyimpan data:", err);
       //setError(err.response?.data?.message || "Gagal menyimpan perubahan");
-      alert("Gagal menyimpan perubahan. Cek console log.");
     }
   };
 
@@ -318,9 +365,9 @@ export default function ProfileUserPage() {
   }
 
   const displayData = isEditing ? formEditData : userData;
-  const profilePictureUrl = displayData?.profile_picture
-    ? `${API_URL}/get-image/${displayData.profile_picture}`
-    : null;
+  const isDataSame = JSON.stringify(userData) === JSON.stringify(formEditData);
+  const hasNewImage = imagePreview !== null;
+  const isDisabled = isDataSame && !hasNewImage;
 
   // --- MAIN CONTENT ---
   return (
@@ -334,29 +381,40 @@ export default function ProfileUserPage() {
               Profile Pengguna
             </h1>
 
-            {/* Aksi Button: Edit / Simpan & Batal (Ditempatkan di header kartu) */}
             {isEditing ? (
-              <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
+              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+                {/* SIMPAN */}
                 <button
                   onClick={handleSave}
-                  className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md text-sm w-25"
+                  disabled={isDisabled}
+                  className={`
+                    px-4 py-2 rounded-xl flex items-center justify-center gap-2
+                    text-sm font-medium w-full md:w-28
+                    transition-all duration-200
+                    ${
+                      isDisabled
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                        : "bg-green-600 text-white shadow-md shadow-green-600/30 hover:bg-green-700 hover:shadow-lg hover:shadow-green-700/40 active:scale-95"
+                    }
+                  `}
                 >
-                  <FontAwesomeIcon icon={faSave} size="1x" />
+                  <FontAwesomeIcon icon={faSave} size="sm" />
                   Simpan
                 </button>
 
+                {/* BATAL */}
                 <button
                   onClick={handleEditToggle}
-                  className="bg-gray-400 text-white px-4 py-2 rounded-xl hover:bg-gray-500 transition-colors flex items-center justify-center gap-2 shadow-md text-sm w-25"
+                  className="px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-medium w-full md:w-28 bg-gray-100 text-gray-700 shadow-md hover:bg-gray-200 transition-all duration-200 active:scale-95"
                 >
-                  <FontAwesomeIcon icon={faTimes} size="1x" />
+                  <FontAwesomeIcon icon={faTimes} size="sm" />
                   Batal
                 </button>
               </div>
             ) : (
               <button
                 onClick={handleEditToggle}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md text-sm"
+                className="px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium bg-blue-900 text-white shadow-md hover:bg-blue-800 transition-all duration-200 active:scale-95"
               >
                 <FontAwesomeIcon icon={faEdit} size="1x" />
                 Edit Profile
@@ -375,13 +433,13 @@ export default function ProfileUserPage() {
                     className="w-full h-full object-cover object-center"
                   />
                 ) : displayData?.profile_picture ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt={displayData.name}
-                    className="w-full h-full object-cover object-center"
+                  <Avatar
+                    image={displayData.profile_picture}
+                    name={displayData.name}
+                    size={"full"}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200 text-blue-600 text-5xl font-extrabold">
+                  <div className="w-full h-full flex items-center justify-center bg-blue-900 text-white text-5xl font-extrabold">
                     {displayData?.name?.charAt(0).toUpperCase() || "U"}
                   </div>
                 )}
@@ -420,7 +478,6 @@ export default function ProfileUserPage() {
                   {displayData?.name}
                 </p>
               )}
-
               {/* NIK dan Status Sejajar */}
               <div className="flex items-center justify-center md:justify-start flex-wrap mt-6 md:mt-3 gap-x-4 gap-y-2">
                 <p className="text-gray-500 text-sm flex items-center">
@@ -443,6 +500,9 @@ export default function ProfileUserPage() {
                   {displayData?.status === "Active" ? "Active" : "Inactive"}
                 </span>
               </div>
+              <p className="text-lg font-semibold text-gray-500">
+                {displayData?.role}
+              </p>
             </div>
           </div>
         </div>
@@ -472,7 +532,13 @@ export default function ProfileUserPage() {
                   <DetailItem
                     label="Jenis Kelamin"
                     name="gender"
-                    value={displayData?.gender}
+                    value={
+                      displayData?.gender === "M"
+                        ? "Laki-laki"
+                        : displayData?.gender === "F"
+                        ? "Perempuan"
+                        : "-"
+                    }
                     isEditing={isEditing}
                     type="select"
                     options={[

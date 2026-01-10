@@ -233,7 +233,7 @@ export default function Dashboard() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-15 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -267,7 +267,7 @@ export default function Dashboard() {
       </section>
 
       {/* iPhone Catalog */}
-      <section id="daftar-iphone" className="py-20 px-6">
+      <section id="daftar-iphone" className="py-15 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -378,7 +378,7 @@ export default function Dashboard() {
       {/* Testimonials */}
       <section
         id="testimoni"
-        className="py-20 px-6 bg-gradient-to-b from-white to-gray-50"
+        className="py-15 px-6 bg-gradient-to-b from-white to-gray-50"
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -445,7 +445,7 @@ export default function Dashboard() {
       </section>
 
       {/* CTA Section */}
-      <section id="kontak" className="py-20 px-6">
+      <section id="kontak" className="py-15 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 rounded-3xl p-12 shadow-2xl text-center text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2"></div>
@@ -473,6 +473,63 @@ export default function Dashboard() {
                   onClick={() => navigate("/unit")}
                 >
                   Lihat Katalog
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="location" className="mb-15 px-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* MAP — UKURAN SAMA KAYAK SECTION CTA */}
+          <div className="rounded-3xl overflow-hidden shadow-2xl border border-blue-900/20 h-[420px]">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.583757887949!2d107.0165589!3d-6.1864186!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f16!3m3!1m2!1s0x2e6989666dcc1e07%3A0x9cbb2f3fd6d22e24!2sSewa%20Iphone%20Bekasi%20(sewaiphoneaja)%20by%20Fika%20Fitrianesia!5e0!3m2!1sid!2sid!4v1768033700765!5m2!1sid!2sid"
+              className="w-full h-full"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+
+          {/* CARD DETAIL — DILEBARIN */}
+          <div className="flex justify-center">
+            <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-3xl p-10 shadow-2xl text-white relative overflow-hidden w-full max-w-3xl">
+              {/* dekor */}
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-yellow-400/20 rounded-full" />
+              <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-blue-300/20 rounded-full" />
+
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-4">Lokasi Sewa iPhone</h3>
+
+                <p className="text-blue-100 font-semibold text-base leading-relaxed">
+                  Bekasi Utara Kec. Babelan, Ujung Harapan Gang Assalam 1 RT 004
+                  / RW 042, No. 50
+                </p>
+
+                <button
+                  onClick={() =>
+                    window.open(
+                      "https://maps.app.goo.gl/T6A3fDdUNEnJj9Ka6",
+                      "_blank"
+                    )
+                  }
+                  className="
+              mt-8
+              bg-white text-blue-900
+              px-8 py-3
+              rounded-xl
+              font-bold
+              transition
+              hover:scale-[1.05]
+              hover:shadow-xl
+              active:scale-95
+              cursor-pointer
+            "
+                >
+                  Buka di Google Maps
                 </button>
               </div>
             </div>

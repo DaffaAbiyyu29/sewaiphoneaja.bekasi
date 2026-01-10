@@ -1,23 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBell,
   faCaretDown,
   faSignOutAlt,
   faUserCircle,
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLocation, useParams } from "react-router-dom";
-import { getUserInfo } from "../../helpers/GetUserInfo";
-import axios from "axios";
-import { getToken } from "../../helpers/GetToken";
+import Swal from "sweetalert2";
+import "animate.css";
 import Avatar from "../Avatar";
+import { removeToken } from "../../helpers/GetToken";
 
-export default function Header({ onMenuClick }) {
+export default function Header({ onMenuClick, userData }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userName, setUserName] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [userPhoto, setUserPhoto] = useState(null);
   const dropdownRef = useRef(null);
   const location = useLocation();
 
@@ -63,31 +59,32 @@ export default function Header({ onMenuClick }) {
   const currentPage = navItems.find((item) => item.path === location.pathname);
   const pageTitle = currentPage ? currentPage.name : "Halaman Tidak Ditemukan";
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  // const API_URL = import.meta.env.VITE_API_URL;
 
-  const fetchUserData = async () => {
-    try {
-      const user = getUserInfo();
-      const token = getToken();
+  // const fetchUserData = async () => {
+  //   try {
+  //     const user = getUserInfo();
+  //     const token = getToken();
 
-      const response = await axios.get(`${API_URL}/api/user/${user.nik}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  //     const response = await axios.get(`${API_URL}/api/user/${user.nik}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
 
-      if (response.data.success) {
-        setUserName(response.data.data.name);
-        setUserRole(response.data.data.role);
-        setUserPhoto(response.data.data.profile_picture);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  //     if (response.data.success) {
+  //       setUserName(response.data.data.name);
+  //       setUserRole(response.data.data.role);
+  //       setUserPhoto(response.data.data.profile_picture);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   useEffect(() => {
-    fetchUserData();
+    console.log(userData);
+    // fetchUserData();
 
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -98,11 +95,55 @@ export default function Header({ onMenuClick }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // const handleLogout = () => {
+  //   alert("Logging out...");
+  //   localStorage.removeItem("token");
+  //   window.location.href = "/";
+  //   setIsDropdownOpen(false);
+  // };
+
   const handleLogout = () => {
-    alert("Logging out...");
-    localStorage.removeItem("token");
-    window.location.href = "/";
-    setIsDropdownOpen(false);
+    Swal.fire({
+      title: "Logout?",
+      text: "Sesi kamu bakal berakhir",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Logout",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Logging out...",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        setTimeout(() => {
+          removeToken();
+          window.location.href = "/";
+        }, 1200);
+      }
+    });
   };
 
   return (
@@ -133,12 +174,11 @@ export default function Header({ onMenuClick }) {
             className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            {/* <img
-              src={`${API_URL}/get-image/${userPhoto}`}
-              alt="avatar"
-              className="w-8 h-8 rounded-full object-cover"
-            /> */}
-            <Avatar image={userPhoto} name={userName} size={10} />
+            <Avatar
+              image={userData?.profile_picture}
+              name={userData?.name}
+              size={10}
+            />
             <FontAwesomeIcon
               icon={faCaretDown}
               className={`w-3 h-3 text-gray-400 transition-transform ${
@@ -150,12 +190,15 @@ export default function Header({ onMenuClick }) {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-30">
               <div className="flex items-center gap-3 p-3 border-b border-gray-100">
-                <Avatar image={userPhoto} name={userName} />
+                <Avatar
+                  image={userData?.profile_picture}
+                  name={userData?.name}
+                />
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">
-                    {userName}
+                    {userData?.name}
                   </p>
-                  <p className="text-xs text-gray-500">{userRole}</p>
+                  <p className="text-xs text-gray-500">{userData?.role}</p>
                 </div>
               </div>
 

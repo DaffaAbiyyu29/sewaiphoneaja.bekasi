@@ -8,6 +8,7 @@ const {
   getRentByInvoiceOrNik,
   getActiveRentByCustomerAndDate,
   getRentsByDateRange,
+  getNextInvoice,
   deleteRent,
   updateRent,
   cancelRent,
@@ -17,6 +18,7 @@ const {
 const { verifyToken } = require("../../middleware/middleware");
 const { resError, resSuccess } = require("../../helpers/sendResponse");
 
+router.get("/getInvoice", getNextInvoice);
 router.get("/pesanan", (req, res) => {
   return resSuccess(res, "Data rental berhasil diambil", {});
 });
@@ -31,7 +33,6 @@ router.get(
   getActiveRentByCustomerAndDate
 );
 
-
 router.post("/", createRent);
 router.get("/", verifyToken, getRents);
 router.get("/:rentId", verifyToken, getRentById);
@@ -40,6 +41,5 @@ router.put("/:rentId/collect", verifyToken, collectUnit);
 router.put("/:rentId/return", verifyToken, returnUnit);
 router.put("/:rentId/cancel", verifyToken, cancelRent);
 router.delete("/:rentId", verifyToken, deleteRent);
-
 
 module.exports = router;

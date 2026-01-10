@@ -11,6 +11,7 @@ const createUser = async (req, res) => {
     let {
       nik,
       name,
+      role,
       email,
       password,
       telp,
@@ -30,6 +31,7 @@ const createUser = async (req, res) => {
     const missing = [];
     if (!nik) missing.push("nik");
     if (!name) missing.push("name");
+    if (!role) missing.push("role");
     if (!password) missing.push("password");
     if (missing.length)
       return resError(
@@ -57,6 +59,7 @@ const createUser = async (req, res) => {
       user_id,
       nik,
       name,
+      role,
       email: email || null,
       password: hashed,
       telp: telp || null,
@@ -125,6 +128,7 @@ const getUsers = async (req, res) => {
       "user_id",
       "nik",
       "name",
+      "role",
       "email",
       "telp",
       "address",
@@ -187,6 +191,7 @@ const updateUser = async (req, res) => {
 
     const {
       name,
+      role,
       email,
       password,
       telp,
@@ -216,6 +221,7 @@ const updateUser = async (req, res) => {
     // 🔹 data update
     const updateData = {
       name: name ?? user.name,
+      role: role ?? user.role,
       email: email ?? user.email,
       telp: telp ?? user.telp,
       address: address ?? user.address,

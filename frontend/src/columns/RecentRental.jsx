@@ -83,16 +83,13 @@ export const RecentRentalColumns = () => [
     accessor: "status",
     sortable: true,
     render: (row) => (
-      console.log(row),
-      (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
-            row.status
-          )}`}
-        >
-          {row.status}
-        </span>
-      )
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+          row.status
+        )}`}
+      >
+        {row.status}
+      </span>
     ),
   },
 ];

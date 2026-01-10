@@ -20,6 +20,7 @@ export default function CreateUserPage() {
   const [formData, setFormData] = useState({
     nik: "",
     name: "",
+    role: "",
     email: "",
     password: "",
     retype_password: "",
@@ -111,8 +112,12 @@ export default function CreateUserPage() {
     // validation
     const newErrors = {};
     if (!formData.nik) newErrors.nik = "NIK wajib diisi.";
+    if (formData.nik.length !== 16)
+      newErrors.nik = "NIK harus terdiri dari 16 karakter.";
     if (!formData.name) newErrors.name = "Nama wajib diisi.";
     if (!formData.email) newErrors.email = "Email wajib diisi.";
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      newErrors.email = "Format email tidak valid.";
     if (!formData.password) newErrors.password = "Password wajib diisi.";
     if (!formData.retype_password)
       newErrors.retype_password = "Retype Password wajib diisi.";
@@ -123,6 +128,7 @@ export default function CreateUserPage() {
     )
       newErrors.retype_password = "Password tidak cocok.";
     if (!formData.telp) newErrors.telp = "Telp wajib diisi.";
+    if (!formData.role) newErrors.role = "Role wajib dipilih.";
     if (!formData.gender) newErrors.gender = "Gender wajib dipilih.";
     if (!formData.birth_place)
       newErrors.birth_place = "Tempat lahir wajib diisi.";
@@ -147,6 +153,7 @@ export default function CreateUserPage() {
       const payload = new FormData();
       payload.append("nik", formData.nik);
       payload.append("name", formData.name);
+      payload.append("role", formData.role);
       payload.append("email", formData.email || "");
       payload.append("password", formData.password);
       payload.append("telp", formData.telp || "");
@@ -318,6 +325,7 @@ export default function CreateUserPage() {
                         <span>NIK</span> <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={16}
                     value={formData.nik}
                     onChange={handleChange("nik")}
                     required
@@ -334,6 +342,7 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={100}
                     value={formData.name}
                     onChange={handleChange("name")}
                     required
@@ -352,12 +361,39 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
-                    type="email"
+                    maxLength={100}
+                    type="text"
                     value={formData.email}
                     onChange={handleChange("email")}
                     placeholder="Email"
                     error={errors.email}
                   />
+
+                  <div className="mt-3">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Role <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange("role")}
+                      className={`w-full rounded-xl px-4 py-3 pr-12 text-gray-900 bg-white shadow-sm border ${
+                        errors.role
+                          ? "border-red-500 focus:ring-red-500"
+                          : "border-gray-300 focus:ring-blue-900"
+                      } focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 appearance-none`}
+                    >
+                      <option value="" disabled>
+                        Pilih Role
+                      </option>
+                      <option value="Admin">Admin</option>
+                      <option value="Manager">Manager</option>
+                    </select>
+
+                    {errors.role && (
+                      <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -368,6 +404,7 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={100}
                     type="password"
                     value={formData.password}
                     onChange={handleChange("password")}
@@ -385,6 +422,7 @@ export default function CreateUserPage() {
                           <span className="text-red-500">*</span>
                         </>
                       }
+                      maxLength={100}
                       type="password"
                       value={formData.retype_password}
                       onChange={handleChange("retype_password")}
@@ -406,6 +444,7 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={13}
                     value={formData.telp}
                     onChange={handleChange("telp")}
                     placeholder="No. Telp"
@@ -449,6 +488,7 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={100}
                     value={formData.birth_place}
                     onChange={handleChange("birth_place")}
                     placeholder="Kota"
@@ -464,6 +504,7 @@ export default function CreateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={10}
                     type="date"
                     value={formData.birth_date}
                     onChange={handleChange("birth_date")}

@@ -21,6 +21,7 @@ export default function UpdateUserPage() {
   const [formData, setFormData] = useState({
     nik: "",
     name: "",
+    role: "",
     email: "",
     password: "",
     retype_password: "",
@@ -126,6 +127,7 @@ export default function UpdateUserPage() {
           ...prev,
           nik: data.nik || "",
           name: data.name || "",
+          role: data.role || "",
           email: data.email || "",
           telp: data.telp || "",
           address: data.address || "",
@@ -156,9 +158,13 @@ export default function UpdateUserPage() {
     // validation
     const newErrors = {};
     if (!formData.nik) newErrors.nik = "NIK wajib diisi.";
+    if (formData.nik.length !== 16)
+      newErrors.nik = "NIK harus terdiri dari 16 karakter.";
     if (!formData.name) newErrors.name = "Nama wajib diisi.";
+    if (!formData.role) newErrors.role = "Role wajib dipilih.";
     if (!formData.email) newErrors.email = "Email wajib diisi.";
-
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      newErrors.email = "Format email tidak valid.";
     // validate password only if admin chooses to change it
     if (changePassword) {
       if (!formData.password) newErrors.password = "Password wajib diisi.";
@@ -198,6 +204,7 @@ export default function UpdateUserPage() {
       if (userId) payload.append("user_id", userId);
       payload.append("nik", formData.nik);
       payload.append("name", formData.name);
+      payload.append("role", formData.role);
       payload.append("email", formData.email || "");
       if (changePassword && formData.password)
         payload.append("password", formData.password);
@@ -370,6 +377,7 @@ export default function UpdateUserPage() {
                         <span>NIK</span> <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={16}
                     value={formData.nik}
                     onChange={handleChange("nik")}
                     required
@@ -387,6 +395,7 @@ export default function UpdateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={100}
                     value={formData.name}
                     onChange={handleChange("name")}
                     required
@@ -405,7 +414,8 @@ export default function UpdateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
-                    type="email"
+                    maxLength={100}
+                    type="text"
                     value={formData.email}
                     onChange={handleChange("email")}
                     placeholder="Email"
@@ -413,7 +423,7 @@ export default function UpdateUserPage() {
                   />
                 </div>
 
-                <div>
+                <div className="mt-6">
                   <div className="flex items-center mb-3">
                     <input
                       id="changePassword"
@@ -450,6 +460,7 @@ export default function UpdateUserPage() {
                       <Input
                         label={<span>Password</span>}
                         type="password"
+                        maxLength={100}
                         value={formData.password}
                         onChange={handleChange("password")}
                         placeholder="Password baru"
@@ -461,6 +472,7 @@ export default function UpdateUserPage() {
                         <Input
                           label={<span>Retype Password</span>}
                           type="password"
+                          maxLength={100}
                           value={formData.retype_password}
                           onChange={handleChange("retype_password")}
                           placeholder="Ketik ulang password baru"
@@ -475,6 +487,32 @@ export default function UpdateUserPage() {
                     </p>
                   )}
                 </div>
+
+                <div className="mt-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange("role")}
+                    className={`w-full rounded-xl px-4 py-3 pr-12 text-gray-900 bg-white shadow-sm border ${
+                      errors.role
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-900"
+                    } focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 appearance-none`}
+                  >
+                    <option value="" disabled>
+                      Pilih Role
+                    </option>
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                  </select>
+
+                  {errors.role && (
+                    <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -486,6 +524,7 @@ export default function UpdateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={13}
                     value={formData.telp}
                     onChange={handleChange("telp")}
                     placeholder="No. Telp"
@@ -529,6 +568,7 @@ export default function UpdateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={100}
                     value={formData.birth_place}
                     onChange={handleChange("birth_place")}
                     placeholder="Kota"
@@ -544,6 +584,7 @@ export default function UpdateUserPage() {
                         <span className="text-red-500">*</span>
                       </>
                     }
+                    maxLength={10}
                     type="date"
                     value={formData.birth_date}
                     onChange={handleChange("birth_date")}

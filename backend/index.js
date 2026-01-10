@@ -1,4 +1,5 @@
-require("dotenv").config();
+process.env.DOTENV_CONFIG_QUIET = "true";
+require("dotenv").config({ quiet: true });
 const userRoutes = require("./routes/auth/AuthRoute");
 const unitRoutes = require("./routes/admin/UnitRoute");
 const unitCustomerRoutes = require("./routes/customer/UnitPageRoute");
@@ -10,6 +11,7 @@ const rentalRoutes = require("./routes/rental/RentalRoute");
 const detailrentalRoutes = require("./routes/rental/DetailRentalRoute");
 const userAdminRoutes = require("./routes/user/UserRoute");
 const adminRoutes = require("./routes/admin/DashboardRoute");
+const emailRoutes = require("./routes/email/EmailRouter");
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -35,10 +37,7 @@ app.use(
 app.use((req, res, next) => {
   const origin = req.headers.origin || "*";
   res.header("Access-Control-Allow-Origin", origin);
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,OPTIONS"
-  );
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
@@ -53,6 +52,7 @@ app.use(express.json());
 
 const UPLOAD_FOLDER = "public/images";
 app.use("/get-image", express.static(path.join(__dirname, UPLOAD_FOLDER)));
+app.use("/api/email", emailRoutes);
 
 app.use("/api/unit/catalog", unitCustomerRoutes);
 
@@ -66,7 +66,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/rental", rentalRoutes);
 app.use("/api/detailrental", detailrentalRoutes);
 app.use("/api/user", userAdminRoutes);
-app.use('/api/admin', adminRoutes)
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");

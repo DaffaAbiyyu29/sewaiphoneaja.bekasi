@@ -5,6 +5,7 @@ export default function Input({
   type = "text",
   value,
   onChange,
+  onBlur = () => {},
   placeholder = "",
   showPasswordToggle = false,
   error = "",
@@ -66,6 +67,7 @@ export default function Input({
               value={value}
               onChange={handleChange}
               placeholder={placeholder}
+              onBlur={onBlur}
               className={`${baseClass} ${
                 type === "number"
                   ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

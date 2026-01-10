@@ -194,7 +194,12 @@ const cancelRent = async (req, res) => {
     // ✅ TANPA ROLE: done yah king dayu buat request sudah login (verifyToken sudah set req.user)
     if (!req.user) {
       await t.rollback();
-      return resError(res, "Akses ditolak", "Token tidak valid / belum login", 401);
+      return resError(
+        res,
+        "Akses ditolak",
+        "Token tidak valid / belum login",
+        401
+      );
     }
 
     const rent = await TrnRent.findOne({
@@ -223,7 +228,12 @@ const cancelRent = async (req, res) => {
     // ❌ tidak boleh cancel kalau sudah Open (unit sudah diambil)
     if (rent.status === "Open") {
       await t.rollback();
-      return resError(res, "Tidak bisa cancel, unit sudah diambil", "Conflict", 409);
+      return resError(
+        res,
+        "Tidak bisa cancel, unit sudah diambil",
+        "Conflict",
+        409
+      );
     }
 
     await rent.update(
@@ -289,7 +299,12 @@ const getRentsByDateRange = async (req, res) => {
     const { start, end, customer_id } = req.query;
 
     if (!start || !end) {
-      return resError(res, "start dan end wajib (YYYY-MM-DD)", "Bad Request", 400);
+      return resError(
+        res,
+        "start dan end wajib (YYYY-MM-DD)",
+        "Bad Request",
+        400
+      );
     }
 
     const startDate = new Date(start);
@@ -309,13 +324,15 @@ const getRentsByDateRange = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
-    return resSuccess(res, "Rental berdasarkan rentang tanggal berhasil diambil", rows);
+    return resSuccess(
+      res,
+      "Rental berdasarkan rentang tanggal berhasil diambil",
+      rows
+    );
   } catch (err) {
     return resError(res, "Gagal mengambil rental", err.message, 500);
   }
 };
-
-
 
 //buat ambil unit oleh customer
 const collectUnit = async (req, res) => {
@@ -723,6 +740,21 @@ const getRentById = async (req, res) => {
   }
 };
 
+const getNextInvoice = async (req, res) => {
+  try {
+    const invoice = await generateInvoiceNumber("trn_rent");
+
+    res.json({
+      invoice,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Gagal generate invoice",
+    });
+  }
+};
+
 const getRentByInvoiceOrNik = async (req, res) => {
   try {
     let { search } = req.params;
@@ -950,6 +982,7 @@ module.exports = {
   getRentByInvoiceOrNik,
   getActiveRentByCustomerAndDate,
   getRentsByDateRange,
+  getNextInvoice,
   updateRent,
   deleteRent,
   cancelRent,

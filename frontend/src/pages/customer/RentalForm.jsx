@@ -96,6 +96,8 @@ const RentalForm = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("09:00");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isErrorCust, setIsErrorCust] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem("selectedUnit")) {
@@ -418,7 +420,7 @@ const RentalForm = () => {
 
     // Validation for Step 3 (Document) - KTP wajib (only KTP allowed)
     if (step === 3) {
-      if (!imageFile) {
+      if (!isRepeat && !imageFile) {
         newErrors.photo = `Foto KTP wajib diunggah.`;
       }
       isValid = Object.keys(newErrors).length === 0;
@@ -448,7 +450,7 @@ const RentalForm = () => {
       const token = await getToken();
 
       // 1. Validasi KTP wajib
-      if (!imageFile) {
+      if (!isRepeat && !imageFile) {
         setErrors((prev) => ({ ...prev, photo: `Foto KTP wajib diunggah.` }));
         setLoading(false);
         return;
@@ -519,7 +521,10 @@ const RentalForm = () => {
         "social_media_username",
         formData.socialMediaUsername || ""
       );
-      customerPayload.append("ktp_image", imageFile.name || "");
+      customerPayload.append(
+        "ktp_image",
+        imageFile?.name || formData?.ktpImage || ""
+      );
       customerPayload.append("status", "Active");
       customerPayload.append("photo", imageFile);
 
@@ -563,6 +568,14 @@ const RentalForm = () => {
           },
         }
       );
+      const responseNextInvoice = await axios.post(
+        `${API_URL}/api/rental/getInvoice`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const rentData = responseRent.data?.data;
       if (!rentData || !rentData.rent_id) {
         throw new Error("Gagal membuat data rental.");
@@ -592,6 +605,46 @@ const RentalForm = () => {
         throw new Error("Gagal membuat detail rental.");
       }
 
+      // helper format rupiah (kalau belum ada)
+      const formatRupiah = (num) =>
+        `Rp ${Number(num || 0).toLocaleString("id-ID")}`;
+
+      // ===== 5. SEND EMAIL INVOICE =====
+      const emailPayload = {
+        email: formData.email,
+        name: formData.fullname,
+        address: formData.address || "Bekasi, Jawa Barat",
+        phone: formData.telp,
+        invoice: responseNextInvoice.data.invoice,
+        unit: unit.unit_name,
+        variant: selectedVariant?.color || "-",
+        duration: quantity,
+        pricePerDay: formatRupiah(selectedPrice?.price_per_day),
+        subtotal: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
+        total: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
+        paid: "Rp 0",
+        remaining: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
+        status: "Menunggu Pembayaran",
+        message: "Wajib menyelesaikan pembayaran untuk mengambil unit",
+        url: `https://sewaiphoneaja.bekasi/invoice/INV-${new Date().getFullYear()}-${rent_id}`,
+        date: new Date().toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }),
+      };
+
+      await axios.post(
+        `${API_URL}/api/email/send-invoice-customer`,
+        emailPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       setSubmissionSuccess(true);
       sessionStorage.removeItem("selectedUnit");
     } catch (error) {
@@ -604,6 +657,55 @@ const RentalForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchDataCustomerByNIK = async (nik) => {
+    setIsErrorCust(false);
+    setErrors((prev) => ({ ...prev, submit: null }));
+    axios
+      .get(`${API_URL}/api/customer/nik/${nik}`, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+      .then((res) => {
+        setIsRepeat(true);
+        console.log(res.data.data.customer);
+        setFormData((prev) => ({
+          ...prev,
+          fullname: res.data.data.customer.fullname || "",
+          nik: res.data.data.customer.nik || "",
+          telp: res.data.data.customer.telp || "",
+          email: res.data.data.customer.email || "",
+          address: res.data.data.customer.address || "",
+          closestContactName: res.data.data.customer.closest_contact_name || "",
+          closestContactTelp: res.data.data.customer.closest_contact_telp || "",
+          socialMediaType: res.data.data.customer.social_media_type || "",
+          socialMediaUsername:
+            res.data.data.customer.social_media_username || "",
+          ktpImage: res.data.data.customer.ktp_image || "",
+        }));
+        setImagePreview(
+          res.data.data.customer.ktp_image
+            ? `${API_URL}/get-image/${res.data.data.customer.ktp_image}`
+            : null
+        );
+      })
+      .catch((err) => {
+        if (
+          err.response.status === 409 ||
+          err.response.data.error === "Conflict"
+        ) {
+          setIsErrorCust(true);
+          setErrors({
+            submit:
+              err.response.data?.message ||
+              "Customer tidak dapat meminjam saat ini.",
+          });
+
+          console.log(errors);
+        }
+      });
   };
 
   // ===
@@ -719,6 +821,10 @@ const RentalForm = () => {
                     type="number"
                     value={formData.nik}
                     onChange={handleChange("nik")}
+                    onBlur={() => {
+                      fetchDataCustomerByNIK(formData.nik);
+                    }}
+                    disabled={isRepeat}
                     placeholder="16 digit NIK"
                     maxLength={16}
                     error={errors.nik}
@@ -730,6 +836,7 @@ const RentalForm = () => {
                   name="fullname"
                   value={formData.fullname}
                   onChange={handleChange("fullname")}
+                  disabled={isRepeat}
                   placeholder="Sesuai KTP"
                   error={errors.fullname}
                 />
@@ -739,6 +846,7 @@ const RentalForm = () => {
                   name="telp"
                   value={formData.telp}
                   onChange={handleChange("telp")}
+                  disabled={isRepeat}
                   placeholder="08xxxxxxxxxx"
                   maxLength={13}
                   type="number"
@@ -750,6 +858,7 @@ const RentalForm = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange("email")}
+                  disabled={isRepeat}
                   placeholder="email@contoh.com"
                   type="email"
                   error={errors.email}
@@ -761,6 +870,7 @@ const RentalForm = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange("address")}
+                    disabled={isRepeat}
                     placeholder="Alamat lengkap sesuai KTP"
                     type="textarea"
                     error={errors.address}
@@ -781,6 +891,7 @@ const RentalForm = () => {
                     name="closestContactName"
                     value={formData.closestContactName}
                     onChange={handleChange("closestContactName")}
+                    disabled={isRepeat}
                     placeholder="Nama kerabat/teman"
                     error={errors.closestContactName}
                   />
@@ -790,6 +901,7 @@ const RentalForm = () => {
                     name="closestContactTelp"
                     value={formData.closestContactTelp}
                     onChange={handleChange("closestContactTelp")}
+                    disabled={isRepeat}
                     placeholder="08xxxxxxxxxx"
                     maxLength={13}
                     type="number"
@@ -822,6 +934,7 @@ const RentalForm = () => {
                     <select
                       name="socialMediaType"
                       id="socialMediaType"
+                      disabled={isRepeat}
                       value={formData.socialMediaType}
                       onChange={handleChange("socialMediaType")}
                       className={`block w-full border-2 rounded-lg shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 p-3 text-sm font-medium transition-all ${
@@ -849,6 +962,7 @@ const RentalForm = () => {
                     name="socialMediaUsername"
                     value={formData.socialMediaUsername}
                     onChange={handleChange("socialMediaUsername")}
+                    disabled={isRepeat}
                     placeholder="@username"
                     error={errors.socialMediaUsername}
                   />
@@ -942,48 +1056,67 @@ const RentalForm = () => {
                         alt="Preview"
                         className="w-full h-96 object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
 
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl shadow-xl transform hover:scale-110"
-                      >
-                        <SVGX className="w-5 h-5" size={20} />
-                      </button>
-
-                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
-                        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3 shadow-lg">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <Check
-                              className="w-5 h-5 text-blue-600"
-                              size={20}
-                            />
+                      {!isRepeat && (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                          <button
+                            type="button"
+                            onClick={removeImage}
+                            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl shadow-xl transform hover:scale-110"
+                          >
+                            <SVGX className="w-5 h-5" size={20} />
+                          </button>
+                          <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
+                            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3 shadow-lg">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Check
+                                  className="w-5 h-5 text-blue-600"
+                                  size={20}
+                                />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">
+                                  File Berhasil Diupload
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  Klik ganti atau hapus untuk mengubah
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">
-                              File Berhasil Diupload
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              Klik ganti atau hapus untuk mengubah
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl"
+                        className={`
+                          flex-1 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg
+                          ${
+                            isRepeat
+                              ? "bg-blue-900/60 text-white/60 cursor-not-allowed"
+                              : "bg-blue-900 hover:bg-blue-800 text-white hover:shadow-xl cursor-pointer"
+                          }
+                        `}
                       >
                         Ganti Foto
                       </button>
+
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all border-2 border-red-200"
+                        disabled={isRepeat}
+                        className={`
+                          px-6 py-3 rounded-xl text-sm font-bold transition-all border-2
+                          ${
+                            isRepeat
+                              ? "bg-red-50 text-red-300 border-red-200 cursor-not-allowed"
+                              : "bg-red-50 hover:bg-red-100 text-red-600 border-red-200 cursor-pointer"
+                          }
+                        `}
                       >
                         Hapus
                       </button>
@@ -1002,22 +1135,24 @@ const RentalForm = () => {
               </div>
 
               {/* Info Box */}
-              <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-5">
-                <div className="flex gap-3">
-                  <AlertCircle
-                    className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
-                    size={20}
-                  />
-                  <div className="text-sm text-amber-900">
-                    <p className="font-bold mb-2">Persyaratan Foto:</p>
-                    <ul className="space-y-1 list-disc list-inside">
-                      <li>Foto harus jelas dan tidak buram</li>
-                      <li>Semua informasi terbaca dengan baik</li>
-                      <li>Tidak terpotong atau tertutup</li>
-                    </ul>
+              {!isRepeat && (
+                <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-5">
+                  <div className="flex gap-3">
+                    <AlertCircle
+                      className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                      size={20}
+                    />
+                    <div className="text-sm text-amber-900">
+                      <p className="font-bold mb-2">Persyaratan Foto:</p>
+                      <ul className="space-y-1 list-disc list-inside">
+                        <li>Foto harus jelas dan tidak buram</li>
+                        <li>Semua informasi terbaca dengan baik</li>
+                        <li>Tidak terpotong atau tertutup</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );
@@ -1133,7 +1268,7 @@ const RentalForm = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-screen mx-auto px-4 py-8">
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black text-gray-900 mb-2">
@@ -1162,9 +1297,9 @@ const RentalForm = () => {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* LEFT: Gallery & Summary - Sticky */}
-          <div className="lg:col-span-1">
+          <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-32 space-y-6">
               {/* Gallery */}
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
@@ -1190,7 +1325,7 @@ const RentalForm = () => {
           </div>
 
           {/* RIGHT: Form Fields */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="w-full lg:w-2/3 space-y-6">
             {/* Render Current Step Content */}
             {renderStepContent(currentStep)}
 
@@ -1212,13 +1347,13 @@ const RentalForm = () => {
                   type="button"
                   onClick={nextStep}
                   disabled={isSewaDisabled && currentStep === 1}
-                  className={`px-4 py-3 bg-blue-900 hover:bg-blue-700 text-gray-700 rounded-lg text-sm font-semibold transition-all border border-gray-300 shadow-sm ${
+                  className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all border shadow-sm ${
                     isSewaDisabled && currentStep === 1
                       ? "bg-gray-400 cursor-not-allowed text-white"
                       : "bg-blue-900 hover:bg-blue-800 text-white"
                   }`}
                 >
-                  Lanjut Step {currentStep + 1} &rarr;
+                  Lanjut Step {currentStep + 1} →
                 </button>
               ) : (
                 <button
@@ -1228,33 +1363,47 @@ const RentalForm = () => {
                   className={`w-full ${
                     loading || isSewaDisabled
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-900 via-blue-900 to-sky-900 hover:from-blue-700 hover:via-sky-700 hover:to-sky-700 shadow-lg hover:shadow-xl transform hover:scale-[1.01] active:scale-[0.99]"
-                  } text-white px-5 py-3 rounded-lg font-semibold text-base transition-all flex items-center justify-center gap-2 group relative overflow-hidden`}
+                      : "bg-gradient-to-r from-blue-900 via-blue-900 to-sky-900 hover:from-blue-700 hover:to-sky-700"
+                  } text-white px-5 py-3 rounded-lg font-semibold text-base transition-all flex items-center justify-center gap-2`}
                 >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Mengirim...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      <Check className="w-4 h-4 transform group-hover:rotate-12 transition-transform" />
-                      <span>Kirim Pengajuan</span>
-                    </>
+                  {/* Spinner */}
+                  {loading && (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                      ></path>
+                    </svg>
                   )}
+
+                  {/* Teks Button */}
+                  <span className="min-w-[140px] text-center">
+                    {loading ? "Mengirim..." : "Kirim Pengajuan"}
+                  </span>
                 </button>
               )}
             </div>
 
-            {/* Terms (Only visible on the final step for submission) */}
             {currentStep === stepperItems.length && (
-              <p className="text-xs text-center text-gray-500 leading-relaxed mt-4">
+              <p className="text-xs text-center text-gray-500 mt-4">
                 Dengan mengirim formulir, Anda menyetujui{" "}
-                <span className="font-semibold text-blue-600 cursor-pointer hover:underline">
+                <span className="font-semibold text-blue-600 hover:underline cursor-pointer">
                   syarat & ketentuan
-                </span>{" "}
-                penyewaan kami
+                </span>
               </p>
             )}
           </div>
