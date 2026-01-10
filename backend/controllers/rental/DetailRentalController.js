@@ -2,59 +2,149 @@ const TrnDetailRent = require("../../models/TrnDetailRental");
 const MstUnit = require("../../models/MstUnit");
 const MstVariantUnit = require("../../models/MstVariantUnit");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
-
+const sequelize = require("../../models/index");
 const { generateIncrementId } = require("../../helpers/generateID");
 
 const createDetail = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     const { rent_id, unit_code, variant_unit_code, price, qty, created_by } =
       req.body;
 
+    // =====================
+    // VALIDASI REQUEST
+    // =====================
     const missing = [];
     if (!rent_id) missing.push("rent_id");
     if (!unit_code) missing.push("unit_code");
-    if (price === undefined || price === null || price === "")
-      missing.push("price");
-    if (missing.length)
+    if (!variant_unit_code) missing.push("variant_unit_code");
+    if (price === undefined || price === null || price === "") missing.push("price");
+
+    if (missing.length) {
+      await t.rollback();
       return resError(
         res,
         "Data detail rental tidak lengkap",
         `Missing fields: ${missing.join(", ")}`,
         400
       );
+    }
 
-    const detail_id = await generateIncrementId(
-      TrnDetailRent,
-      "detail_id",
-      "DET"
-    );
     const q = qty !== undefined && qty !== null && qty !== "" ? Number(qty) : 1;
-    const p = Number(price);
-    const subtotal = p * q;
+    if (!Number.isFinite(q) || q <= 0) {
+      await t.rollback();
+      return resError(res, "qty tidak valid", "qty harus > 0", 400);
+    }
 
-    const newDetail = await TrnDetailRent.create({
-      detail_id,
-      rent_id,
-      unit_code,
-      variant_unit_code: variant_unit_code || null,
-      price: p,
-      qty: q,
-      subtotal,
-      created_at: new Date(),
-      created_by: created_by || null,
+    const p = Number(price);
+    if (!Number.isFinite(p) || p <= 0) {
+      await t.rollback();
+      return resError(res, "price tidak valid", "price harus > 0", 400);
+    }
+
+    // =====================
+    // CEK UNIT ADA?
+    // =====================
+    const unit = await MstUnit.findOne({
+      where: { unit_code },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
-    return resSuccess(
-      res,
-      "Detail rental berhasil dibuat",
-      newDetail,
-      null,
-      201
+    if (!unit) {
+      await t.rollback();
+      return resError(res, "Unit tidak ditemukan", "Not Found", 404);
+    }
+
+    // =====================
+    // CEK VARIANT ADA & MILIK UNIT?
+    // =====================
+    // kalau tabel mst_variant_unit punya kolom unit_code, kita pakai itu buat validasi relasi
+    const variantWhere = { variant_unit_code };
+
+    // ✅ ini membuat kode kamu tetap jalan walau struktur DB beda
+    if (MstVariantUnit.rawAttributes && MstVariantUnit.rawAttributes.unit_code) {
+      variantWhere.unit_code = unit_code;
+    }
+
+    const variant = await MstVariantUnit.findOne({
+      where: variantWhere,
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!variant) {
+      await t.rollback();
+      return resError(
+        res,
+        "Variant tidak ditemukan",
+        "Variant tidak ada / bukan milik unit tersebut",
+        404
+      );
+    }
+
+    // =====================
+    // CEK STOK
+    // =====================
+    const currentStock = Number(variant.qty || 0);
+
+    if (currentStock < q) {
+      await t.rollback();
+      return resError(
+        res,
+        "Stok tidak cukup",
+        `Stok tersedia: ${currentStock}, diminta: ${q}`,
+        409
+      );
+    }
+
+    // =====================
+    // KURANGI STOK VARIANT
+    // =====================
+    const newStock = currentStock - q;
+
+    await variant.update(
+      {
+        qty: newStock,
+        // opsional: update status variant kalau stok habis
+        ...(MstVariantUnit.rawAttributes && MstVariantUnit.rawAttributes.status
+          ? { status: newStock === 0 ? "Unavailable" : "Available" }
+          : {}),
+        updated_at: new Date(),
+      },
+      { transaction: t }
     );
+
+    // =====================
+    // CREATE DETAIL RENTAL
+    // =====================
+    const detail_id = await generateIncrementId(TrnDetailRent, "detail_id", "DET");
+    const subtotal = p * q;
+
+    const newDetail = await TrnDetailRent.create(
+      {
+        detail_id,
+        rent_id,
+        unit_code,
+        variant_unit_code,
+        price: p,
+        qty: q,
+        subtotal,
+        created_at: new Date(),
+        created_by: created_by || null,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return resSuccess(res, "Detail rental berhasil dibuat", newDetail, null, 201);
   } catch (err) {
+    await t.rollback();
     return resError(res, "Gagal membuat detail rental", err.message, 500);
   }
 };
+
 
 // const getDetails = async (req, res) => {
 //   try {
