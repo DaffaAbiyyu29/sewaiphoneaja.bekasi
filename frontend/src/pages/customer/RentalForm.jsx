@@ -662,13 +662,16 @@ const RentalForm = () => {
   const fetchDataCustomerByNIK = async (nik) => {
     setIsErrorCust(false);
     setErrors((prev) => ({ ...prev, submit: null }));
-    axios
-      .get(`${API_URL}/api/customer/nik/${nik}`, {
+
+    try {
+      const res = await axios.get(`${API_URL}/api/customer/nik/${nik}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
-      })
-      .then((res) => {
+      });
+
+      // THEN logic
+      if (res.data.data.customer) {
         setIsRepeat(true);
         console.log(res.data.data.customer);
         setFormData((prev) => ({
@@ -690,22 +693,24 @@ const RentalForm = () => {
             ? `${API_URL}/get-image/${res.data.data.customer.ktp_image}`
             : null
         );
-      })
-      .catch((err) => {
-        if (
-          err.response.status === 409 ||
-          err.response.data.error === "Conflict"
-        ) {
-          setIsErrorCust(true);
-          setErrors({
-            submit:
-              err.response.data?.message ||
-              "Customer tidak dapat meminjam saat ini.",
-          });
-
-          console.log(errors);
-        }
-      });
+      }
+    } catch (err) {
+      // CATCH logic
+      if (
+        err.response?.status === 409 ||
+        err.response?.data?.error === "Conflict"
+      ) {
+        setIsErrorCust(true);
+        setErrors({
+          submit:
+            err.response.data?.message ||
+            "Customer tidak dapat meminjam saat ini.",
+        });
+        console.log(errors);
+      } else {
+        console.error(err);
+      }
+    }
   };
 
   // ===
