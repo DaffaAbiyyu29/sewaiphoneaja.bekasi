@@ -18,7 +18,7 @@ const {
 const { verifyToken } = require("../../middleware/middleware");
 const { resError, resSuccess } = require("../../helpers/sendResponse");
 
-router.get("/getInvoice", getNextInvoice);
+router.post("/getInvoice", getNextInvoice);
 router.get("/pesanan", (req, res) => {
   return resSuccess(res, "Data rental berhasil diambil", {});
 });
