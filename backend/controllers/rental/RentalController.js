@@ -153,7 +153,7 @@ const createRent = async (req, res) => {
             balance !== undefined && balance !== null && balance !== ""
               ? Number(balance)
               : Number(total_price) - (total_paid || 0),
-          status: status || "Waiting Payment",
+          status: "Waiting Payment",
           invoice_number: invoiceNo,
           created_at: new Date(),
           created_by: created_by || null,

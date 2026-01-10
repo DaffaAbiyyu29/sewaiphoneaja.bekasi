@@ -140,12 +140,22 @@ const updatePayment = async (req, res) => {
         balance: newBalance,
       });
 
-      // Jika balance 0 → ganti status rent jadi Open
-      if (newBalance === 0) {
-        await rent.update({ status: "Open" });
+      if (status === "Paid" && rent) {
+        const totalPaid = await TrnPayment.sum("total_payment", {
+          where: { rent_id: rent.rent_id, status: "Paid" },
+        });
+
+        const newTotalPaid = Number(totalPaid || 0);
+        const newBalance = Number(rent.total_price) - newTotalPaid;
+
+        await rent.update({
+          total_paid: newTotalPaid,
+          balance: newBalance,
+          status: newBalance <= 0 ? "Open" : "Waiting Payment",
+        });
       }
     }
-    
+
     return resSuccess(res, "Pembayaran berhasil diperbarui", payment);
   } catch (err) {
     return resError(res, "Gagal memperbarui pembayaran", err.message, 500);
