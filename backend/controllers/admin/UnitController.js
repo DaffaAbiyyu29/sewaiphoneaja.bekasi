@@ -35,14 +35,15 @@ const getAllUnit = async (req, res) => {
       "status",
     ];
 
-    const where =
-      search.trim() !== ""
-        ? {
-            [Op.or]: searchableFields.map((field) => ({
-              [field]: { [Op.like]: `%${search}%` },
-            })),
-          }
-        : {};
+    const where = {
+      is_delete: 0,
+    };
+
+    if (search.trim() !== "") {
+      where[Op.or] = searchableFields.map((field) => ({
+        [field]: { [Op.like]: `%${search}%` },
+      }));
+    }
 
     const allowedOrderFields = [
       "unit_code",
@@ -86,7 +87,7 @@ const getUnitByCode = async (req, res) => {
   try {
     const { unitCode } = req.params;
     const unit = await MstUnit.findOne({
-      where: { unit_code: unitCode },
+      where: { unit_code: unitCode, is_delete: 0 },
     });
 
     if (!unit) return resError(res, "Unit tidak ditemukan", "Not Found", 404);
@@ -123,6 +124,7 @@ const getVariantUnitByUnitCode = async (req, res) => {
     // --- 2. Filter Utama (unit_code) ---
     const primaryWhere = {
       unit_code: unitCode,
+      is_delete: 0,
     };
 
     // --- 3. Filter Pencarian (Search) ---
@@ -138,7 +140,7 @@ const getVariantUnitByUnitCode = async (req, res) => {
         : {};
 
     // Gabungkan primaryWhere (unit_code) dan searchWhere
-    const where = { ...primaryWhere, ...searchWhere };
+    const where = { is_delete: 0, ...primaryWhere, ...searchWhere };
 
     // --- 4. Sorting ---
     const allowedOrderFields = [
@@ -212,6 +214,7 @@ const getPriceUnitByUnitCode = async (req, res) => {
     // --- 2. Filter Utama (unit_code) ---
     const primaryWhere = {
       unit_code: unitCode,
+      is_delete: 0,
     };
 
     // --- 3. Filter Pencarian (Search) ---
@@ -241,7 +244,7 @@ const getPriceUnitByUnitCode = async (req, res) => {
     }
 
     // Gabungkan primaryWhere (unit_code) dan searchWhere
-    const where = { ...primaryWhere, ...searchWhere };
+    const where = { is_delete: 0, ...primaryWhere, ...searchWhere };
 
     // --- 4. Sorting ---
     const allowedOrderFields = [
@@ -435,7 +438,6 @@ const deleteUnit = async (req, res) => {
   }
 };
 
-
 // =============================================
 // UPDATE EXPORT agar semua fungsi dikenali
 // =============================================
@@ -445,10 +447,7 @@ module.exports = {
   getUnitByCode,
   getVariantUnitByUnitCode,
   getPriceUnitByUnitCode,
-  // CREATE
   createUnit,
-  // UPDATE
   updateUnit,
-  // DELETE
   deleteUnit,
 };

@@ -61,7 +61,7 @@ export default function Dashboard() {
         setIsLoading(true);
         setError(null);
         const response = await axios.get(`${API_URL}/api/unit/catalog`);
-        console.log(response);
+
         if (!response.data.success) {
           throw new Error("Gagal mengambil data dari server");
         }

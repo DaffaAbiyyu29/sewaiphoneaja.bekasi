@@ -21,6 +21,10 @@ const TrnRent = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    duration: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     collect_date: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -43,8 +47,7 @@ const TrnRent = sequelize.define(
     },
     status: {
       type: DataTypes.ENUM(
-        "Waiting Approval",
-        "Rejected Approval",
+        "Cancelled",
         "Waiting Payment",
         "Open",
         "Close",

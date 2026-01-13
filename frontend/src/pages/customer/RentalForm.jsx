@@ -29,13 +29,11 @@ import {
 
 // Data dummy untuk dropdown Jenis Sosial Media
 const socialMediaOptions = [
-  { value: "", label: "Pilih Jenis Sosial Media" },
-  { value: "instagram", label: "Instagram" },
-  { value: "facebook", label: "Facebook" },
-  { value: "twitter", label: "Twitter (X)" },
-  { value: "tiktok", label: "TikTok" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "lainnya", label: "Lainnya" },
+  { value: "Instagram", label: "Instagram" },
+  { value: "Facebook", label: "Facebook" },
+  { value: "Twitter", label: "Twitter (X)" },
+  { value: "TikTok", label: "TikTok" },
+  { value: "Lainnya", label: "Lainnya" },
 ];
 
 // ===
@@ -97,7 +95,6 @@ const RentalForm = () => {
   const [endTime, setEndTime] = useState("09:00");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
-  const [isErrorCust, setIsErrorCust] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem("selectedUnit")) {
@@ -549,14 +546,15 @@ const RentalForm = () => {
         customer_id,
         start_rent_date: `${startDate}T${startTime}:00`,
         end_rent_date: `${endDate}T${endTime}:00`,
+        duration: rentalDays,
         total_price: selectedPrice?.price_per_day
-          ? selectedPrice.price_per_day * quantity
+          ? selectedPrice.price_per_day * quantity * rentalDays
           : 0,
         total_paid: 0,
         balance: selectedPrice?.price_per_day
-          ? selectedPrice.price_per_day * quantity
+          ? selectedPrice.price_per_day * quantity * rentalDays
           : 0,
-        status: "Waiting Approval",
+        status: "Waiting Payment",
         created_by: formData.fullname || "SYSTEM",
       };
       const responseRent = await axios.post(
@@ -621,11 +619,8 @@ const RentalForm = () => {
         duration: quantity,
         pricePerDay: formatRupiah(selectedPrice?.price_per_day),
         subtotal: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
-        total: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
         paid: "Rp 0",
         remaining: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
-        status: "Menunggu Pembayaran",
-        message: "Wajib menyelesaikan pembayaran untuk mengambil unit",
         url: `https://sewaiphoneaja.bekasi/invoice/INV-${new Date().getFullYear()}-${rent_id}`,
         date: new Date().toLocaleDateString("id-ID", {
           day: "2-digit",
@@ -660,7 +655,6 @@ const RentalForm = () => {
   };
 
   const fetchDataCustomerByNIK = async (nik) => {
-    setIsErrorCust(false);
     setErrors((prev) => ({ ...prev, submit: null }));
 
     try {
@@ -700,7 +694,6 @@ const RentalForm = () => {
         err.response?.status === 409 ||
         err.response?.data?.error === "Conflict"
       ) {
-        setIsErrorCust(true);
         setErrors({
           submit:
             err.response.data?.message ||
@@ -940,20 +933,27 @@ const RentalForm = () => {
                       name="socialMediaType"
                       id="socialMediaType"
                       disabled={isRepeat}
-                      value={formData.socialMediaType}
+                      value={formData.socialMediaType || ""}
                       onChange={handleChange("socialMediaType")}
-                      className={`block w-full border-2 rounded-lg shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 p-3 text-sm font-medium transition-all ${
-                        errors.socialMediaType
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-300"
-                      }`}
+                      className={`block w-full border-2 rounded-lg shadow-sm 
+                        focus:ring-2 focus:ring-blue-900 focus:border-blue-900 
+                        p-3 text-sm font-medium transition-all ${
+                          errors.socialMediaType
+                            ? "border-red-500 bg-red-50"
+                            : "border-gray-300"
+                        }`}
                     >
+                      <option value="" disabled>
+                        Pilih Jenis Sosial Media
+                      </option>
+
                       {socialMediaOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
                       ))}
                     </select>
+
                     {errors.socialMediaType && (
                       <p className="text-red-600 text-xs mt-2 font-medium flex items-center gap-1">
                         <AlertCircle className="w-4 h-4" size={16} />

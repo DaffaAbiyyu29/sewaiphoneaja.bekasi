@@ -19,6 +19,7 @@ export default function DetailPaymentDialog({
   isOpen,
   onClose,
   payment,
+  customer,
   onSuccess,
 }) {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -234,7 +235,7 @@ export default function DetailPaymentDialog({
                     <div>
                       <p className="text-gray-500 mb-0.5">Dibuat</p>
                       <p className="font-medium text-gray-700">
-                        {payment.created_by || "-"}
+                        {customer || "-"}
                       </p>
                       {payment.created_at && (
                         <p className="text-gray-500 text-[10px]">

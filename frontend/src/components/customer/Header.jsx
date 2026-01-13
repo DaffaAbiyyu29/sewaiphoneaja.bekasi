@@ -32,7 +32,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Menu - CENTER */}
-        <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-x-12">
+        <div className="hidden lg:flex md:hidden absolute left-1/2 -translate-x-1/2 gap-x-12">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -53,7 +53,7 @@ export default function Header() {
 
         {/* Mobile Button */}
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          className="lg:hidden md:flex p-2 rounded-lg hover:bg-gray-100"
           onClick={() => setMobileMenuOpen(true)}
         >
           <FontAwesomeIcon icon={faBars} className="w-5 h-5 text-gray-700" />

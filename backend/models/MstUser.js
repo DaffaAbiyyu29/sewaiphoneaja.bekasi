@@ -19,8 +19,8 @@ const MstUser = sequelize.define(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM("Admin", "Manager"),
-      allowNull: false,
+      type: DataTypes.ENUM("Admin", "Manager", "Supervisor"),
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING(100),
@@ -77,6 +77,10 @@ const MstUser = sequelize.define(
     },
     role: {
       type: DataTypes.STRING(16),
+      allowNull: true,
+    },
+    is_delete: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
   },

@@ -114,14 +114,16 @@ const getUsers = async (req, res) => {
       "birth_place",
     ];
 
-    const where =
-      search.trim() !== ""
+    const where = {
+      is_delete: 0,
+      ...(search.trim() !== ""
         ? {
             [Op.or]: searchableFields.map((field) => ({
               [field]: { [Op.like]: `%${search}%` },
             })),
           }
-        : {};
+        : {}),
+    };
 
     /** ================= ORDER ================= */
     const allowedOrderFields = [
@@ -171,7 +173,7 @@ const getUserById = async (req, res) => {
   try {
     const { nik } = req.params;
 
-    const user = await MstUser.findOne({ where: { nik: nik } });
+    const user = await MstUser.findOne({ where: { nik: nik, is_delete: 0 } });
     if (!user) return resError(res, "User tidak ditemukan", "Not Found", 404);
     const data = user.toJSON();
     delete data.password;

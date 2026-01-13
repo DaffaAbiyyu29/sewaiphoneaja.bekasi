@@ -19,6 +19,6 @@ router.get("/", verifyToken, getPayments);
 // detail
 router.get("/:paymentId", verifyToken, getPaymentById);
 // delete
-router.delete("/:paymentId", verifyToken, deletePayment);
+router.post("/delete/:paymentId", verifyToken, deletePayment);
 
 module.exports = router;

@@ -14,6 +14,10 @@ import {
   SVGCheck,
   SVGAlertCircle,
   SVGMobilePhone,
+  SVGCalendarStart,
+  SVGCalendarEnd,
+  SVGVariant,
+  SVGEmail,
 } from "./SVGComponents";
 import axios from "axios";
 
@@ -89,7 +93,6 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
     : null;
 
   useEffect(() => {
-    console.log(normalized);
     // reset ketika rentalData berubah / dialog ditutup
     if (!isOpen) {
       setImageFile(null);
@@ -206,12 +209,18 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
         return "bg-green-100 text-green-800";
       case "OverDue":
         return "bg-red-100 text-red-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
       case "Invalid":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  const isUploadDisabled = ["Close", "Cancelled", "Invalid"].includes(
+    normalized.status
+  );
 
   return (
     <ModalWrapper
@@ -309,7 +318,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
 
               <div className="flex items-start gap-3">
                 <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
-                  <SVGCalendar size={20} />
+                  <SVGCalendarStart size={20} />
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">Tanggal Awal</div>
@@ -321,7 +330,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
 
               <div className="flex items-start gap-3">
                 <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
-                  <SVGCalendar size={20} />
+                  <SVGCalendarEnd size={20} />
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">Tanggal Akhir</div>
@@ -330,14 +339,11 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* KOLOM KANAN */}
-            <div className="space-y-3">
               {normalized.variant && (
                 <div className="flex items-start gap-3">
                   <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
-                    <SVGUser size={20} />
+                    <SVGVariant size={20} />
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Variant</div>
@@ -347,17 +353,29 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* KOLOM KANAN */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
+                  <SVGUser size={20} />
+                </div>
+                <div className="text-start">
+                  <div className="text-xs text-slate-500">Customer</div>
+                  <div className="font-medium text-slate-900">
+                    {normalized.customer?.fullname ?? "-"}
+                  </div>
+                </div>
+              </div>
 
               <div className="flex items-start gap-3">
                 <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
                   <SVGPhone size={20} />
                 </div>
-                <div>
-                  <div className="text-xs text-slate-500">Customer</div>
+                <div className="text-start">
+                  <div className="text-xs text-slate-500">Telp</div>
                   <div className="font-medium text-slate-900">
-                    {normalized.customer?.fullname ?? "-"}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
                     {normalized.customer?.telp ?? "-"}
                   </div>
                 </div>
@@ -365,9 +383,9 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
 
               <div className="flex items-start gap-3">
                 <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
-                  <SVGUser size={20} />
+                  <SVGEmail size={20} />
                 </div>
-                <div>
+                <div className="text-start">
                   <div className="text-xs text-slate-500">Email</div>
                   <div className="font-medium text-slate-900">
                     {normalized.customer?.email ?? "-"}
@@ -410,6 +428,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
 
               <input
                 ref={fileInputRef}
+                disabled={isUploadDisabled}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleImageChange(e.target.files[0])}
@@ -418,18 +437,25 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
 
               {!imagePreview ? (
                 <div
-                  className={`relative border-3 border-dashed rounded-xl cursor-pointer transition-all duration-300 p-10 min-h-[300px] flex items-center justify-center group ${
-                    dragActive
-                      ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
-                      : errors.photo
-                      ? "border-red-400 bg-red-50 shadow-md"
-                      : "border-gray-300 hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  className={`relative border-3 border-dashed rounded-xl p-10 min-h-[300px]
+                      flex items-center justify-center transition-all
+                      ${
+                        isUploadDisabled
+                          ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
+                          : dragActive
+                          ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
+                          : errors.photo
+                          ? "border-red-400 bg-red-50 shadow-md"
+                          : "border-gray-300 cursor-pointer hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
+                      }
+                    `}
+                  onClick={() => {
+                    if (!isUploadDisabled) fileInputRef.current?.click();
+                  }}
+                  onDragEnter={!isUploadDisabled ? handleDrag : undefined}
+                  onDragOver={!isUploadDisabled ? handleDrag : undefined}
+                  onDragLeave={!isUploadDisabled ? handleDrag : undefined}
+                  onDrop={!isUploadDisabled ? handleDrop : undefined}
                 >
                   <div className="text-center">
                     <div className="relative inline-block mb-6">

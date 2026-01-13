@@ -95,13 +95,6 @@ export default function Header({ onMenuClick, userData }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // const handleLogout = () => {
-  //   alert("Logging out...");
-  //   localStorage.removeItem("token");
-  //   window.location.href = "/";
-  //   setIsDropdownOpen(false);
-  // };
-
   const handleLogout = () => {
     Swal.fire({
       title: "Logout?",

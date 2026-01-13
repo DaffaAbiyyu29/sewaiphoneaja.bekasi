@@ -152,7 +152,6 @@ const getCustomerDetail = async (req, res) => {
 //END OF getCustomerDetail
 //
 
-
 // ===
 // CHECK CUSTOMER BY NIK
 // ===
@@ -225,7 +224,9 @@ const checkCustomerByNIK = async (req, res) => {
 // ===
 // helper normalize status
 const isCustomerActive = (customer) => {
-  const s = String(customer.status || "").trim().toLowerCase();
+  const s = String(customer.status || "")
+    .trim()
+    .toLowerCase();
   return s === "active";
 };
 
@@ -342,7 +343,6 @@ const createCustomer = async (req, res) => {
   }
 };
 
-
 // ===
 // UPDATE CUSTOMER
 // ===
@@ -369,7 +369,7 @@ const updateCustomer = async (req, res) => {
     }
 
     //jadi admin bisa blokir/inactive customer melalui update
-    const allowedStatus = ["Active","Inactive"]; 
+    const allowedStatus = ["Active", "Inactive"];
 
     // support admin action via query (?action=block / inactive / activate)
     if (req.query.action) {

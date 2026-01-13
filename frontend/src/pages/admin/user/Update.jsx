@@ -507,6 +507,7 @@ export default function UpdateUserPage() {
                     </option>
                     <option value="Admin">Admin</option>
                     <option value="Manager">Manager</option>
+                    <option value="Supervisor">Supervisor</option>
                   </select>
 
                   {errors.role && (

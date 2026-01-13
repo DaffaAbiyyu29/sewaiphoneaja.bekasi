@@ -92,6 +92,44 @@ input[type="password"]::-webkit-password-toggle-button {
   transition: width 0.1s linear;
 }
 
+.swal-confirm {
+  border-radius: 999px !important;
+  padding: 10px 20px !important;
+  font-weight: 600;
+}
+
+.swal-danger {
+  border-radius: 999px !important;
+  padding: 10px 20px !important;
+  font-weight: 600;
+  background: #ef4444 !important;
+}
+
+.swal-cancel {
+  border-radius: 999px !important;
+  padding: 10px 20px !important;
+}
+
+.swal-textarea-blue {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1.5px solid #c7d2fe;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.swal-textarea-blue:focus {
+  border-color: #1e3a8a; /* blue-900 */
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.18);
+}
+
 /* @keyframes dotWave {
   0%,
   100% {

@@ -21,7 +21,17 @@ import {
   faUsers,
   faReceipt,
   faInfoCircle,
+  faUserCheck,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
+
+import {
+  faInstagram,
+  faFacebook,
+  faXTwitter,
+  faTiktok,
+} from "@fortawesome/free-brands-svg-icons";
+
 import { getToken } from "../../../helpers/GetToken";
 import DetailPaymentDialog from "../../../components/admin/DetailPaymentDialog";
 import {
@@ -89,7 +99,7 @@ const getStatusColor = (status) => {
     return "bg-yellow-100 text-yellow-800";
   }
 
-  if (lower.includes("rejected")) {
+  if (lower.includes("cancelled")) {
     return "bg-red-100 text-red-800";
   }
 
@@ -137,16 +147,101 @@ export default function RentalDetailPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const openDetail = (payment) => {
-    console.log("Opening payment detail for:", payment);
     setSelectedPayment(payment);
     setShowDetail(true);
+  };
 
-    console.log(selectedPayment);
-    console.log(showDetail);
+  const openDelete = async (payment) => {
+    if (!payment?.payment_id) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Hapus Pembayaran?",
+      text: "Pembayaran ini akan ditandai sebagai dihapus.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
+      },
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      const token = getToken();
+
+      Swal.fire({
+        title: "Menghapus...",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await axios.post(
+        `${API_URL}/api/payment/delete/${payment.payment_id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Pembayaran berhasil dihapus.",
+        timer: 2000,
+        showConfirmButton: false,
+
+        customClass: { popup: "rounded-swal" },
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
+      });
+
+      // update state frontend (tanpa reload)
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: err.response?.data?.message || "Gagal menghapus pembayaran.",
+
+        customClass: {
+          popup: "rounded-swal",
+          confirmButton: "confirm-swal",
+        },
+
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
+      });
+    }
   };
 
   const user = getUserInfo();
-  console.log(user.name);
+  const socialMediaIconMap = {
+    Instagram: faInstagram,
+    Facebook: faFacebook,
+    Twitter: faXTwitter,
+    TikTok: faTiktok,
+    Lainnya: faLink,
+  };
 
   const handleApproveRental = async (rentId) => {
     if (!rentId) return;
@@ -203,61 +298,200 @@ export default function RentalDetailPage() {
   const handleRejectRental = async (rentId) => {
     if (!rentId) return;
 
-    const { value: notes } = await Swal.fire({
-      title: "Reject Pengajuan",
-      input: "textarea",
-      inputPlaceholder: "Masukkan alasan penolakan (opsional)...",
+    // STEP 1 — input alasan
+    const { value: notes, isConfirmed: notesConfirmed } = await Swal.fire({
+      title: "Alasan Penolakan",
+      html: `
+          <label style="
+            display:block;
+            text-align:left;
+            font-size:13px;
+            color:#1e3a8a;
+            margin-bottom:6px;
+            font-weight:600;
+          ">
+            Jelaskan alasan penolakan
+          </label>
+
+          <textarea
+            id="reject-notes"
+            class="swal-textarea-blue"
+            placeholder="Contoh: Unit sedang digunakan oleh penyewa lain di tanggal tersebut"
+            rows="4"
+          ></textarea>
+
+          <small style="
+            display:block;
+            margin-top:6px;
+            font-size:12px;
+            color:#475569;
+          ">
+            Alasan ini akan dikirimkan ke pelanggan.
+          </small>
+        `,
       showCancelButton: true,
-      confirmButtonText: "Kirim",
+      confirmButtonText: "Lanjut",
       cancelButtonText: "Batal",
-      inputAttributes: {
-        "aria-label": "Alasan penolakan",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      preConfirm: () => {
+        const value = document.getElementById("reject-notes").value;
+        if (!value.trim()) {
+          Swal.showValidationMessage("Alasan penolakan wajib diisi");
+          return false;
+        }
+        return value;
+      },
+
+      didOpen: () => {
+        document.getElementById("reject-notes")?.focus();
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
       },
     });
 
-    if (notes === undefined) return; // canceled
+    if (!notesConfirmed) return;
 
-    const confirmed = await Swal.fire({
-      title: "Konfirmasi Reject",
-      text: "Apakah Anda yakin ingin menolak pengajuan ini?",
+    // STEP 2 — konfirmasi reject
+    const confirm = await Swal.fire({
+      title: "Konfirmasi Penolakan",
+      text: "Pengajuan penyewaan ini akan ditolak. Lanjutkan?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#6b7280",
       confirmButtonText: "Ya, Tolak",
       cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
+      },
     });
 
-    if (!confirmed.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
     try {
       const token = getToken();
+
+      // STEP 3 — loading
+      Swal.fire({
+        title: "Memproses...",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
       await axios.put(
-        `${API_URL}/api/rental/${rentId}/reject`,
+        `${API_URL}/api/rental/${rentId}/cancel`,
         { notes, updated_by: user.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      const formatRupiah = (num) =>
+        `Rp ${Number(num || 0).toLocaleString("id-ID")}`;
+
+      console.log(details[0]);
+      const emailPayload = {
+        invoice: rental.invoice_number,
+        email: customer.email,
+        name: customer.fullname,
+        address: customer.address,
+        phone: customer.telp,
+        unit: details[0].unit_name,
+        variant: details[0].variant_name || "-",
+        duration: rental.duration,
+        pricePerDay: formatRupiah(details[0].price),
+        subtotal: formatRupiah(details[0].price * rental.duration),
+        note: notes || "Unit tidak tersedia",
+        date: new Date(rental.created_at).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }),
+      };
+
+      await axios.post(
+        `${API_URL}/api/email/send-rejected-invoice-customer`,
+        emailPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // STEP 4 — success
       Swal.fire({
         icon: "success",
-        title: "Berhasil!",
+        title: "Berhasil Ditolak",
         text: "Pengajuan penyewaan telah ditolak.",
-        showConfirmButton: false,
         timer: 2000,
+        showConfirmButton: false,
+
+        customClass: {
+          popup: "rounded-swal",
+        },
+
+        showClass: {
+          popup: "animate__animated animate__zoomIn",
+        },
+        hideClass: {
+          popup: "animate__animated animate__zoomOut",
+        },
       });
 
-      // Update local rental state
-      setRental((prev) => ({ ...prev, status: "Rejected Approval" }));
+      setRental((prev) => ({ ...prev, status: "Cancelled" }));
 
       setTimeout(() => {
         window.location.reload();
       }, 2000);
     } catch (err) {
       console.error(err);
+
       Swal.fire({
         icon: "error",
-        title: "Gagal!",
+        title: "Gagal",
         text: err.response?.data?.message || "Terjadi kesalahan saat reject.",
+
+        customClass: {
+          popup: "rounded-swal",
+          confirmButton: "confirm-swal",
+        },
+
+        showClass: {
+          popup: "animate__animated animate__zoomIn",
+        },
+        hideClass: {
+          popup: "animate__animated animate__zoomOut",
+        },
       });
     }
   };
@@ -267,19 +501,42 @@ export default function RentalDetailPage() {
 
     const confirmResult = await Swal.fire({
       title: "Collect Unit?",
-      text: "Unit akan ditandai sebagai sudah di-collect.",
+      text: "Unit akan ditandai sudah diambil oleh customer.",
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#10b981",
-      cancelButtonColor: "#6b7280",
       confirmButtonText: "Ya, Collect",
       cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
+      },
     });
 
     if (!confirmResult.isConfirmed) return;
 
     try {
       const token = getToken();
+
+      Swal.fire({
+        title: "Memproses...",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
       const res = await axios.put(
         `${API_URL}/api/rental/${rentId}/collect`,
         {},
@@ -288,13 +545,16 @@ export default function RentalDetailPage() {
 
       Swal.fire({
         icon: "success",
-        title: "Berhasil!",
+        title: "Berhasil",
         text: "Unit berhasil di-collect.",
-        showConfirmButton: false,
         timer: 2000,
+        showConfirmButton: false,
+
+        customClass: { popup: "rounded-swal" },
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
       });
 
-      // update state lokal (biar tombol langsung berubah)
       setRental((prev) => ({
         ...prev,
         collect_date: res.data?.collect_date || new Date().toISOString(),
@@ -303,8 +563,16 @@ export default function RentalDetailPage() {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Gagal!",
+        title: "Gagal",
         text: err.response?.data?.message || "Gagal collect unit.",
+
+        customClass: {
+          popup: "rounded-swal",
+          confirmButton: "confirm-swal",
+        },
+
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
       });
     }
   };
@@ -314,19 +582,42 @@ export default function RentalDetailPage() {
 
     const confirmResult = await Swal.fire({
       title: "Return Unit?",
-      text: "Unit akan dikembalikan dan status diset ke Close.",
+      text: "Unit akan ditandai sudah dikembalikan oleh customer dan status akan ditutup.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      cancelButtonColor: "#6b7280",
       confirmButtonText: "Ya, Return",
       cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+
+      customClass: {
+        popup: "rounded-swal",
+        confirmButton: "confirm-swal",
+        cancelButton: "cancel-swal",
+      },
+
+      showClass: {
+        popup: "animate__animated animate__zoomIn",
+        backdrop: "animate__animated animate__fadeIn",
+      },
+      hideClass: {
+        popup: "animate__animated animate__zoomOut",
+        backdrop: "animate__animated animate__fadeOut",
+      },
     });
 
     if (!confirmResult.isConfirmed) return;
 
     try {
       const token = getToken();
+
+      Swal.fire({
+        title: "Memproses...",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
       const res = await axios.put(
         `${API_URL}/api/rental/${rentId}/return`,
         {},
@@ -335,10 +626,14 @@ export default function RentalDetailPage() {
 
       Swal.fire({
         icon: "success",
-        title: "Berhasil!",
+        title: "Berhasil",
         text: "Unit berhasil dikembalikan.",
-        showConfirmButton: false,
         timer: 2000,
+        showConfirmButton: false,
+
+        customClass: { popup: "rounded-swal" },
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
       });
 
       setRental((prev) => ({
@@ -350,8 +645,16 @@ export default function RentalDetailPage() {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Gagal!",
+        title: "Gagal",
         text: err.response?.data?.message || "Gagal return unit.",
+
+        customClass: {
+          popup: "rounded-swal",
+          confirmButton: "confirm-swal",
+        },
+
+        showClass: { popup: "animate__animated animate__zoomIn" },
+        hideClass: { popup: "animate__animated animate__zoomOut" },
       });
     }
   };
@@ -455,7 +758,7 @@ export default function RentalDetailPage() {
 
   // Calculate total from details
   const totalPriceFromDetails = details.reduce(
-    (sum, d) => sum + (d.subtotal || 0),
+    (sum, d) => sum + (d.subtotal || 0) * (d.qty || 1) * rentalDays,
     0
   );
 
@@ -501,15 +804,14 @@ export default function RentalDetailPage() {
                   <p className="font-semibold text-sm">{rental.status}</p>
                 </div>
 
-                {/* Show approve/reject only when waiting approval */}
-                {rental.status === "Waiting Approval" && (
+                {rental.status === "Waiting Payment" && (
                   <div className="flex items-center gap-2">
-                    <button
+                    {/* <button
                       onClick={() => handleApproveRental(rental?.rent_id)}
                       className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
                     >
                       Approve
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => handleRejectRental(rental?.rent_id)}
                       className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition-all shadow-sm"
@@ -589,7 +891,8 @@ export default function RentalDetailPage() {
 
               {details.length > 0 && (
                 <div className="p-5 border-t border-gray-200">
-                  <div className="flex items-center gap-2 mb-3">
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-5">
                     <div className="bg-blue-100 p-2 rounded-lg">
                       <FontAwesomeIcon
                         icon={faBox}
@@ -600,22 +903,47 @@ export default function RentalDetailPage() {
                       Informasi Unit
                     </h3>
                   </div>
-                  <div className="space-y-3">
+
+                  {/* Content */}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                    {/* Nama Unit */}
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Nama Unit</p>
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-[11px] text-gray-500 mb-1">
+                        Nama Unit
+                      </p>
+                      <p className="text-sm font-semibold text-gray-900 leading-tight">
                         {details[mainImageIndex]?.unit_name ||
                           details[mainImageIndex]?.unit_code}
                       </p>
                     </div>
+
+                    {/* Harga */}
+                    <div className="text-right">
+                      <p className="text-[11px] text-gray-500 mb-1">
+                        Harga / Hari
+                      </p>
+                      <p className="text-sm font-bold text-blue-900">
+                        {formatCurrency(details[mainImageIndex].price)}
+                      </p>
+                    </div>
+
+                    {/* Varian */}
                     {details[mainImageIndex]?.variant_name && (
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Varian</p>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-[11px] text-gray-500 mb-1">Varian</p>
+                        <p className="text-sm font-medium text-gray-900">
                           {details[mainImageIndex]?.variant_name}
                         </p>
                       </div>
                     )}
+
+                    {/* Qty */}
+                    <div className="text-right">
+                      <p className="text-[11px] text-gray-500 mb-1">Jumlah</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {details[mainImageIndex].qty} Unit
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -637,7 +965,7 @@ export default function RentalDetailPage() {
                         className="flex justify-between items-center text-sm bg-white/10 p-3 rounded-lg"
                       >
                         <span className="text-white/90">
-                          {detail.qty}x {detail.unit_code}
+                          {detail.qty}x {detail.unit_name}
                         </span>
                         <span className="font-semibold">
                           {formatCurrency(detail.subtotal)}
@@ -704,119 +1032,126 @@ export default function RentalDetailPage() {
           <div className="lg:col-span-8 space-y-6">
             {/* Customer Info */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-blue-900 px-5 py-4">
-                <div className="flex items-center gap-2">
+              {/* Header */}
+              <div className="bg-blue-900 px-6 py-4">
+                <div className="flex items-center gap-3">
                   <FontAwesomeIcon
                     icon={faUser}
                     className="text-white w-5 h-5"
                   />
-                  <h3 className="text-base font-semibold text-white">
+                  <h3 className="text-base font-semibold text-white tracking-wide">
                     Data Customer
                   </h3>
                 </div>
               </div>
+
+              {/* Content */}
               <div className="p-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FontAwesomeIcon
-                        icon={faUser}
-                        className="text-gray-400 w-3.5 h-3.5"
-                      />
-                      <p className="text-xs text-gray-500 font-medium">
-                        Nama Lengkap
-                      </p>
+                <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                  {/* Item */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
+                      <FontAwesomeIcon icon={faUser} className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">Nama Lengkap</span>
                     </div>
                     <p className="text-sm font-semibold text-gray-900">
                       {customer?.fullname || "-"}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
                       <FontAwesomeIcon
                         icon={faIdCard}
-                        className="text-gray-400 w-3.5 h-3.5"
+                        className="w-3.5 h-3.5"
                       />
-                      <p className="text-xs text-gray-500 font-medium">NIK</p>
+                      <span className="text-xs font-medium">NIK</span>
                     </div>
                     <p className="text-sm font-mono text-gray-900">
                       {customer?.nik || "-"}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
                       <FontAwesomeIcon
                         icon={faEnvelope}
-                        className="text-gray-400 w-3.5 h-3.5"
+                        className="w-3.5 h-3.5"
                       />
-                      <p className="text-xs text-gray-500 font-medium">Email</p>
+                      <span className="text-xs font-medium">Email</span>
                     </div>
                     <p className="text-sm text-gray-900 break-all">
                       {customer?.email || "-"}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FontAwesomeIcon
-                        icon={faPhone}
-                        className="text-gray-400 w-3.5 h-3.5"
-                      />
-                      <p className="text-xs text-gray-500 font-medium">
-                        Telepon
-                      </p>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
+                      <FontAwesomeIcon icon={faPhone} className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">Telepon</span>
                     </div>
                     <p className="text-sm text-gray-900">
                       {customer?.telp || "-"}
                     </p>
                   </div>
-                  <div className="md:col-span-2 space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
                       <FontAwesomeIcon
                         icon={faMapMarkerAlt}
-                        className="text-gray-400 w-3.5 h-3.5"
+                        className="w-3.5 h-3.5"
                       />
-                      <p className="text-xs text-gray-500 font-medium">
-                        Alamat
-                      </p>
+                      <span className="text-xs font-medium">Alamat</span>
                     </div>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 leading-relaxed">
                       {customer?.address || "-"}
                     </p>
                   </div>
 
-                  {/* Divider */}
-                  <div className="md:col-span-2 border-t border-gray-200 my-2"></div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
                       <FontAwesomeIcon
-                        icon={faUsers}
-                        className="text-gray-400 w-3.5 h-3.5"
+                        icon={
+                          socialMediaIconMap[customer?.social_media_type] ||
+                          faLink
+                        }
+                        className="w-3.5 h-3.5 text-blue-900"
                       />
-                      <p className="text-xs text-gray-500 font-medium">
+                      <span className="text-xs font-medium">Media Sosial</span>
+                    </div>
+                    <p className="text-sm text-gray-900">
+                      {customer?.social_media_type || "-"}{" "}
+                      <span className="text-gray-400">•</span>{" "}
+                      {customer?.social_media_username || "-"}
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="md:col-span-2 border-t border-gray-200 pt-4"></div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
+                      <FontAwesomeIcon icon={faUsers} className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">
                         Kontak Terdekat
-                      </p>
+                      </span>
                     </div>
                     <p className="text-sm text-gray-900">
                       {customer?.closest_contact_name || "-"}
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FontAwesomeIcon
-                        icon={faPhone}
-                        className="text-gray-400 w-3.5 h-3.5"
-                      />
-                      <p className="text-xs text-gray-500 font-medium">
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1 text-gray-500">
+                      <FontAwesomeIcon icon={faPhone} className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">
                         Telepon Kontak
-                      </p>
+                      </span>
                     </div>
                     <p className="text-sm text-gray-900">
                       {customer?.closest_contact_telp || "-"}
                     </p>
                   </div>
-
-                  {/* Action buttons moved to header */}
                 </div>
               </div>
             </div>
@@ -836,26 +1171,26 @@ export default function RentalDetailPage() {
               </div>
               <div className="p-6">
                 <div className="grid md:grid-cols-3 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2 font-medium">
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p className="text-xs text-blue-900 mb-2 font-semibold">
                       Tanggal Mulai
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                    <p className="text-sm font-semibold text-blue-900 mb-1">
                       {formatDate(rental.start_rent_date)}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                    <div className="flex items-center gap-1.5 text-xs text-blue-900">
                       <FontAwesomeIcon icon={faClock} className="w-3 h-3" />
                       {formatTime(rental.start_rent_date)}
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2 font-medium">
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p className="text-xs text-blue-900 mb-2 font-semibold">
                       Tanggal Selesai
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                    <p className="text-sm font-semibold text-blue-900 mb-1">
                       {formatDate(rental.end_rent_date)}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                    <div className="flex items-center gap-1.5 text-xs text-blue-900">
                       <FontAwesomeIcon icon={faClock} className="w-3 h-3" />
                       {formatTime(rental.end_rent_date)}
                     </div>
@@ -864,80 +1199,19 @@ export default function RentalDetailPage() {
                     <p className="text-xs text-blue-900 mb-2 font-semibold">
                       Durasi Total
                     </p>
-                    <p className="text-3xl font-bold text-blue-900">
-                      {rentalDays}
+                    <p>
+                      <span className="text-3xl font-bold text-blue-900">
+                        {rentalDays}
+                      </span>{" "}
+                      {""}
+                      <span className="text-xs text-blue-900 font-medium">
+                        Hari
+                      </span>
                     </p>
-                    <p className="text-xs text-blue-900 font-medium">Hari</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Detail Units */}
-            {details.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-blue-900 px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <FontAwesomeIcon
-                      icon={faBox}
-                      className="text-white w-5 h-5"
-                    />
-                    <h3 className="text-base font-semibold text-white">
-                      Detail Unit
-                    </h3>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  {details.map((detail, idx) => (
-                    <div
-                      key={idx}
-                      className="border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-sm transition-all"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500 mb-1">
-                            Nama Unit
-                          </p>
-                          <p className="text-base font-semibold text-gray-900">
-                            {detail.unit_name || detail.unit_code}
-                          </p>
-                        </div>
-                        {detail.variant_name && (
-                          <div className="flex-1">
-                            <p className="text-xs text-gray-500 mb-1">Varian</p>
-                            <p className="text-base font-semibold text-gray-900">
-                              {detail.variant_name}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">
-                            Harga/Hari
-                          </p>
-                          <p className="text-sm font-bold text-blue-900">
-                            {formatCurrency(detail.price)}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">Qty</p>
-                          <p className="text-sm font-bold text-gray-900">
-                            {detail.qty} Unit
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">Subtotal</p>
-                          <p className="text-sm font-bold text-green-600">
-                            {formatCurrency(detail.subtotal)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Payment History */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -989,15 +1263,15 @@ export default function RentalDetailPage() {
 
                                 <div className="flex items-center gap-1.5">
                                   <FontAwesomeIcon
-                                    icon={faCreditCard}
+                                    icon={faUser}
                                     className="w-3 h-3"
                                   />
-                                  {payment.payment_method || "-"}
+                                  {customer?.fullname || "-"}
                                 </div>
 
                                 <div className="flex items-center gap-1.5">
                                   <FontAwesomeIcon
-                                    icon={faUser}
+                                    icon={faUserCheck}
                                     className="w-3 h-3"
                                   />
                                   {payment.updated_by || "-"}
@@ -1017,12 +1291,32 @@ export default function RentalDetailPage() {
                         </div>
 
                         {/* TOMBOL TENGAH KANAN */}
-                        <button
-                          onClick={() => openDetail(payment)}
-                          className="text-xs px-3 py-1.5 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition shrink-0"
-                        >
-                          Detail
-                        </button>
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button
+                            onClick={() => openDetail(payment)}
+                            className="text-xs px-3 py-1.5 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition"
+                          >
+                            Detail
+                          </button>
+
+                          <button
+                            onClick={() => openDelete(payment)}
+                            disabled={
+                              rental?.status === "Close" ||
+                              rental?.status === "Cancelled"
+                            }
+                            className={`text-xs px-3 py-1.5 rounded-md transition
+                              ${
+                                rental?.status === "Close" ||
+                                rental?.status === "Cancelled"
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                  : "bg-red-500 text-white hover:bg-red-600"
+                              }
+                            `}
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1123,6 +1417,7 @@ export default function RentalDetailPage() {
         isOpen={showDetail}
         onClose={() => setShowDetail(false)}
         payment={selectedPayment}
+        customer={customer?.fullname}
         onSuccess={() => {
           setRefreshKey((prev) => prev + 1);
         }}

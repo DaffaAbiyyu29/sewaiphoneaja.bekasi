@@ -45,6 +45,7 @@ const getAllUnitCatalog = async (req, res) => {
     ];
 
     const where = {
+      is_delete: 0,
       ...(search.trim() !== ""
         ? {
             [Op.or]: searchableFields.map((field) => ({
@@ -220,40 +221,7 @@ const getCatalogByUnitCode = async (req, res) => {
 
   try {
     const { count, rows } = await MstUnit.findAndCountAll({
-      where: { unit_code: unitCode },
-      include: [
-        {
-          model: MstVariantUnit,
-          as: "variants",
-          attributes: ["variant_unit_code", "color", "qty", "status", "photo"],
-        },
-        {
-          model: MstPriceUnit,
-          as: "prices",
-          where: { status: "Active" },
-          attributes: ["price_id", "duration", "price_per_day", "status"],
-        },
-      ],
-      distinct: true,
-    });
-
-    let message = "Daftar unit berhasil diambil";
-    if (count === 0) {
-      message = "Data Unit tidak ditemukan. ";
-    }
-
-    return resSuccess(res, message, rows[0]);
-  } catch (err) {
-    return resError(res, "Gagal mengambil data unit", err.message, 500);
-  }
-};
-
-const getCatalogByInvoiceOrNik = async (req, res) => {
-  const { unitCode } = req.params;
-
-  try {
-    const { count, rows } = await MstUnit.findAndCountAll({
-      where: { unit_code: unitCode },
+      where: { unit_code: unitCode, is_delete: 0 },
       include: [
         {
           model: MstVariantUnit,
@@ -283,6 +251,5 @@ const getCatalogByInvoiceOrNik = async (req, res) => {
 
 module.exports = {
   getAllUnitCatalog,
-  getCatalogByInvoiceOrNik,
   getCatalogByUnitCode,
 };

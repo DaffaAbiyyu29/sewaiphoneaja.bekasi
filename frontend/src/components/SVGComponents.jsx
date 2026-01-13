@@ -208,3 +208,80 @@ export const SVGCalendar = ({ className, size = 20 }) => (
     />
   </svg>
 );
+
+export const SVGCalendarStart = ({ className, size = 20 }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* calendar body */}
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M8 3v4M16 3v4M3 9h18" />
+
+    {/* start indicator */}
+    <path d="M7 12v6" />
+  </svg>
+);
+
+export const SVGCalendarEnd = ({ className, size = 20 }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* calendar body */}
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M8 3v4M16 3v4M3 9h18" />
+
+    {/* end indicator */}
+    <path d="M17 12v6" />
+  </svg>
+);
+
+export const SVGVariant = ({ className, size = 20 }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 3l8 4-8 4-8-4 8-4z" />
+    <path d="M4 13l8 4 8-4" />
+    <path d="M4 17l8 4 8-4" />
+  </svg>
+);
+
+export const SVGEmail = ({ className, size = 20 }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 7l9 6 9-6" />
+  </svg>
+);

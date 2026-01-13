@@ -11,7 +11,8 @@ const rentalRoutes = require("./routes/rental/RentalRoute");
 const detailrentalRoutes = require("./routes/rental/DetailRentalRoute");
 const userAdminRoutes = require("./routes/user/UserRoute");
 const adminRoutes = require("./routes/admin/DashboardRoute");
-const emailRoutes = require("./routes/email/EmailRouter");
+const emailRoutes = require("./routes/email/EmailRoute");
+const pdfInvoiceRoute = require("./routes/pdf/InvoiceRoute");
 
 const express = require("express");
 const cors = require("cors"); // import cors
@@ -53,6 +54,7 @@ app.use(express.json());
 const UPLOAD_FOLDER = "public/images";
 app.use("/get-image", express.static(path.join(__dirname, UPLOAD_FOLDER)));
 app.use("/api/email", emailRoutes);
+app.use("/", pdfInvoiceRoute);
 
 app.use("/api/unit/catalog", unitCustomerRoutes);
 

@@ -62,7 +62,7 @@ const getDashboardAdmin = async (req, res) => {
       recentOrdersResult, // Menggunakan findAndCountAll untuk pagination
     ] = await Promise.all([
       TrnPayment.sum("total_payment", {
-        where: { status: "Paid", payment_date: dateRangeFilter },
+        where: { status: "Paid", payment_date: dateRangeFilter, is_delete: 0 },
       }),
       TrnRent.findOne({
         attributes: [
@@ -72,14 +72,14 @@ const getDashboardAdmin = async (req, res) => {
         where: { created_at: dateRangeFilter },
         raw: true,
       }),
-      MstUnit.count({ where: { status: "Available" } }),
+      MstUnit.count({ where: { status: "Available", is_delete: 0 } }),
       TrnPayment.findAll({
         attributes: [
           [fn("YEAR", col("payment_date")), "year"],
           [fn("MONTH", col("payment_date")), "month"],
           [fn("SUM", col("total_payment")), "total"],
         ],
-        where: { status: "Paid", payment_date: dateRangeFilter },
+        where: { status: "Paid", payment_date: dateRangeFilter, is_delete: 0 },
         group: [
           fn("YEAR", col("payment_date")),
           fn("MONTH", col("payment_date")),

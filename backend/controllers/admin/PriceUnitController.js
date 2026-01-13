@@ -8,7 +8,7 @@ const getPriceUnitByUnitCode = async (req, res) => {
     const { priceId } = req.params;
 
     const priceUnits = await MstPriceUnit.findAll({
-      where: { price_id: priceId },
+      where: { price_id: priceId, is_delete: 0 },
       order: [["duration", "ASC"]],
     });
 
@@ -80,4 +80,9 @@ const deletePriceUnit = async (req, res) => {
   }
 };
 
-module.exports = { createPriceUnit, updatePriceUnit, deletePriceUnit };
+module.exports = {
+  getPriceUnitByUnitCode,
+  createPriceUnit,
+  updatePriceUnit,
+  deletePriceUnit,
+};

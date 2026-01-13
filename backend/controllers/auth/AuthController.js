@@ -16,7 +16,7 @@ const login = async (req, res) => {
         400
       );
 
-    const user = await MstUser.findOne({ where: { email } });
+    const user = await MstUser.findOne({ where: { email, is_delete: 0 } });
     if (!user) return resError(res, "User tidak ditemukan", "Not Found", 404);
 
     const match = await bcrypt.compare(password, user.password);

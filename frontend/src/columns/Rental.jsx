@@ -1,13 +1,16 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faEye } from "@fortawesome/free-solid-svg-icons";
-import { getPage } from "../helpers/GetPage";
+import { getPage, openNewPage } from "../helpers/GetPage";
 
-const formatDate = (dateString) => {
+const formatDateTime = (dateString) => {
   if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    year: "numeric",
+
+  return new Date(dateString).toLocaleString("id-ID", {
+    day: "2-digit",
     month: "short",
-    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -32,13 +35,12 @@ const getStatusBadgeColor = (status) => {
       return "bg-blue-100 text-blue-800";
     case "Close":
       return "bg-green-100 text-green-800";
-    case "Waiting Approval":
       return "bg-yellow-100 text-yellow-800";
     case "Waiting Payment":
       return "bg-yellow-100 text-yellow-800";
     case "OverDue":
       return "bg-red-100 text-red-800";
-    case "Rejected Approval":
+    case "Cancelled":
       return "bg-red-100 text-red-800";
     case "Invalid":
       return "bg-gray-100 text-gray-800";
@@ -68,13 +70,13 @@ export const RentalColumns = () => [
     header: "Tanggal Mulai",
     accessor: "start_rent_date",
     sortable: true,
-    render: (row) => formatDate(row.start_rent_date),
+    render: (row) => formatDateTime(row.start_rent_date),
   },
   {
     header: "Tanggal Selesai",
     accessor: "end_rent_date",
     sortable: true,
-    render: (row) => formatDate(row.end_rent_date),
+    render: (row) => formatDateTime(row.end_rent_date),
   },
   {
     header: "Total Harga",
@@ -146,7 +148,13 @@ export const RentalColumns = () => [
         </button>
 
         <button
-          // onClick={() => getPage("/menu/rental/" + row.rent_id)}
+          onClick={() =>
+            openNewPage(
+              import.meta.env.VITE_API_URL +
+                "/invoice/pdf/" +
+                encodeURIComponent(row.invoice_number)
+            )
+          }
           className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
           title="Unduh Invoice"
         >

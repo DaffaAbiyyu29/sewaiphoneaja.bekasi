@@ -19,7 +19,8 @@ const createDetail = async (req, res) => {
     if (!rent_id) missing.push("rent_id");
     if (!unit_code) missing.push("unit_code");
     if (!variant_unit_code) missing.push("variant_unit_code");
-    if (price === undefined || price === null || price === "") missing.push("price");
+    if (price === undefined || price === null || price === "")
+      missing.push("price");
 
     if (missing.length) {
       await t.rollback();
@@ -64,7 +65,10 @@ const createDetail = async (req, res) => {
     const variantWhere = { variant_unit_code };
 
     // ✅ ini membuat kode kamu tetap jalan walau struktur DB beda
-    if (MstVariantUnit.rawAttributes && MstVariantUnit.rawAttributes.unit_code) {
+    if (
+      MstVariantUnit.rawAttributes &&
+      MstVariantUnit.rawAttributes.unit_code
+    ) {
       variantWhere.unit_code = unit_code;
     }
 
@@ -119,7 +123,11 @@ const createDetail = async (req, res) => {
     // =====================
     // CREATE DETAIL RENTAL
     // =====================
-    const detail_id = await generateIncrementId(TrnDetailRent, "detail_id", "DET");
+    const detail_id = await generateIncrementId(
+      TrnDetailRent,
+      "detail_id",
+      "DET"
+    );
     const subtotal = p * q;
 
     const newDetail = await TrnDetailRent.create(
@@ -138,69 +146,18 @@ const createDetail = async (req, res) => {
     );
 
     await t.commit();
-    return resSuccess(res, "Detail rental berhasil dibuat", newDetail, null, 201);
+    return resSuccess(
+      res,
+      "Detail rental berhasil dibuat",
+      newDetail,
+      null,
+      201
+    );
   } catch (err) {
     await t.rollback();
     return resError(res, "Gagal membuat detail rental", err.message, 500);
   }
 };
-
-
-// const getDetails = async (req, res) => {
-//   try {
-//     const { rent_id, unit_code } = req.query;
-//     const where = {};
-//     if (rent_id) where.rent_id = rent_id;
-//     if (unit_code) where.unit_code = unit_code;
-
-//     const details = await TrnDetailRent.findAll({
-//       where,
-//       order: [["created_at", "ASC"]],
-//       include: [
-//         {
-//           model: MstUnit,
-//           as: "unit",
-//           attributes: ["unit_code", "unit_name"],
-//           required: false,
-//         },
-//         {
-//           model: MstVariantUnit,
-//           as: "variant",
-//           attributes: ["variant_unit_code", "color", "photo"],
-//           required: false,
-//         },
-//       ],
-//     });
-
-//     // Tambahkan unit_name dan variant_name untuk kemudahan di frontend
-//     const formatted = details.map((item) => {
-//       const json = item.toJSON();
-
-//       const unit_name = json.unit?.unit_name || null;
-//       const variant_name = json.variant?.color || null;
-//       const variant_photo = json.variant?.photo || null;
-
-//       delete json.unit;
-//       delete json.variant;
-
-//       return {
-//         ...json,
-//         unit_name,
-//         variant_name,
-//         variant_photo,
-//       };
-//     });
-
-//     return resSuccess(res, "Daftar detail rental berhasil diambil", formatted);
-//   } catch (err) {
-//     return resError(
-//       res,
-//       "Gagal mengambil daftar detail rental",
-//       err.message,
-//       500
-//     );
-//   }
-// };
 
 const getDetailById = async (req, res) => {
   try {
@@ -269,7 +226,6 @@ const deleteDetail = async (req, res) => {
 
 module.exports = {
   createDetail,
-  // getDetails,
   getDetailById,
   updateDetail,
   deleteDetail,

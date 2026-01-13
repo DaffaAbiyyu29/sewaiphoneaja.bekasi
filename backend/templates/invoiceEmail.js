@@ -62,8 +62,19 @@ module.exports = function invoiceTemplate(data) {
                             <td></td>
                             <td style="padding-left:12px;padding-top:4px;">
                               <div style="font-size:11px;color:#9ca3af;line-height:1.4;">
-                                Bekasi utara, Kec.Babelan, Ujung Harapan, gang Assalam 1, RT 004/042, No 50
+                                Bekasi Utara, Kec. Babelan, Ujung Harapan, Gang Assalam 1, RT 004/042, No 50
                               </div>
+
+                              <div style="font-size:11px;line-height:1.4;">
+                                <a
+                                  href="https://maps.app.goo.gl/T6A3fDdUNEnJj9Ka6"
+                                  target="_blank"
+                                  style="color:#2563eb;text-decoration:none;"
+                                >
+                                  Lihat lokasi di Google Maps
+                                </a>
+                              </div>
+
                               <div style="font-size:11px;color:#9ca3af;line-height:1.4;">
                                 +62 851-7419-4500
                               </div>
@@ -174,16 +185,10 @@ module.exports = function invoiceTemplate(data) {
                       </td>
                       <td width="50%" style="vertical-align:top;">
                         <table width="100%" cellpadding="8" cellspacing="0">
-                          <tr>
-                            <td style="text-align:right;font-size:13px;color:#64748b;">Subtotal</td>
-                            <td style="text-align:right;font-size:14px;font-weight:600;width:140px;">${
-                              data.subtotal || data.total
-                            }</td>
-                          </tr>
                           <tr style="border-top:2px solid #cbd5e1;">
-                            <td style="text-align:right;font-size:15px;font-weight:600;color:#1e293b;padding-top:12px;">Total</td>
+                            <td style="text-align:right;font-size:15px;font-weight:600;color:#1e293b;padding-top:12px;">Subtotal</td>
                             <td style="text-align:right;font-size:16px;font-weight:bold;color:#1e3a8a;padding-top:12px;width:140px;">${
-                              data.total
+                              data.subtotal
                             }</td>
                           </tr>
                           ${
@@ -210,26 +215,8 @@ module.exports = function invoiceTemplate(data) {
               <!-- Status Badge -->
               <tr>
                 <td style="padding:0 40px 20px 40px;">
-                  <div style="background:${
-                    data.status === "Lunas"
-                      ? "#dcfce7"
-                      : data.status === "Menunggu Pembayaran"
-                      ? "#fef9c3"
-                      : "#fee2e2"
-                  };
-                              color:${
-                                data.status === "Lunas"
-                                  ? "#166534"
-                                  : data.status === "Menunggu Pembayaran"
-                                  ? "#854d0e"
-                                  : "#991b1b"
-                              };
-                              padding:12px 20px;
-                              border-radius:6px;
-                              text-align:center;
-                              font-weight:600;
-                              font-size:14px;">
-                    Status Pembayaran: ${data.status}
+                  <div style="background:#fef3c7;color:#92400e;padding:12px 20px;border-radius:6px;text-align:center;font-weight:600;font-size:14px;border-left:4px solid #f59e0b;">
+                    Status: MENUNGGU PEMBAYARAN
                   </div>
                 </td>
               </tr>
@@ -238,12 +225,9 @@ module.exports = function invoiceTemplate(data) {
               <tr>
                 <td style="padding:0 40px 30px 40px;">
                   <div style="background:#f8fafc;padding:20px;border-radius:6px;border-left:4px solid #1e3a8a;">
-                    <h4 style="margin:0 0 10px 0;font-size:14px;color:#1e293b;font-weight:600;">Pesan</h4>
+                    <h4 style="margin:0 0 10px 0;font-size:14px;color:#1e293b;font-weight:600;">Note</h4>
                     <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">
-                      ${
-                        data.message ||
-                        "Wajib Menyelesaikan pembayaran untuk mengambil Unit."
-                      }
+                      Wajib menyelesaikan pembayaran untuk mengambil unit.
                     </p>
                   </div>
                 </td>
@@ -271,13 +255,13 @@ module.exports = function invoiceTemplate(data) {
                           background:#22c55e;
                           color:#ffffff;
                           text-decoration:none;
-                          padding:12px 20px;
-                          border-radius:999px;
+                          padding:12px 24px;
+                          border-radius:6px;
                           font-size:14px;
                           font-weight:600;
                         "
                       >
-                        💬 Hubungi Admin via WhatsApp
+                        Hubungi Admin via WhatsApp
                       </a>
                     </div>
                   </div>

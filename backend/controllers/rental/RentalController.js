@@ -45,6 +45,7 @@ const createRent = async (req, res) => {
       nik, // ✅ tambah ini
       start_rent_date,
       end_rent_date,
+      duration,
       collect_date,
       return_date,
       total_price,
@@ -142,6 +143,7 @@ const createRent = async (req, res) => {
           customer_id,
           start_rent_date: start_rent_date || new Date(),
           end_rent_date: end_rent_date || null,
+          duration: duration || null,
           collect_date: collect_date || null,
           return_date: return_date || null,
           total_price: Number(total_price),
@@ -357,7 +359,6 @@ const collectUnit = async (req, res) => {
     }
 
     // VALIDASI: Hanya bisa collect jika statusnya 'Open' atau setelah 'Waiting Payment'
-    // Tergantung flow Anda, biasanya unit diambil saat status sudah bukan 'Waiting Approval'
     if (["Close", "Cancelled"].includes(rent.status)) {
       await t.rollback();
       return resError(
@@ -457,7 +458,9 @@ const returnUnit = async (req, res) => {
 
     // ✅ OPTIONAL: update status unit berdasarkan total stok variant
     // (kalau unit_code di detail selalu ada)
-    const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+    const unitCodes = [
+      ...new Set(details.map((d) => d.unit_code).filter(Boolean)),
+    ];
 
     for (const unit_code of unitCodes) {
       const variants = await MstVariantUnit.findAll({
@@ -466,10 +469,16 @@ const returnUnit = async (req, res) => {
         transaction: t,
       });
 
-      const totalStock = variants.reduce((sum, v) => sum + Number(v.qty || 0), 0);
+      const totalStock = variants.reduce(
+        (sum, v) => sum + Number(v.qty || 0),
+        0
+      );
 
       await MstUnit.update(
-        { status: totalStock > 0 ? "Available" : "Unavailable", updated_at: new Date() },
+        {
+          status: totalStock > 0 ? "Available" : "Unavailable",
+          updated_at: new Date(),
+        },
         { where: { unit_code }, transaction: t }
       );
     }
@@ -481,7 +490,8 @@ const returnUnit = async (req, res) => {
         status: "Close",
         notes: notes || rent.notes,
         updated_at: new Date(),
-        updated_by: req.user?.user_id || req.user?.email || rent.updated_by || null,
+        updated_by:
+          req.user?.user_id || req.user?.email || rent.updated_by || null,
       },
       { transaction: t }
     );
@@ -494,7 +504,6 @@ const returnUnit = async (req, res) => {
     return resError(res, "Gagal return unit", err.message, 500);
   }
 };
-
 
 const getRents = async (req, res) => {
   try {
@@ -671,7 +680,7 @@ const getRentById = async (req, res) => {
     });
 
     const payments = await TrnPayment.findAll({
-      where: { rent_id: rentId },
+      where: { rent_id: rentId, is_delete: 0 },
       order: [["created_at", "ASC"]],
     });
 
@@ -774,7 +783,7 @@ const getRentByInvoiceOrNik = async (req, res) => {
         {
           model: MstCustomer,
           as: "customer",
-          attributes: ["customer_id", "fullname", "nik"],
+          attributes: ["customer_id", "fullname", "nik", "telp", "email"],
         },
       ],
     });

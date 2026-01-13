@@ -65,6 +65,7 @@ const getPayments = async (req, res) => {
     const where = {};
     if (rent_id) where.rent_id = rent_id;
     if (status) where.status = status;
+    where.is_delete = 0;
 
     const payments = await TrnPayment.findAll({
       where,
@@ -80,7 +81,7 @@ const getPaymentById = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const payment = await TrnPayment.findOne({
-      where: { payment_id: paymentId },
+      where: { payment_id: paymentId, is_delete: 0 },
     });
     if (!payment)
       return resError(res, "Pembayaran tidak ditemukan", "Not Found", 404);
@@ -153,6 +154,10 @@ const updatePayment = async (req, res) => {
           balance: newBalance,
           status: newBalance <= 0 ? "Open" : "Waiting Payment",
         });
+        // Jika balance <= 0 → ganti status rent jadi Open
+        if (newBalance <= 0) {
+          await rent.update({ status: "Open" });
+        }
       }
     }
 
@@ -165,11 +170,30 @@ const updatePayment = async (req, res) => {
 const deletePayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const deleted = await TrnPayment.destroy({
+    const payment = await TrnPayment.findOne({
       where: { payment_id: paymentId },
     });
-    if (!deleted)
+
+    const rent = await TrnRent.findOne({
+      where: { rent_id: payment.rent_id },
+    });
+
+    await rent.update({
+      total_paid: Number(rent.total_paid) - Number(payment.total_payment),
+      balance: Number(rent.balance) + Number(payment.total_payment),
+      status:
+        Number(rent.balance) + Number(payment.total_payment) <= 0
+          ? "Open"
+          : "Waiting Payment",
+    });
+
+    if (!payment)
       return resError(res, "Pembayaran tidak ditemukan", "Not Found", 404);
+
+    await payment.update({
+      is_delete: 1,
+    });
+
     return resSuccess(res, "Pembayaran berhasil dihapus");
   } catch (err) {
     return resError(res, "Gagal menghapus pembayaran", err.message, 500);

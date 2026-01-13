@@ -8,7 +8,7 @@ const getVariantUnitByUnitCode = async (req, res) => {
   try {
     const { variantUnitCode } = req.params;
     const { count, rows } = await MstVariantUnit.findAndCountAll({
-      where: { variant_unit_code: variantUnitCode },
+      where: { variant_unit_code: variantUnitCode, is_delete: 0 },
     });
 
     if (count === 0) {
