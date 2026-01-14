@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 /**
  * Anti-mainstream Page Loader — Neon Blue Aurora Style ✨
@@ -8,11 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
  * - Progress bar looping bolak-balik dari 0 → 100 → 0 terus
  */
 
-export function Loader({
-  loading = true,
-  duration = 700,
-  children,
-}) {
+export function Loader({ loading = true, duration = 700, children }) {
   const [show, setShow] = useState(loading);
 
   useEffect(() => {

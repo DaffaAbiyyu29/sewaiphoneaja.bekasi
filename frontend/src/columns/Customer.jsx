@@ -1,7 +1,7 @@
+import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, } from "@fortawesome/free-solid-svg-icons";
-import { getPage } from "../helpers/GetPage";
 import { Switch } from "@headlessui/react";
+import { getPage } from "../helpers/GetPage";
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";

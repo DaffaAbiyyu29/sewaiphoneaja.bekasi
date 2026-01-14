@@ -1,5 +1,5 @@
+import { faEye, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDownload, faEye } from "@fortawesome/free-solid-svg-icons";
 import { getPage, openNewPage } from "../helpers/GetPage";
 
 const formatDateTime = (dateString) => {
@@ -35,7 +35,6 @@ const getStatusBadgeColor = (status) => {
       return "bg-blue-100 text-blue-800";
     case "Close":
       return "bg-green-100 text-green-800";
-      return "bg-yellow-100 text-yellow-800";
     case "Waiting Payment":
       return "bg-yellow-100 text-yellow-800";
     case "OverDue":
@@ -158,7 +157,7 @@ export const RentalColumns = () => [
           className="p-2 bg-blue-900 text-white rounded-md shadow-md hover:bg-blue-800 transition duration-150"
           title="Unduh Invoice"
         >
-          <FontAwesomeIcon icon={faDownload} />
+          <FontAwesomeIcon icon={faFilePdf} />
         </button>
       </div>
     ),

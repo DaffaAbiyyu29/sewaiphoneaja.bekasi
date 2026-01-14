@@ -2,14 +2,14 @@ const TrnPayment = require("../../models/TrnPayment");
 const { resSuccess, resError } = require("../../helpers/sendResponse");
 const { generateIncrementId } = require("../../helpers/generateID");
 const TrnRent = require("../../models/TrnRental");
+const { deletePhoto } = require("../../middleware/upload");
 
 const createPayment = async (req, res) => {
   const photoPath = req.file ? req.file.path : null;
   const photoName = req.file ? req.file.filename : null;
 
   try {
-    const { rent_id, payment_date, due_date, total_payment, created_by } =
-      req.body;
+    const { rent_id, due_date, total_payment, created_by } = req.body;
 
     const payment_id = await generateIncrementId(
       TrnPayment,

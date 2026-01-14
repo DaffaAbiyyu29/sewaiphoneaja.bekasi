@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 import { getToken } from "../../helpers/GetToken";
-import Input from "../Input";
 import ActionButton from "../ActionButton";
+import Input from "../Input";
 import ModalWrapper from "../ModalWrapper";
 // Asumsi impor FontAwesome sudah tersedia di proyek Anda
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function AddVariantDialog({ isOpen, onClose, unit, onAdded }) {
   const API_URL = import.meta.env.VITE_API_URL;

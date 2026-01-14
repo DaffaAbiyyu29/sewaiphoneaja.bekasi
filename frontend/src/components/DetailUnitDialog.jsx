@@ -2,15 +2,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ModalWrapper from "../components/ModalWrapper";
 import ActionButton from "../components/ActionButton";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import SelectPrice from "./customer/SelectPrice";
-import SelectColor from "./customer/SelectColor";
-import SelectRentalDate from "./customer/SelectRentalDate";
-import SelectQuantity from "./customer/SelectQuantity";
+import ModalWrapper from "../components/ModalWrapper";
 import GalleryUnit from "./customer/GaleryUnit";
 import PriceSummary from "./customer/PriceSummary";
+import SelectColor from "./customer/SelectColor";
+import SelectPrice from "./customer/SelectPrice";
+import SelectQuantity from "./customer/SelectQuantity";
+import SelectRentalDate from "./customer/SelectRentalDate";
 
 export default function DetailUnitDialog({ isOpen, onClose, unit }) {
   const API_URL = import.meta.env.VITE_API_URL;

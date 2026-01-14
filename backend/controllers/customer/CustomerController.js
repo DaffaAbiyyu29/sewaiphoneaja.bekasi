@@ -368,15 +368,15 @@ const updateCustomer = async (req, res) => {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
-    //jadi admin bisa blokir/inactive customer melalui update
+    //jadi admin bisa blokir/Inactive customer melalui update
     const allowedStatus = ["Active", "Inactive"];
 
-    // support admin action via query (?action=block / inactive / activate)
+    // support admin action via query (?action=block / Inactive / activate)
     if (req.query.action) {
       const action = req.query.action.toLowerCase();
 
       if (action === "block") req.body.status = "Blocked";
-      else if (action === "inactive") req.body.status = "Inactive";
+      else if (action === "Inactive") req.body.status = "Inactive";
       else if (action === "Active" || action === "unblock")
         req.body.status = "Active";
     }
@@ -440,7 +440,7 @@ const updateCustomerStatus = async (req, res) => {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
-    // ✅ NORMALISASI: apapun bentuknya (Active/active/Inactive/inactive)
+    // ✅ NORMALISASI: apapun bentuknya (Active/active/Inactive/Inactive)
     // kita buat pembandingnya jadi lowercase
     const current = String(customer.status || "")
       .trim()
@@ -449,8 +449,8 @@ const updateCustomerStatus = async (req, res) => {
     let newStatus;
 
     if (current === "active") {
-      newStatus = "inactive";
-    } else if (current === "inactive") {
+      newStatus = "Inactive";
+    } else if (current === "Inactive") {
       newStatus = "Active";
     } else {
       return resError(

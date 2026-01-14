@@ -21,7 +21,6 @@ const getStatusBadgeColor = (status) => {
       return "bg-blue-100 text-blue-800";
     case "Close":
       return "bg-green-100 text-green-800";
-      return "bg-yellow-100 text-yellow-800";
     case "Waiting Payment":
       return "bg-yellow-100 text-yellow-800";
     case "OverDue":

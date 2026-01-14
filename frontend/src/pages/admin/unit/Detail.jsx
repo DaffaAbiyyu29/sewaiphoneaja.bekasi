@@ -1,18 +1,18 @@
-import { useParams, useNavigate } from "react-router-dom";
-import Datatable from "../../../components/Datatable";
-import { VariantColumns } from "../../../columns/Variant";
-import { PriceColumns } from "../../../columns/Price";
-import Swal from "sweetalert2";
-import { useEffect, useState } from "react";
 import axios from "axios";
-import { getToken } from "../../../helpers/GetToken";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
+import { PriceColumns } from "../../../columns/Price";
+import { VariantColumns } from "../../../columns/Variant";
+import Datatable from "../../../components/Datatable";
 import { Loader } from "../../../components/Loader";
 import AddVariantDialog from "../../../components/admin/AddVariantUnitDialog";
+import { getToken } from "../../../helpers/GetToken";
 
 import EditPriceUnitDialog from "../../../components/admin/EditPriceUnitDialog";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import AddPriceUnitDialog from "../../../components/admin/AddPriceUnitDialog";
 
 export default function DetailUnitPage() {
@@ -394,7 +394,7 @@ export default function DetailUnitPage() {
         isOpen={showDialogVariant}
         onClose={() => setShowDialogVariant(false)}
         unit={unitData}
-        onAdded={(newVariant) => {
+        onAdded={() => {
           setRefreshKeyVariant((prev) => prev + 1);
         }}
       />
@@ -402,7 +402,7 @@ export default function DetailUnitPage() {
         isOpen={showDialogPrice}
         onClose={() => setShowDialogPrice(false)}
         unit={unitData}
-        onAdded={(newPrice) => {
+        onAdded={() => {
           setRefreshKeyPrice((prev) => prev + 1);
         }}
       />

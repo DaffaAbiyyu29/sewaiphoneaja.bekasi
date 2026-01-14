@@ -1,44 +1,44 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import Swal from "sweetalert2";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
-  faCalendar,
-  faClock,
-  faUser,
-  faCreditCard,
   faBox,
-  faImage,
+  faCalendar,
   faChevronLeft,
   faChevronRight,
-  faMapMarkerAlt,
-  faPhone,
+  faClock,
+  faCreditCard,
   faEnvelope,
   faIdCard,
-  faUsers,
-  faReceipt,
+  faImage,
   faInfoCircle,
-  faUserCheck,
   faLink,
+  faMapMarkerAlt,
+  faPhone,
+  faReceipt,
+  faUser,
+  faUserCheck,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
 import {
-  faInstagram,
   faFacebook,
-  faXTwitter,
+  faInstagram,
   faTiktok,
+  faXTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 
-import { getToken } from "../../../helpers/GetToken";
 import DetailPaymentDialog from "../../../components/admin/DetailPaymentDialog";
 import {
   formatCurrency,
   formatDate,
   formatTime,
 } from "../../../helpers/Format";
+import { getToken } from "../../../helpers/GetToken";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
 
 // Helper SVG Components
@@ -241,58 +241,6 @@ export default function RentalDetailPage() {
     Twitter: faXTwitter,
     TikTok: faTiktok,
     Lainnya: faLink,
-  };
-
-  const handleApproveRental = async (rentId) => {
-    if (!rentId) return;
-
-    const confirmResult = await Swal.fire({
-      title: "Approve Pengajuan?",
-      text: "Pengajuan penyewaan akan disetujui dan status diubah menjadi Waiting Payment",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#10b981",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Ya, Approve",
-      cancelButtonText: "Batal",
-    });
-
-    if (!confirmResult.isConfirmed) return;
-
-    try {
-      const token = getToken();
-      await axios.put(
-        `${API_URL}/api/rental/${rentId}/approve`,
-        { approval_by: user.name, updated_by: user.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      Swal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        text: "Pengajuan penyewaan telah disetujui.",
-        showConfirmButton: false,
-        timer: 2000,
-      });
-
-      // Update local rental state
-      setRental((prev) => ({
-        ...prev,
-        status: "Waiting Payment",
-        approval_date: new Date().toISOString(),
-      }));
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } catch (err) {
-      console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "Gagal!",
-        text: err.response?.data?.message || "Terjadi kesalahan saat approve.",
-      });
-    }
   };
 
   const handleRejectRental = async (rentId) => {

@@ -1,4 +1,3 @@
-const { default: puppeteer } = require("puppeteer");
 const transporter = require("../config/mailer");
 const invoiceTemplate = require("../templates/invoiceEmail");
 const rejectedInvoiceEmail = require("../templates/rejectedInvoiceEmail");

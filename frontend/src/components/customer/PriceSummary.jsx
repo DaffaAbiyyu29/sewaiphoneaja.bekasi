@@ -1,5 +1,4 @@
 // src/components/PriceSummary.jsx
-import React from "react";
 
 /**
  * Komponen untuk menampilkan ringkasan total harga.

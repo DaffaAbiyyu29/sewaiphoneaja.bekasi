@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
-import Sidebar from "../admin/Sidebar";
-import Header from "../admin/Header";
-import Footer from "../admin/Footer";
-import Swal from "sweetalert2";
 import "animate.css";
-import { getUserInfo } from "../../helpers/GetUserInfo";
-import Avatar from "../Avatar";
-import { createRoot } from "react-dom/client";
-import { getToken } from "../../helpers/GetToken";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { Outlet } from "react-router-dom";
+import Swal from "sweetalert2";
+import { getToken } from "../../helpers/GetToken";
+import { getUserInfo } from "../../helpers/GetUserInfo";
+import Footer from "../admin/Footer";
+import Header from "../admin/Header";
+import Sidebar from "../admin/Sidebar";
+import Avatar from "../Avatar";
 
 export default function LayoutAdmin() {
   const API_URL = import.meta.env.VITE_API_URL;

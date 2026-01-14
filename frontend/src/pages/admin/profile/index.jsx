@@ -1,28 +1,24 @@
 // src/pages/ProfileUserPage.jsx
-import { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faEye,
-  faEdit,
-  faUser,
-  faCalendarDays,
-  faPhone,
   faBriefcase,
-  faMapLocationDot,
+  faClock,
+  faEdit,
   faEnvelope,
   faIdCard,
-  faClock,
   faSave, // Untuk tombol simpan
-  faTimes, // Untuk tombol batal
+  faTimes,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "animate.css";
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
+import Swal from "sweetalert2";
+import Avatar from "../../../components/Avatar";
+import Input from "../../../components/Input";
+import { formatDate } from "../../../helpers/Format";
 import { getToken } from "../../../helpers/GetToken";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
-import { formatDate } from "../../../helpers/Format";
-import Input from "../../../components/Input";
-import Avatar from "../../../components/Avatar";
-import Swal from "sweetalert2";
-import "animate.css";
 
 export default function ProfileUserPage() {
   const [userData, setUserData] = useState(null);
@@ -208,41 +204,6 @@ export default function ProfileUserPage() {
 
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleImageChange(file);
-
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      try {
-        const response = await fetch(`${API_URL}/upload`, {
-          method: "POST",
-          body: formData,
-        });
-        if (!response.ok) {
-          throw new Error("Failed to upload photo");
-        }
-        const data = await response.json();
-
-        // Update userData dengan photo yang baru
-        setFormEditData((prevData) => ({
-          ...prevData,
-          profile_picture: data.filename || data.photo,
-        }));
-
-        setError((prev) => ({ ...prev, photo: "" }));
-      } catch (error) {
-        console.error("Error uploading photo:", error);
-        setError((prev) => ({
-          ...prev,
-          photo: error.message || "Gagal mengunggah foto",
-        }));
-      }
-    }
   };
 
   const formatDateTime = (datetime) => {
@@ -672,7 +633,6 @@ export default function ProfileUserPage() {
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          // onChange={handlePhotoChange}
           onChange={(e) => handleImageChange(e.target.files[0])}
           className="hidden"
           ref={fileInputRef}

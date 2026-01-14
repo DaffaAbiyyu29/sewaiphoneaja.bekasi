@@ -1,7 +1,6 @@
+import { faEdit, faEye, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { getPage } from "../helpers/GetPage";
-import Swal from "sweetalert2";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

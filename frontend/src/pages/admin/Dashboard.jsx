@@ -1,36 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
+  faBoxesPacking,
+  faCalendar,
+  faDollarSign,
+  faFilter,
+  faMobileScreen,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDollarSign,
-  faBoxesPacking,
-  faUsers,
-  faMobileScreen,
-  faArrowUp,
-  faArrowDown,
-  faCalendar,
-  faFilter,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
 import { RecentRentalColumns } from "../../columns/RecentRental";
 import Datatable from "../../components/Datatable";
 
@@ -83,7 +78,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData(startDate, endDate);
-  }, []);
+  }, [startDate, endDate]);
 
   const handleFilter = () => {
     if (startDate && endDate) {

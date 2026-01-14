@@ -1,19 +1,19 @@
 // src/components/DetailPaymentDialog.jsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
-  faReceipt,
-  faMoneyBillWave,
   faFileImage,
   faHome,
+  faMoneyBillWave,
+  faReceipt,
 } from "@fortawesome/free-solid-svg-icons";
-import ModalWrapper from "../ModalWrapper";
-import { formatCurrency, formatDate, formatTime } from "../../helpers/Format";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { formatCurrency, formatDate, formatTime } from "../../helpers/Format";
 import { getUserInfo } from "../../helpers/GetUserInfo";
+import ModalWrapper from "../ModalWrapper";
 
 export default function DetailPaymentDialog({
   isOpen,

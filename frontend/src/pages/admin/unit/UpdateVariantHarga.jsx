@@ -1,4 +1,9 @@
-const UpdatePriceHarga = async (priceCode, formData, onSuccess) => {
+import axios from "axios";
+import Swal from "sweetalert2";
+
+export const UpdatePriceHarga = async (priceCode, formData, onSuccess) => {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   Swal.fire({
     title: "Menyimpan perubahan...",
     text: "Mohon tunggu sebentar",

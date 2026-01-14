@@ -1,25 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import ModalWrapper from "./ModalWrapper";
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 import ActionButton from "./ActionButton";
+import ModalWrapper from "./ModalWrapper";
 import {
-  SVGUpload,
-  SVGCreditCard,
-  SVGUser,
-  SVGCalendar,
+  SVGAlertCircle,
+  SVGCalendarEnd,
+  SVGCalendarStart,
+  SVGCheck,
+  SVGEmail,
+  SVGMobilePhone,
   SVGPackage,
   SVGPhone,
-  SVGX,
-  SVGCheck,
-  SVGAlertCircle,
-  SVGMobilePhone,
-  SVGCalendarStart,
-  SVGCalendarEnd,
+  SVGUpload,
+  SVGUser,
   SVGVariant,
-  SVGEmail,
+  SVGX,
 } from "./SVGComponents";
-import axios from "axios";
 
 const Check = SVGCheck;
 const AlertCircle = SVGAlertCircle;

@@ -1,5 +1,4 @@
 const express = require("express");
-const { verifyToken } = require("../../middleware/middleware");
 const {
   getAllCustomers,
   getCustomerByID,

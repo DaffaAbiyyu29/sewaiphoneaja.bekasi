@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const RentalController = require("../../controllers/rental/RentalController");
 const {
   createRent,
   getRents,
@@ -16,7 +15,7 @@ const {
   returnUnit,
 } = require("../../controllers/rental/RentalController");
 const { verifyToken } = require("../../middleware/middleware");
-const { resError, resSuccess } = require("../../helpers/sendResponse");
+const { resSuccess } = require("../../helpers/sendResponse");
 
 router.post("/getInvoice", getNextInvoice);
 router.get("/pesanan", (req, res) => {

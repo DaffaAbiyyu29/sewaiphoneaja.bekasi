@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import PaymentDialog from "../../components/PaymentDialog";
 
 const Pesanan = () => {
@@ -12,33 +12,32 @@ const Pesanan = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchRentData = async () => {
-    setLoading(true);
-    try {
-      // Menambahkan query parameter untuk pagination
-      const res = await axios.get(
-        `${API_URL}/api/rental/pesanan/${encodeURIComponent(searchTerm)}`
-      );
-      if (res.data.success) {
-        setRentData(res.data.data);
-        setUnit(res.data.data.details[0].unit);
-      }
-    } catch (err) {
-      // console.error("Gagal ambil data unit:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchRentData = async () => {
+      setLoading(true);
+      try {
+        // Menambahkan query parameter untuk pagination
+        const res = await axios.get(
+          `${API_URL}/api/rental/pesanan/${encodeURIComponent(searchTerm)}`
+        );
+        if (res.data.success) {
+          setRentData(res.data.data);
+          setUnit(res.data.data.details[0].unit);
+        }
+      } catch (err) {
+        console.error("Gagal ambil data unit:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     setRentData(null);
     setUnit(null);
     fetchRentData();
-  }, [searchTerm]);
+  }, [searchTerm, API_URL]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    // Kita panggil fetchRentData di useEffect dengan dependency searchTerm/filterStatus
   };
 
   const handleOpenDetail = () => {

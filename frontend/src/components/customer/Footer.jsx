@@ -1,14 +1,14 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faEnvelope,
-  faMobileScreen,
-  faLocationDot,
-} from "@fortawesome/free-solid-svg-icons";
 import {
   faInstagram,
-  faWhatsapp,
   faTiktok,
+  faWhatsapp,
 } from "@fortawesome/free-brands-svg-icons"; // Import brand icons
+import {
+  faEnvelope,
+  faLocationDot,
+  faMobileScreen,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function Footer() {
   return (

@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
 import { getToken } from "../../helpers/GetToken";
-import Input from "../Input";
 import ActionButton from "../ActionButton";
+import Input from "../Input";
 import ModalWrapper from "../ModalWrapper";
 // FontAwesome tidak lagi diperlukan karena tidak ada upload foto
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 // Nama komponen diubah dari AddPriceDialog menjadi AddPriceUnitDialog agar lebih jelas
 export default function AddPriceUnitDialog({ isOpen, onClose, unit, onAdded }) {

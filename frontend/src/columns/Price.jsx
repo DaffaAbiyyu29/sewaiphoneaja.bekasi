@@ -1,6 +1,5 @@
+import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { getPage } from "../helpers/GetPage";
 
 export const PriceColumns = (onDeleteClick, onEditClick) => [
   //   { header: "No", render: (_, index) => index + 1 },

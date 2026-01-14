@@ -1,7 +1,7 @@
 // src/components/SelectRentalDate.jsx
-import React, { useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendar } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect } from "react";
 
 /**
  * Komponen untuk memilih tanggal dan waktu mulai dan selesai sewa.

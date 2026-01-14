@@ -1,8 +1,8 @@
+import axios from "axios";
+import { useState } from "react";
+import Swal from "sweetalert2";
 import { RentalColumns } from "../../../columns/Rental";
 import Datatable from "../../../components/Datatable";
-import { useState } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
 
 export default function RentalPage() {
   const API_URL = import.meta.env.VITE_API_URL;

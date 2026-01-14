@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBars,
   faCaretDown,
   faSignOutAlt,
   faUserCircle,
-  faBars,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "animate.css";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import "animate.css";
-import Avatar from "../Avatar";
 import { removeToken } from "../../helpers/GetToken";
+import Avatar from "../Avatar";
 
 export default function Header({ onMenuClick, userData }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

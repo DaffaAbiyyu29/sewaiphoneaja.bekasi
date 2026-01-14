@@ -1,10 +1,7 @@
 const express = require("express");
-const { verifyToken } = require("../../middleware/middleware");
-const { uploadPhoto } = require("../../middleware/upload");
 const {
   sendInvoiceEmail,
   sendRejectedInvoiceEmail,
-  exportInvoicePdf,
 } = require("../../service/EmailService");
 const router = express.Router();
 

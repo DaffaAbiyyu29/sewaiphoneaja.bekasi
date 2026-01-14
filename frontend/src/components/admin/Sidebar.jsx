@@ -1,31 +1,57 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
+  faClipboardList,
+  faFileInvoiceDollar,
   faHome,
   faMobile,
   faUser,
-  faClipboardList,
-  faCogs,
-  faUserCog,
-  faAngleDoubleLeft,
-  faAngleDoubleRight,
-  faXmark,
   faUsers,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
 import { createPortal } from "react-dom";
+import { Link, useLocation } from "react-router-dom";
+import { getUserInfo } from "../../helpers/GetUserInfo";
 
 // ===== MENU SECTION =====
-const generalItems = [{ name: "Dashboard", path: "/dashboard", icon: faHome }];
+const generalItems = [
+  {
+    name: "Dashboard",
+    path: "/dashboard",
+    icon: faHome,
+    roles: ["Manager", "Supervisor", "Admin"],
+  },
+];
 
 const masterItems = [
-  { name: "Unit", path: "/menu/unit", icon: faMobile },
-  { name: "Customer", path: "/menu/customer", icon: faUsers },
-  { name: "User", path: "/menu/user", icon: faUser },
+  { name: "Unit", path: "/menu/unit", icon: faMobile, roles: ["Supervisor"] },
+  {
+    name: "Customer",
+    path: "/menu/customer",
+    icon: faUsers,
+    roles: ["Supervisor"],
+  },
+  { name: "User", path: "/menu/user", icon: faUser, roles: ["Supervisor"] },
 ];
 
 const transactionItems = [
-  { name: "Penyewaan", path: "/menu/rental", icon: faClipboardList },
+  {
+    name: "Penyewaan",
+    path: "/menu/rental",
+    icon: faClipboardList,
+    roles: ["Supervisor", "Admin"],
+  },
+];
+
+const reportItems = [
+  {
+    name: "Laporan",
+    path: "/menu/report",
+    icon: faFileInvoiceDollar,
+    roles: ["Manager", "Admin"],
+  },
 ];
 
 // ===== Tooltip Component (pakai portal biar gak ke-clip) =====
@@ -55,6 +81,10 @@ export default function Sidebar({
 }) {
   const location = useLocation();
   const [tooltip, setTooltip] = useState(null);
+  const userRole = getUserInfo()?.role;
+  const filterByRole = (items) => {
+    return items.filter((item) => item.roles.includes(userRole));
+  };
 
   // fungsi render nav section
   const renderNavSection = (title, items, collapsed, showDivider = true) => (
@@ -143,9 +173,22 @@ export default function Sidebar({
           </div>
 
           <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-            {renderNavSection("Umum", generalItems, collapsed)}
-            {renderNavSection("Master Data", masterItems, collapsed)}
-            {renderNavSection("Transaksi", transactionItems, collapsed)}
+            {filterByRole(generalItems).length > 0 &&
+              renderNavSection("Umum", filterByRole(generalItems), collapsed)}
+            {filterByRole(masterItems).length > 0 &&
+              renderNavSection(
+                "Master Data",
+                filterByRole(masterItems),
+                collapsed
+              )}
+            {filterByRole(transactionItems).length > 0 &&
+              renderNavSection(
+                "Transaksi",
+                filterByRole(transactionItems),
+                collapsed
+              )}
+            {filterByRole(reportItems).length > 0 &&
+              renderNavSection("Laporan", filterByRole(reportItems), collapsed)}
           </nav>
 
           <div className="p-3 border-t border-gray-200">
@@ -207,9 +250,22 @@ export default function Sidebar({
           </div>
 
           <div className="p-4 overflow-y-auto h-[calc(100vh-64px)]">
-            {renderNavSection("Umum", generalItems, false)}
-            {renderNavSection("Master Data", masterItems, false)}
-            {renderNavSection("Transaksi", transactionItems, false)}
+            {filterByRole(generalItems).length > 0 &&
+              renderNavSection("Umum", filterByRole(generalItems), collapsed)}
+            {filterByRole(masterItems).length > 0 &&
+              renderNavSection(
+                "Master Data",
+                filterByRole(masterItems),
+                collapsed
+              )}
+            {filterByRole(transactionItems).length > 0 &&
+              renderNavSection(
+                "Transaksi",
+                filterByRole(transactionItems),
+                collapsed
+              )}
+            {filterByRole(reportItems).length > 0 &&
+              renderNavSection("Laporan", filterByRole(reportItems), collapsed)}
           </div>
         </div>
       </div>

@@ -1,5 +1,4 @@
 module.exports = function invoiceTemplate(data) {
-  const API_URL = process.env.API_URL;
   const fs = require("fs");
   const imageBase64 = fs.readFileSync("./public/images/sewaiphoneaja.png", {
     encoding: "base64",

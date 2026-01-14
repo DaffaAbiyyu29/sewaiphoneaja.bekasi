@@ -1,16 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
+  faCheck,
   faFloppyDisk,
+  faPalette,
   faUpload,
   faXmark,
-  faCheck,
-  faPalette,
 } from "@fortawesome/free-solid-svg-icons";
-import { useParams, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Loader } from "../../../components/Loader";
 import { getToken } from "../../../helpers/GetToken";
 
@@ -27,7 +27,6 @@ export default function UpdateVariantPage() {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [existingImage, setExistingImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [response, setResponse] = useState({ success: null, message: "" });
@@ -57,7 +56,6 @@ export default function UpdateVariantPage() {
         });
 
         if (data.photo) {
-          setExistingImage(data.photo);
           setImagePreview(`${BASE_URL}/get-image/${data.photo}`);
         }
       } catch (err) {
@@ -72,7 +70,7 @@ export default function UpdateVariantPage() {
     };
 
     fetchVariant();
-  }, [variantUnitCode]);
+  }, [variantUnitCode, BASE_URL]);
 
   // 🔹 Input text
   const handleChange = (e) => {
@@ -97,7 +95,6 @@ export default function UpdateVariantPage() {
     }
 
     setImageFile(file);
-    setExistingImage(null);
 
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result);
@@ -125,7 +122,7 @@ export default function UpdateVariantPage() {
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    setExistingImage(null);
+
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 

@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
 import DetailUnitDialog from "../../components/DetailUnitDialog"; // ✅ panggil komponen dialog
-import Input from "../../components/Input";
 
 const Unit = () => {
   const iphones = [
@@ -118,7 +117,7 @@ const Unit = () => {
     setIsDialogOpen(true);
   };
 
-    const closeModal = () => setIsDialogOpen(false);
+  const closeModal = () => setIsDialogOpen(false);
 
   return (
     <div className="bg-gray-50 min-h-screen py-16 px-6 sm:px-10 lg:px-20">

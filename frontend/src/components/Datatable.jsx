@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, Fragment } from "react";
-import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faSort,
-  faSortUp,
-  faSortDown,
-  faPlus,
-  faSpinner,
   faCheck,
   faChevronDown,
+  faPlus,
+  faSort,
+  faSortDown,
+  faSortUp,
+  faSpinner,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Listbox, Transition } from "@headlessui/react";
+import axios from "axios";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { getToken } from "../helpers/GetToken";
 
 // Debounce hook
@@ -29,7 +29,7 @@ const useDebounce = (value, delay) => {
 };
 
 export default function Datatable({
-  key,
+  refreshKey,
   apiUrl,
   dataValue,
   columns,
@@ -84,7 +84,16 @@ export default function Datatable({
         setIsLoading(false);
       }
     }
-  }, [key, apiUrl, dataValue, page, limit, debouncedSearch, orderBy, orderDir]);
+  }, [
+    refreshKey,
+    apiUrl,
+    dataValue,
+    page,
+    limit,
+    debouncedSearch,
+    orderBy,
+    orderDir,
+  ]);
 
   useEffect(() => {
     fetchData();

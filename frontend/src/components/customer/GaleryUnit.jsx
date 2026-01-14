@@ -1,6 +1,5 @@
 // src/components/GalleryUnit.jsx
-import React from "react";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
 /**
  * Komponen untuk menampilkan galeri gambar unit, termasuk gambar utama dan navigasi thumbnail.
@@ -64,7 +63,7 @@ export default function GalleryUnit({
       // Jika tidak ada varian, pastikan gambar utama unit yang terpilih
       setMainImage({ id: "unit-photo", src: unit.photo || null });
     }
-  }, [selectedVariant, unit, detailImages, setMainImage]);
+  }, [selectedVariant, unit, detailImages, setMainImage, thumbStartIndex]);
 
   const visibleThumbs = detailImages.slice(
     thumbStartIndex,
@@ -161,7 +160,7 @@ export default function GalleryUnit({
           )}
 
           <div className="flex-1 flex gap-2 overflow-hidden p-3">
-            {visibleThumbs.map((imgObj, idx) => {
+            {visibleThumbs.map((imgObj) => {
               const globalIndex = detailImages.findIndex(
                 (item) => item.id === imgObj.id
               );

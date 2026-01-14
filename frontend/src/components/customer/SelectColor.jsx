@@ -1,7 +1,6 @@
 // src/components/SelectColor.jsx
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSwatchbook } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 /**
  * Komponen untuk memilih varian warna (Color Variant).

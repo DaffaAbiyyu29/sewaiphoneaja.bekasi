@@ -1,17 +1,17 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUpload,
-  faXmark,
+  faArrowLeft,
   faCheck,
   faCircleExclamation,
-  faMobile,
-  faArrowLeft,
   faFloppyDisk,
+  faMobile,
+  faUpload,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { useParams, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function UpdateUnitPage() {
   const [formData, setFormData] = useState({
@@ -69,7 +69,7 @@ export default function UpdateUnitPage() {
     };
 
     fetchUnitData();
-  }, [unitCode]);
+  }, [unitCode, BASE_URL]);
 
   // 🔹 Input change
   const handleChange = (e) => {

@@ -1,8 +1,8 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom"; // Pastikan Navigate diimport
-import axios from "axios";
-import { getToken, removeToken } from "./GetToken";
 import { Loader } from "../components/Loader";
+import { getToken, removeToken } from "./GetToken";
 
 export default function AdminAuth({ children }) {
   const token = getToken();

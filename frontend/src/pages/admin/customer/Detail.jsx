@@ -1,11 +1,10 @@
-import { useParams, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { getToken } from "../../../helpers/GetToken";
-import { Loader } from "../../../components/Loader";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Loader } from "../../../components/Loader";
+import { getToken } from "../../../helpers/GetToken";
 
 export default function DetailCustomerPage() {
   const { customerId } = useParams();

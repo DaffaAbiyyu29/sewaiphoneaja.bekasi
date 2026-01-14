@@ -19,7 +19,7 @@ const isCustomerActive = (customer) => {
   if (!customer) return false;
 
   // Sesuaikan dengan tipe field status di DB kamu:
-  // - Bisa string: "Active"/"inactive"
+  // - Bisa string: "Active"/"Inactive"
   // - Bisa int: 1/0
   // - Bisa boolean: true/false
 
@@ -30,8 +30,8 @@ const isCustomerActive = (customer) => {
   // semua variasi "active" dianggap aktif
   if (s === "active") return true;
 
-  // semua variasi "inactive" dianggap tidak aktif
-  if (s === "inactive") return false;
+  // semua variasi "Inactive" dianggap tidak aktif
+  if (s === "Inactive") return false;
 
   // kalau ada nilai lain (mis "blocked") => anggap tidak aktif
 
@@ -51,7 +51,6 @@ const createRent = async (req, res) => {
       total_price,
       total_paid,
       balance,
-      status,
       created_by,
     } = req.body;
 
@@ -526,14 +525,6 @@ const getRents = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    // Field yang bisa dicari
-    const searchableFields = [
-      "rent_id",
-      "customer_id",
-      "approval_by",
-      "invoice_number",
-    ];
-
     // Build WHERE clause untuk search dan filter
     let whereClause = {};
 
@@ -760,6 +751,7 @@ const getNextInvoice = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Gagal generate invoice",
+      err,
     });
   }
 };

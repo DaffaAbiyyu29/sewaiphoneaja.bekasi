@@ -1,10 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import SkeletonCard from "../../components/SkeletonCard";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
   faBoxesPacking,
@@ -13,6 +8,11 @@ import {
   faStar,
   faZap,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SkeletonCard from "../../components/SkeletonCard";
 
 export default function Dashboard() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -116,7 +116,7 @@ export default function Dashboard() {
     };
 
     fetchUnits();
-  }, []); // Dependency array kosong, fetch 1x saat mount
+  }, [API_URL]); // Dependency array kosong, fetch 1x saat mount
 
   // Data 'units' yang lama sudah dihapus
 

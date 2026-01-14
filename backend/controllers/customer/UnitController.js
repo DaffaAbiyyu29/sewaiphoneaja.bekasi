@@ -77,7 +77,7 @@ const getAllUnitCatalog = async (req, res) => {
     // =====================
     // QUERY DATA
     // =====================
-    const { count, rows } = await MstUnit.findAndCountAll({
+    const { rows } = await MstUnit.findAndCountAll({
       where,
       limit,
       offset,

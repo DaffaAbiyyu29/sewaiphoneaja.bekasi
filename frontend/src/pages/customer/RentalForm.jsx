@@ -1,20 +1,19 @@
 // RentalForm.jsx - Enhanced with Stepper Tabs Layout
 
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // Import komponen kustom
-import Input from "../../components/Input";
 import axios from "axios";
-import { getToken } from "../../helpers/GetToken";
-import SelectPrice from "../../components/customer/SelectPrice";
-import SelectColor from "../../components/customer/SelectColor";
-import SelectRentalDate from "../../components/customer/SelectRentalDate";
-import SelectQuantity from "../../components/customer/SelectQuantity";
+import { useNavigate } from "react-router-dom";
+import ActionButton from "../../components/ActionButton";
 import GalleryUnit from "../../components/customer/GaleryUnit";
 import PriceSummary from "../../components/customer/PriceSummary";
-import ActionButton from "../../components/ActionButton";
-import { useNavigate } from "react-router-dom";
+import SelectColor from "../../components/customer/SelectColor";
+import SelectPrice from "../../components/customer/SelectPrice";
+import SelectQuantity from "../../components/customer/SelectQuantity";
+import SelectRentalDate from "../../components/customer/SelectRentalDate";
+import Input from "../../components/Input";
 import {
   SVGAlertCircle,
   SVGCalendar,
@@ -26,6 +25,7 @@ import {
   SVGUser,
   SVGX,
 } from "../../components/SVGComponents";
+import { getToken } from "../../helpers/GetToken";
 
 // Data dummy untuk dropdown Jenis Sosial Media
 const socialMediaOptions = [
@@ -102,7 +102,7 @@ const RentalForm = () => {
     }
 
     setSelectedData(JSON.parse(sessionStorage.getItem("selectedUnit")));
-  }, []);
+  }, [navigate]);
 
   // ===
   // Fetch Data Unit (Unchanged)

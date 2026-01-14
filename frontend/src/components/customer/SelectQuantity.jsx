@@ -1,7 +1,6 @@
 // src/components/SelectQuantity.jsx
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBoxesPacking } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 /**
  * Komponen untuk memilih jumlah unit sewa.

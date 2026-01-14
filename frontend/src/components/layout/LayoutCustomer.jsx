@@ -1,6 +1,6 @@
-import { Outlet, Link } from "react-router-dom";
-import Header from "../customer/Header";
+import { Outlet } from "react-router-dom";
 import Footer from "../customer/Footer";
+import Header from "../customer/Header";
 
 export default function LayoutCustomer() {
   return (

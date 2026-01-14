@@ -1,7 +1,6 @@
 // src/components/SelectPrice.jsx
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollar } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 /**
  * Komponen untuk memilih paket harga (Price Package).
