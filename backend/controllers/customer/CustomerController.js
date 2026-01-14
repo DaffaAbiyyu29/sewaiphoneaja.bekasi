@@ -484,31 +484,27 @@ const deleteCustomer = async (req, res) => {
       return resError(res, "Customer ID diperlukan", "Bad Request", 400);
     }
 
-    // Ambil data customer dulu untuk mendapatkan nama file KTP (jika ada)
+    // 1️⃣ Cari customer (yang belum dihapus)
     const customer = await MstCustomer.findOne({
-      where: { customer_id: customerId },
+      where: {
+        customer_id: customerId,
+        is_delete: 0,
+      },
     });
 
     if (!customer) {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
-    const oldKtpName = customer.ktp_image;
+    // 2️⃣ Soft delete
+    await MstCustomer.update(
+      { is_delete: 1 },
+      { where: { customer_id: customerId } }
+    );
 
-    const deleted = await MstCustomer.destroy({
-      where: { customer_id: customerId },
-    });
-
-    if (!deleted) {
-      return resError(res, "Gagal menghapus customer", "Server Error", 500);
-    }
-
-    // Hapus file KTP dari filesystem jika ada
-    if (oldKtpName) deletePhoto(oldKtpName);
-
-    return resSuccess(res, "Customer berhasil dihapus", {
+    // 3️⃣ Response
+    return resSuccess(res, "Customer berhasil dihapus (soft delete)", {
       deleted_customer_id: customerId,
-      deleted_ktp_image: oldKtpName || null,
     });
   } catch (err) {
     console.error(err);

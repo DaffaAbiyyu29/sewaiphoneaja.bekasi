@@ -123,7 +123,7 @@ export default function Dashboard() {
   const COLORS = {
     Open: "#3b82f6",
     Close: "#10b981",
-    Pending: "#f59e0b",
+    "Waiting Payment": "#f59e0b",
     Cancelled: "#ef4444",
   };
 
@@ -230,7 +230,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
           {stats.map((stat, idx) => (
             <div
               key={idx}
@@ -293,7 +293,7 @@ export default function Dashboard() {
           {/* Popular Devices */}
           <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-purple-600 rounded-full"></span>
+              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
               Device Populer
             </h3>
             <ResponsiveContainer width="100%" height={320}>
@@ -315,7 +315,7 @@ export default function Dashboard() {
                     borderRadius: "12px",
                   }}
                 />
-                <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="count" fill="#0d69e0" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -326,7 +326,7 @@ export default function Dashboard() {
           {/* Order Status Pie Chart */}
           <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-2 border-gray-200">
             <h3 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
-              <span className="w-1 h-5 md:h-6 bg-emerald-500 rounded-full"></span>
+              <span className="w-1 h-5 md:h-6 bg-blue-600 rounded-full"></span>
               Status Pesanan
             </h3>
 

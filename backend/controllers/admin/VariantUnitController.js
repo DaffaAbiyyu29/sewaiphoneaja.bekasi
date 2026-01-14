@@ -111,24 +111,26 @@ const deleteVariantUnit = async (req, res) => {
   try {
     const { variantUnitCode } = req.params;
 
-    // Cari varian dulu
+    // 1️⃣ Cari varian (yang belum dihapus)
     const variant = await MstVariantUnit.findOne({
-      where: { variant_unit_code: variantUnitCode },
+      where: {
+        variant_unit_code: variantUnitCode,
+        is_delete: 0,
+      },
     });
 
     if (!variant) {
       return resError(res, "Varian unit tidak ditemukan", "Not Found", 404);
     }
 
-    // Hapus file foto jika ada (pakai helper)
-    if (variant.photo) {
-      deletePhoto(variant.photo);
-    }
+    // 2️⃣ Soft delete (jangan hapus foto)
+    await MstVariantUnit.update(
+      { is_delete: 1 },
+      { where: { variant_unit_code: variantUnitCode } }
+    );
 
-    // Hapus dari DB
-    await variant.destroy();
-
-    return resSuccess(res, "Varian unit berhasil dihapus");
+    // 3️⃣ Response
+    return resSuccess(res, "Varian unit berhasil dihapus (soft delete)");
   } catch (err) {
     console.error(err);
     return resError(res, "Gagal menghapus varian unit", err.message, 500);

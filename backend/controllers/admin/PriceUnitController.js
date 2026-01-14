@@ -68,13 +68,25 @@ const deletePriceUnit = async (req, res) => {
   try {
     const { priceId } = req.params;
 
-    const deleted = await MstPriceUnit.destroy({
-      where: { price_id: priceId },
+    // 1️⃣ Cek data (yang belum dihapus)
+    const priceUnit = await MstPriceUnit.findOne({
+      where: {
+        price_id: priceId,
+        is_delete: 0,
+      },
     });
-    if (!deleted)
+
+    if (!priceUnit)
       return resError(res, "Harga unit tidak ditemukan", "Not Found", 404);
 
-    return resSuccess(res, "Harga unit berhasil dihapus");
+    // 2️⃣ Soft delete
+    await MstPriceUnit.update(
+      { is_delete: 1 },
+      { where: { price_id: priceId } }
+    );
+
+    // 3️⃣ Response
+    return resSuccess(res, "Harga unit berhasil dihapus (soft delete)");
   } catch (err) {
     return resError(res, "Gagal menghapus harga unit", err.message, 500);
   }

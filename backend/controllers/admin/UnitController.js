@@ -410,28 +410,25 @@ const deleteUnit = async (req, res) => {
   try {
     const { unitCode } = req.params;
 
-    // 1️⃣ Cek apakah unit dengan kode tersebut ada
-    const unit = await MstUnit.findOne({ where: { unit_code: unitCode } });
+    // 1️⃣ Cek unit (yang belum dihapus)
+    const unit = await MstUnit.findOne({
+      where: {
+        unit_code: unitCode,
+        is_delete: 0,
+      },
+    });
+
     if (!unit) {
       return resError(res, "Unit tidak ditemukan", "Not Found", 404);
     }
 
-    // 2️⃣ Simpan nama foto lama (jika ada)
-    const oldPhotoName = unit.photo;
+    // 2️⃣ Soft delete → update is_delete
+    await MstUnit.update({ is_delete: 1 }, { where: { unit_code: unitCode } });
 
-    // 3️⃣ Hapus unit dari database
-    await MstUnit.destroy({ where: { unit_code: unitCode } });
-
-    // 4️⃣ Jika unit memiliki foto, hapus juga file fisiknya
-    if (oldPhotoName) {
-      deletePhoto(oldPhotoName); // fungsi ini sudah kamu import dari upload.js
-    }
-
-    // 5️⃣ Kirim respons sukses
-    return resSuccess(res, "Unit berhasil dihapus", {
+    // 3️⃣ Response
+    return resSuccess(res, "Unit berhasil dihapus (soft delete)", {
       deleted_unit_code: unitCode,
       deleted_unit_name: unit.unit_name,
-      deleted_photo: oldPhotoName || null,
     });
   } catch (err) {
     return resError(res, "Gagal menghapus unit", err.message, 500);

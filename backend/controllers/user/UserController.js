@@ -261,14 +261,23 @@ const deleteUser = async (req, res) => {
       return resError(res, "Parameter nik diperlukan", "Bad Request", 400);
     }
 
-    // 🔹 hapus user berdasarkan NIK
-    const deleted = await MstUser.destroy({ where: { nik } });
+    // 1️⃣ cek user (yang belum dihapus)
+    const user = await MstUser.findOne({
+      where: {
+        nik,
+        is_delete: 0,
+      },
+    });
 
-    if (!deleted) {
+    if (!user) {
       return resError(res, "User tidak ditemukan", "Not Found", 404);
     }
 
-    return resSuccess(res, "User berhasil dihapus");
+    // 2️⃣ soft delete
+    await MstUser.update({ is_delete: 1 }, { where: { nik } });
+
+    // 3️⃣ response
+    return resSuccess(res, "User berhasil dihapus (soft delete)");
   } catch (err) {
     console.error(err);
     return resError(res, "Gagal menghapus user", err.message, 500);
