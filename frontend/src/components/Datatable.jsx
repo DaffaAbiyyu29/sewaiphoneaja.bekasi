@@ -37,6 +37,7 @@ export default function Datatable({
   onAddClick,
   isSearch = true,
   isCard = true,
+  isPrice = false,
 }) {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -231,7 +232,7 @@ export default function Datatable({
             </div>
           </Listbox>
 
-          {allowAdd === true && (
+          {allowAdd && (!isPrice || (isPrice && totalDataCount === 0)) && (
             <button
               onClick={onAddClick}
               className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white text-sm rounded-lg shadow-md hover:bg-blue-800 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-opacity-50"

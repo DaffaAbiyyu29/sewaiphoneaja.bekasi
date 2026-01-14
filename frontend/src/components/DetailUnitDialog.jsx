@@ -15,6 +15,7 @@ import PriceSummary from "./customer/PriceSummary";
 export default function DetailUnitDialog({ isOpen, onClose, unit }) {
   const API_URL = import.meta.env.VITE_API_URL;
 
+  const [activePrices, setActivePrices] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedPrice, setSelectedPrice] = useState(null);
@@ -39,7 +40,17 @@ export default function DetailUnitDialog({ isOpen, onClose, unit }) {
         setMainImage({ id: "unit-photo", src: unit.photo || null });
       }
 
-      setSelectedPrice(null);
+      setActivePrices(
+        unit.prices?.filter(
+          (p) => p.status === "Active" && p.is_delete === 0
+        ) || []
+      );
+
+      setSelectedPrice(
+        unit.prices?.filter(
+          (p) => p.status === "Active" && p.is_delete === 0
+        )[0]
+      );
       setStartDate("");
       setEndDate("");
       setStartTime("09:00");
@@ -61,7 +72,6 @@ export default function DetailUnitDialog({ isOpen, onClose, unit }) {
 
   if (!unit) return null;
 
-  const activePrices = unit.prices?.filter((p) => p.status === "Active") || [];
   const hasVariants = unit.variants?.length > 0;
   const requiredRentalDays = selectedPrice?.duration || 0;
 
@@ -270,7 +280,7 @@ export default function DetailUnitDialog({ isOpen, onClose, unit }) {
                   <div className="text-sm text-amber-800">
                     <p className="font-medium mb-1">Mohon lengkapi:</p>
                     <ul className="list-disc list-inside space-y-1 text-amber-700">
-                      {!selectedPrice && <li>Pilih paket harga</li>}
+                      {!selectedPrice && <li>Harga /hari</li>}
                       {hasVariants && !selectedVariant && (
                         <li>Pilih warna unit</li>
                       )}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatNumber, unformatNumber } from "../helpers/Format";
 
 export default function Input({
   label,
@@ -15,42 +16,48 @@ export default function Input({
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
+  const isNumberLike = type === "number" || type === "currency";
+  const isCurrency = type === "currency";
+
   const inputType =
     type === "password" && showPasswordToggle
       ? showPassword
         ? "text"
         : "password"
-      : type;
+      : "text";
 
-  const baseClass = `w-full rounded-xl px-4 py-3 pr-12 text-gray-900 placeholder-gray-400 shadow-sm border ${
+  const baseClass = `w-full rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 shadow-sm border ${
     error
       ? "border-red-500 focus:ring-red-500"
       : "border-gray-300 focus:ring-blue-900"
   } focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 appearance-none`;
 
-  const length = value?.length || 0;
+  const length = isNumberLike
+    ? value?.toString().length || 0
+    : value?.length || 0;
 
-  // ============================
-  // HANDLE CHANGE (BLOCK MAX LENGTH)
-  // ============================
   const handleChange = (e) => {
     const val = e.target.value;
-
-    // blok kalau panjang lebih dari maxLength
     if (maxLength && val.length > maxLength) return;
-
     onChange(e);
   };
 
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-start text-gray-700 mb-1">
           {label}
         </label>
       )}
 
       <div className="relative">
+        {/* Prefix Rp */}
+        {isCurrency && (
+          <span className="absolute inset-y-0 left-3 flex items-center text-gray-500 text-sm font-medium pointer-events-none">
+            Rp
+          </span>
+        )}
+
         {type === "textarea" ? (
           <textarea
             value={value}
@@ -64,15 +71,31 @@ export default function Input({
           <>
             <input
               type={inputType}
-              value={value}
-              onChange={handleChange}
+              value={isNumberLike ? formatNumber(value) : value}
+              onChange={(e) => {
+                if (isNumberLike) {
+                  const raw = unformatNumber(e.target.value);
+
+                  // block non digit
+                  if (!/^\d*$/.test(raw)) return;
+
+                  // block maxLength (berdasarkan RAW)
+                  if (maxLength && raw.length > maxLength) return;
+
+                  onChange({
+                    ...e,
+                    target: {
+                      ...e.target,
+                      value: raw,
+                    },
+                  });
+                } else {
+                  handleChange(e);
+                }
+              }}
               placeholder={placeholder}
               onBlur={onBlur}
-              className={`${baseClass} ${
-                type === "number"
-                  ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  : ""
-              }`}
+              className={`${baseClass} ${isCurrency ? "pl-10" : ""}`}
               disabled={disabled}
             />
 
@@ -92,7 +115,7 @@ export default function Input({
                   >
                     <path
                       fillRule="evenodd"
-                      d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z"
+                      d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22Z"
                       clipRule="evenodd"
                     />
                     <path d="m10.748 13.93 2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a.651.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
@@ -126,7 +149,7 @@ export default function Input({
       </div>
 
       {error && (
-        <p className="text-red-500 text-sm mt-1 animate-[fadeIn_0.2s_ease-in]">
+        <p className="text-red-500 text-sm text-start mt-1 animate-[fadeIn_0.2s_ease-in]">
           {error}
         </p>
       )}

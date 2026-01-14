@@ -49,7 +49,6 @@ export default function UpdateVariantPage() {
         );
         const data = res.data.data || res.data;
 
-        console.log(data);
         setFormData({
           color: data.color || "",
           qty: data.qty || "",

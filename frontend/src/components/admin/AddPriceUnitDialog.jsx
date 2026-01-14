@@ -28,7 +28,7 @@ export default function AddPriceUnitDialog({ isOpen, onClose, unit, onAdded }) {
     if (isOpen) {
       setForm({
         duration: 1,
-        price_per_day: 0,
+        price_per_day: 100000,
         status: "Active",
       });
       setErrors({});
@@ -130,29 +130,31 @@ export default function AddPriceUnitDialog({ isOpen, onClose, unit, onAdded }) {
               label="Durasi (Hari)"
               type="number"
               value={form.duration}
+              disabled={true}
               onChange={handleChange("duration")}
-              min={1}
+              maxLength={2}
               placeholder="Masukkan durasi sewa dalam hari"
               error={errors.duration}
             />
 
             <Input
-              label="Harga Per Hari"
-              type="number"
+              label="Harga /Hari"
+              type="currency"
               value={form.price_per_day}
               onChange={handleChange("price_per_day")}
-              min={0}
+              maxLength={9}
               placeholder="Masukkan harga sewa per hari"
               error={errors.price_per_day}
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-start text-gray-700 mb-1">
                 Status
               </label>
               <select
                 value={form.status}
                 onChange={handleChange("status")}
+                disabled={true}
                 className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                   errors.status
                     ? "border-red-500 focus:ring-red-500"

@@ -198,12 +198,14 @@ export default function AddVariantDialog({ isOpen, onClose, unit, onAdded }) {
               value={form.color}
               onChange={handleChange("color")}
               placeholder="Masukkan warna"
+              maxLength={20}
               error={errors.color}
             />
 
             <Input
               label="Jumlah"
               type="number"
+              maxLength={2}
               value={form.qty}
               onChange={handleChange("qty")}
               min={1}

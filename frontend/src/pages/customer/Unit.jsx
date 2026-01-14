@@ -64,7 +64,6 @@ const Unit = () => {
   };
 
   const handleFilterChange = (status) => {
-    console.log("Filter changed to:", status);
     setFilterStatus(status);
     // Kita panggil fetchUnits di useEffect dengan dependency searchTerm/filterStatus
   };

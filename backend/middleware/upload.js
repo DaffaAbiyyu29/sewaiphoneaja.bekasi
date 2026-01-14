@@ -42,7 +42,6 @@ const deletePhoto = (filePathOrName) => {
     // 1) Jika diberikan full path dan file ada, hapus langsung
     if (fs.existsSync(filePathOrName)) {
       fs.unlinkSync(filePathOrName);
-      console.log(`File berhasil dihapus: ${filePathOrName}`);
       return;
     }
 
@@ -55,7 +54,6 @@ const deletePhoto = (filePathOrName) => {
     for (const p of tryPaths) {
       if (fs.existsSync(p)) {
         fs.unlinkSync(p);
-        console.log(`File berhasil dihapus: ${p}`);
         return;
       }
     }

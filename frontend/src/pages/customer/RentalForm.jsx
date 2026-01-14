@@ -136,13 +136,12 @@ const RentalForm = () => {
       setEndTime(selectedData?.endTime);
 
       const activePrices =
-        mappedUnit.prices?.filter((p) => p.status === "Active") || [];
+        mappedUnit.prices?.filter(
+          (p) => p.status === "Active" && p.is_delete === 0
+        ) || [];
       if (activePrices.length > 0) setSelectedPrice(activePrices[0]);
 
-      console.log(mappedUnit.variants[0]);
-
       const vForm = JSON.parse(sessionStorage.getItem("selectedUnit"));
-      console.log(vForm.unitVariant);
 
       if (vForm.unitVariant) {
         setSelectedVariant(vForm.unitVariant);
@@ -191,7 +190,9 @@ const RentalForm = () => {
   // ===
   // Derived State and Calculations (Unchanged)
   // ===
-  const activePrices = unit.prices?.filter((p) => p.status === "Active") || [];
+  const activePrices =
+    unit.prices?.filter((p) => p.status === "Active" && p.is_delete === 0) ||
+    [];
   const hasVariants = unit.variants?.length > 0;
   const requiredRentalDays = selectedPrice?.duration || 0;
 

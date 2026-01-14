@@ -351,6 +351,7 @@ export default function DetailUnitPage() {
               isCard={false}
               allowAdd={true}
               onAddClick={handleAddPriceClick}
+              isPrice={true}
             />
           </div>
 
@@ -394,7 +395,6 @@ export default function DetailUnitPage() {
         onClose={() => setShowDialogVariant(false)}
         unit={unitData}
         onAdded={(newVariant) => {
-          console.log("Variant baru:", newVariant);
           setRefreshKeyVariant((prev) => prev + 1);
         }}
       />
@@ -403,7 +403,6 @@ export default function DetailUnitPage() {
         onClose={() => setShowDialogPrice(false)}
         unit={unitData}
         onAdded={(newPrice) => {
-          console.log("price baru:", newPrice);
           setRefreshKeyPrice((prev) => prev + 1);
         }}
       />

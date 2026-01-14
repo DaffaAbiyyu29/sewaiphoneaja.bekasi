@@ -83,7 +83,6 @@ export default function Header({ onMenuClick, userData }) {
   // };
 
   useEffect(() => {
-    console.log(userData);
     // fetchUserData();
 
     function handleClickOutside(e) {

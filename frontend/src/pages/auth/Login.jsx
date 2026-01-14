@@ -49,9 +49,6 @@ export default function LoginPage() {
         password: form.password,
       });
 
-      // berhasil login
-      // console.log("Response:", response.data);
-
       // simpan token ke localStorage
       if (response.data.success && response.data.data?.token) {
         localStorage.setItem("token", response.data.data.token);

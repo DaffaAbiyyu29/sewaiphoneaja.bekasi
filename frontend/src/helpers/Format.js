@@ -24,3 +24,13 @@ export const formatCurrency = (value) => {
     minimumFractionDigits: 0,
   }).format(value);
 };
+
+export const formatNumber = (val) => {
+  if (val === null || val === undefined || val === "") return "";
+  return val
+    .toString()
+    .replace(/\D/g, "")
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+export const unformatNumber = (val) => val.replace(/\./g, "");

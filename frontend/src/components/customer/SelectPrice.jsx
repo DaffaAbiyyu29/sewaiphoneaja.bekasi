@@ -19,14 +19,13 @@ export default function SelectPrice({
   setSelectedPrice,
 }) {
   if (activePrices.length === 0) return null;
+  // setSelectedPrice(activePrices[0]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
         <FontAwesomeIcon icon={faDollar} className="text-blue-900" size="24" />
-        <h3 className="text-base font-semibold text-gray-900">
-          Pilih Paket Harga
-        </h3>
+        <h3 className="text-base font-semibold text-gray-900">Harga /hari</h3>
       </div>
       <div className="grid grid-cols-3 gap-3">
         {activePrices.map((price) => {
@@ -41,7 +40,7 @@ export default function SelectPrice({
                   : "bg-white text-gray-700 border-gray-300 hover:border-blue-900 hover:shadow-sm"
               }`}
             >
-              <div className="font-bold">{price.duration} Hari</div>
+              {/* <div className="font-bold">{price.duration} Hari</div> */}
               <div
                 className={`text-xs mt-1 ${
                   isSelected ? "text-blue-100" : "text-gray-500"

@@ -227,7 +227,6 @@ export default function ProfileUserPage() {
           throw new Error("Failed to upload photo");
         }
         const data = await response.json();
-        console.log("Photo uploaded successfully:", data);
 
         // Update userData dengan photo yang baru
         setFormEditData((prevData) => ({

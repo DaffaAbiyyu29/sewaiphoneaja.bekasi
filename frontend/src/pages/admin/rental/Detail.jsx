@@ -417,7 +417,6 @@ export default function RentalDetailPage() {
       const formatRupiah = (num) =>
         `Rp ${Number(num || 0).toLocaleString("id-ID")}`;
 
-      console.log(details[0]);
       const emailPayload = {
         invoice: rental.invoice_number,
         email: customer.email,
