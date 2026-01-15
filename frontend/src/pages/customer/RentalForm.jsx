@@ -817,7 +817,7 @@ const RentalForm = () => {
                   <Input
                     label="NIK (Nomor Induk Kependudukan)"
                     name="nik"
-                    type="number"
+                    type="rawNumber"
                     value={formData.nik}
                     onChange={handleChange("nik")}
                     onBlur={() => {
@@ -848,7 +848,7 @@ const RentalForm = () => {
                   disabled={isRepeat}
                   placeholder="08xxxxxxxxxx"
                   maxLength={13}
-                  type="number"
+                  type="rawNumber"
                   error={errors.telp}
                 />
 
@@ -903,7 +903,7 @@ const RentalForm = () => {
                     disabled={isRepeat}
                     placeholder="08xxxxxxxxxx"
                     maxLength={13}
-                    type="number"
+                    type="rawNumber"
                     error={errors.closestContactTelp}
                   />
                 </div>

@@ -4,7 +4,7 @@ import LayoutAdmin from "./components/layout/LayoutAdmin";
 import LayoutCustomer from "./components/layout/LayoutCustomer";
 import PageLoader from "./components/PageLoader";
 import NotFoundPage from "./components/PageNotFound";
-import AdminAuth from "./helpers/ValidateToken";
+import ProtectedRoute from "./helpers/ProtectedRoute";
 import CustomerDetailPage from "./pages/admin/customer/Detail";
 import CustomerPage from "./pages/admin/customer/Index";
 import Dashboard from "./pages/admin/Dashboard";
@@ -42,18 +42,27 @@ export default function App() {
   return (
     <PageLoader>
       <Routes>
-        <Route path="/" element={<LayoutCustomer />}>
+        {/* CUSTOMER ROUTES - Public Access */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <LayoutCustomer />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<DashboardCust />} />
           <Route path="unit" element={<Catalog />} />
           <Route path="pesanan" element={<Pesanan />} />
         </Route>
 
+        {/* ADMIN ROUTES - Protected */}
         <Route
           path="/"
           element={
-            <AdminAuth>
+            <ProtectedRoute>
               <LayoutAdmin />
-            </AdminAuth>
+            </ProtectedRoute>
           }
         >
           <Route path="dashboard" element={<Dashboard />} />
@@ -82,16 +91,27 @@ export default function App() {
           <Route path="menu/profile" element={<ProfileUserPage />} />
         </Route>
 
+        {/* AUTH ROUTE */}
         <Route
           path="/login"
           element={
-            <AdminAuth>
+            <ProtectedRoute>
               <LoginPage />
-            </AdminAuth>
+            </ProtectedRoute>
           }
         />
 
-        <Route path="rent-form" element={<RentalForm />} />
+        {/* RENTAL FORM - Public Access */}
+        <Route
+          path="rent-form"
+          element={
+            <ProtectedRoute>
+              <RentalForm />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* NOT FOUND */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </PageLoader>

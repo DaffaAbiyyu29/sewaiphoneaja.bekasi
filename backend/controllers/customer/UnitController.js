@@ -85,12 +85,20 @@ const getAllUnitCatalog = async (req, res) => {
         {
           model: MstVariantUnit,
           as: "variants",
-          attributes: ["variant_unit_code", "color", "qty", "status", "photo"],
+          where: { is_delete: 0 },
+          attributes: [
+            "variant_unit_code",
+            "color",
+            "qty",
+            "status",
+            "photo",
+            "is_delete",
+          ],
         },
         {
           model: MstPriceUnit,
           as: "prices",
-          where: { status: "Active" },
+          where: { status: "Active", is_delete: 0 },
           attributes: [
             "price_id",
             "duration",
@@ -232,12 +240,20 @@ const getCatalogByUnitCode = async (req, res) => {
         {
           model: MstVariantUnit,
           as: "variants",
-          attributes: ["variant_unit_code", "color", "qty", "status", "photo"],
+          where: { is_delete: 0 },
+          attributes: [
+            "variant_unit_code",
+            "color",
+            "qty",
+            "status",
+            "photo",
+            "is_delete",
+          ],
         },
         {
           model: MstPriceUnit,
           as: "prices",
-          where: { status: "Active" },
+          where: { status: "Active", is_delete: 0 },
           attributes: [
             "price_id",
             "duration",

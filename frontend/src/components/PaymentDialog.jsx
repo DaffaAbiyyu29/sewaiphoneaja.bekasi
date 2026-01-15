@@ -216,7 +216,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
     }
   };
 
-  const isUploadDisabled = ["Close", "Cancelled", "Invalid"].includes(
+  const isUploadDisabled = ["Open", "Close", "Cancelled", "Invalid"].includes(
     normalized.status
   );
 

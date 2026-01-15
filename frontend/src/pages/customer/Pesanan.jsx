@@ -265,8 +265,8 @@ const Pesanan = () => {
                     Tidak ada unit yang ditemukan
                   </p>
                   <p className="text-gray-400 text-sm">
-                    Pesanan anda dengan Invoice Number atau NIK "{searchTerm}"
-                    tidak tersedia
+                    {`Pesanan anda dengan Invoice Number atau NIK "${searchTerm}"
+                    tidak tersedia`}
                   </p>
                 </div>
               )}

@@ -1,162 +1,313 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  faArrowLeft,
+  faHome,
+  faLock,
+  faServer,
+  faTriangleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect, useRef } from "react";
 
-// PageNotFound_Antimainstream.jsx
-// Requirements: Tailwind CSS + framer-motion installed
-// Usage: import PageNotFound from './PageNotFound_Antimainstream';
-// place it as route component or show when 404
+export default function ErrorPage({ message, statusCode = 404 }) {
+  const canvasRef = useRef(null);
 
-export default function PageNotFound() {
-  const navigate = useNavigate();
+  const errorConfig = {
+    404: {
+      title: "PAGE NOT FOUND",
+      defaultMessage:
+        "Data tidak ditemukan dalam sistem. Koordinat halaman ini telah dihapus dari server.",
+      icon: faTriangleExclamation,
+      primary: "#0099ff",
+      secondary: "#001540",
+      glitch1: "#0099ff",
+      glitch2: "#0072ff",
+      glow: "rgba(0, 210, 255, 0.4)",
+    },
+    403: {
+      title: "ACCESS DENIED",
+      defaultMessage:
+        "Sistem keamanan mendeteksi upaya akses ilegal ke area terlarang. Izin ditolak.",
+      icon: faLock,
+      primary: "#ff3131e0",
+      secondary: "#450a0a",
+      glitch1: "#ff3131e0",
+      glitch2: "#991b1b",
+      glow: "rgba(255, 49, 49, 0.4)",
+    },
+    500: {
+      title: "SERVER ERROR",
+      defaultMessage:
+        "Kesalahan fatal terdeteksi. Core system mengalami gangguan. Proses recovery dimulai.",
+      icon: faServer,
+      primary: "#ffaa00",
+      secondary: "#451a03",
+      glitch1: "#d4ff00",
+      glitch2: "#b45309",
+      glow: "rgba(255, 170, 0, 0.4)",
+    },
+  };
 
+  const config = errorConfig[statusCode] || errorConfig[404];
+
+  // Gunakan message dari props jika ada, jika tidak pakai defaultMessage dari config
+  const displayMessage = message || config.defaultMessage;
+
+  // Matrix Rain Background
   useEffect(() => {
-    // inject small stylesheet for some fine-tuned animations
-    const id = "pnf-antimainstream-styles";
-    if (document.getElementById(id)) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃ".split(
+        ""
+      );
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = [];
+
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+
+    function draw() {
+      ctx.fillStyle = "rgba(7, 7, 8, 0.1)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        const opacity = drops[i] > 0 ? Math.min(1, 20 / drops[i]) : 0;
+
+        ctx.fillStyle = config.primary;
+        ctx.globalAlpha = opacity * 0.8;
+        ctx.fillText(char, x, y);
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = config.primary;
+        ctx.fillText(char, x, y);
+        ctx.shadowBlur = 0;
+
+        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
+    }
+
+    const animId = requestAnimationFrame(draw);
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animId);
+    };
+  }, [config.primary]);
+
+  // CSS Injection: Intermittent Glitch with Fixed Custom Colors
+  useEffect(() => {
+    const id = "dynamic-theme-glitch-styles";
+    if (document.getElementById(id)) document.getElementById(id).remove();
+
     const style = document.createElement("style");
     style.id = id;
     style.innerHTML = `
-      @keyframes float1 { 0% { transform: translateY(0) rotate(0deg);} 50% { transform: translateY(-18px) rotate(6deg);} 100% { transform: translateY(0) rotate(0deg);} }
-      @keyframes float2 { 0% { transform: translateY(0) rotate(0deg);} 50% { transform: translateY(-28px) rotate(-6deg);} 100% { transform: translateY(0) rotate(0deg);} }
-      @keyframes scanline { 0% { background-position: 0 -100%; } 100% { background-position: 0 100%; } }
-      .glitch-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-      .scanlines { background-image: linear-gradient(transparent 75%, rgba(255,255,255,0.03) 76%); background-size: 100% 6px; animation: scanline 6s linear infinite; mix-blend-mode: overlay; }
+      @keyframes intermittentGlitch {
+        0%, 88%, 92%, 100% { transform: translate(0, 0); filter: none; opacity: 1; }
+        89% { transform: translate(-10px, 4px); filter: contrast(1.2); }
+        90% { transform: translate(10px, -4px); }
+        91% { transform: translate(-2px, -8px); opacity: 0.9; }
+      }
+
+      @keyframes layerJitter {
+        0%, 88%, 100% { transform: translate(var(--base-x), var(--base-y)); }
+        90% { transform: translate(calc(var(--base-x) + 6px), calc(var(--base-y) - 3px)); }
+      }
+
+      .status-wrapper {
+        position: relative;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+      }
+
+      .glitch-number-container {
+        position: relative;
+        font-weight: 900;
+        font-size: 92px;
+        line-height: 1;
+        animation: intermittentGlitch 3.5s infinite;
+      }
+
+      @media (min-width: 768px) {
+        .glitch-number-container { font-size: 145px; }
+        .status-wrapper { height: 160px; }
+      }
+
+      .layer-1 {
+        position: absolute;
+        left: 0; top: 0;
+        --base-x: 5px; --base-y: -4px;
+        transform: translate(var(--base-x), var(--base-y));
+        color: ${config.glitch1};
+        filter: blur(0.4px);
+        mix-blend-mode: screen;
+        animation: layerJitter 3.5s infinite linear;
+      }
+
+      .layer-2 {
+        position: absolute;
+        left: 0; top: 0;
+        --base-x: -5px; --base-y: 4px;
+        transform: translate(var(--base-x), var(--base-y));
+        color: ${config.glitch2};
+        filter: blur(0.4px);
+        mix-blend-mode: screen;
+        animation: layerJitter 3.5s infinite linear reverse;
+      }
+
+      .layer-main {
+        position: relative;
+        color: white;
+      }
+
+      @keyframes pulseGlowIntense {
+        0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+        50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+      }
     `;
     document.head.appendChild(style);
-    return () => style.remove();
-  }, []);
+  }, [config, statusCode]);
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-tr from-neutral-900 via-slate-900 to-stone-800 text-white">
-      {/* animated blob / bokeh background */}
-      <motion.div
-        className="absolute -left-28 -top-28 w-[42rem] h-[42rem] rounded-full filter blur-3xl opacity-60 mix-blend-screen"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 20%, rgba(255,99,71,0.16), transparent 20%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.12), transparent 30%)",
-        }}
-        animate={{ rotate: [0, 12, -8, 0], scale: [1, 1.04, 0.98, 1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    <div className="min-h-screen w-full bg-[#050506] relative overflow-hidden flex items-center justify-center p-4">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 z-0"
+        style={{ opacity: 0.9 }}
       />
+      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/90 z-[1]" />
 
-      <motion.div
-        className="absolute right-[-6rem] top-[10rem] w-96 h-96 rounded-full filter blur-2xl opacity-50"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 50%, rgba(34,197,94,0.12), transparent 30%)",
-        }}
-        animate={{ y: [0, -24, 0], x: [0, 18, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        className="absolute left-10 bottom-[-6rem] w-72 h-72 rounded-full filter blur-2xl opacity-40"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 80%, rgba(245,158,11,0.10), transparent 30%)",
-        }}
-        animate={{ y: [0, -34, 0], x: [0, -14, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* subtle noise + scanlines */}
-      <div className="absolute inset-0 pointer-events-none scanlines" />
-
-      {/* main glass card */}
-      <div className="relative z-20 flex items-center justify-center min-h-screen px-6">
-        <div className="w-full max-w-3xl backdrop-blur-sm bg-white/6 border border-white/10 rounded-3xl p-10 md:p-16 shadow-2xl shadow-black/60">
-          {/* glitchy 404 */}
-          <div className="relative flex items-center justify-center mb-6">
-            <div className="relative w-full h-40 flex items-center justify-center">
-              {/* layered colored copies for glitch effect */}
+      <div className="relative z-10 w-full max-w-3xl">
+        <div
+          className="relative rounded-3xl p-8 md:p-12"
+          style={{
+            background: "rgba(255, 255, 255, 0.015)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+          }}
+        >
+          {/* Icon Section */}
+          <div className="flex justify-center mb-8">
+            <div className="relative">
               <div
-                className="glitch-layer"
-                style={{ width: "100%", height: "100%" }}
-              >
-                <div
-                  aria-hidden
-                  className="absolute text-[92px] md:text-[140px] font-extrabold tracking-tight"
-                  style={{ transform: "translate(27%, -20%)" }}
-                >
-                  <span
-                    style={{
-                      position: "relative",
-                      left: "50%",
-                      top: "50%",
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        transform: "translate(4px, -3px)",
-                        color: "rgba(99,102,241,0.85)",
-                        filter: "blur(0.6px)",
-                        mixBlendMode: "screen",
-                      }}
-                    >
-                      404
-                    </span>
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        transform: "translate(-4px, 3px)",
-                        color: "rgba(250,204,21,0.9)",
-                        filter: "blur(0.4px)",
-                        mixBlendMode: "screen",
-                      }}
-                    >
-                      404
-                    </span>
-                    <span style={{ position: "relative", color: "white" }}>
-                      404
-                    </span>
-                  </span>
-                </div>
-              </div>
+                className="absolute inset-0 blur-3xl rounded-full"
+                style={{
+                  background: config.glow,
+                  width: "110px",
+                  height: "110px",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  animation: "pulseGlowIntense 2.5s ease-in-out infinite",
+                }}
+              />
+              <FontAwesomeIcon
+                icon={config.icon}
+                size="4x"
+                style={{
+                  color: config.primary,
+                  filter: `drop-shadow(0 0 12px ${config.primary})`,
+                }}
+                className="relative z-10"
+              />
             </div>
           </div>
 
-          {/* message & actions */}
-          <div className="text-center">
-            <h3 className="text-xl md:text-2xl font-semibold mb-3">
-              Halaman Tidak Ditemukan
-            </h3>
-            <p className="text-sm md:text-base text-white/70 max-w-xl mx-auto mb-6">
-              Maaf, halaman yang Anda cari tidak tersedia atau telah
-              dipindahkan. Silakan kembali ke beranda atau hubungi tim{" "}
-              <span className="text-sky-400">sewaiphone.bekasi</span> untuk
-              bantuan lebih lanjut.
-            </p>
-
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => navigate("/")}
-                className="group relative inline-flex items-center gap-3 rounded-full px-5 py-2.5 bg-gradient-to-r from-sky-500/95 to-indigo-600/95 text-white font-medium shadow-lg ring-1 ring-white/10 hover:scale-105 active:scale-95 transition-transform"
-              >
-                <span className="inline-block w-3 h-3 rounded-full bg-white/90 group-hover:animate-pulse" />
-                Kembali ke Home
-              </button>
-
-              <button
-                onClick={() => window.history.back()}
-                className="group relative inline-flex items-center gap-3 rounded-full px-5 py-2.5 text-sm border border-white/10 text-white/80 hover:bg-white/3 transition-transform"
-              >
-                Back
-              </button>
+          {/* STATUS CODE SECTION */}
+          <div className="status-wrapper">
+            <div className="glitch-number-container">
+              <span className="layer-1" aria-hidden="true">
+                {statusCode}
+              </span>
+              <span className="layer-2" aria-hidden="true">
+                {statusCode}
+              </span>
+              <span className="layer-main">{statusCode}</span>
             </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center gap-3 mb-6 opacity-40">
+            <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-white to-transparent" />
+            <span
+              className="text-[10px] font-mono tracking-[0.4em] uppercase font-bold"
+              style={{ color: config.primary }}
+            >
+              SYSTEM_FAULT_{statusCode}
+            </span>
+            <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-white to-transparent" />
+          </div>
+
+          {/* Title & Parameter Message */}
+          <div className="text-center space-y-4 mb-10">
+            <h2
+              className="text-3xl md:text-4xl font-black tracking-tighter"
+              style={{
+                color: config.primary,
+                fontFamily: "'Courier New', monospace",
+              }}
+            >
+              {config.title}
+            </h2>
+            <p className="text-white/40 text-sm md:text-base max-w-xl mx-auto font-mono leading-relaxed px-4">
+              {displayMessage}
+            </p>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => (window.location.href = "/dashboard")}
+              className="group relative px-10 py-3.5 rounded-xl font-bold text-xs font-mono uppercase tracking-widest transition-all duration-300 hover:scale-105 flex items-center gap-2 text-white overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${config.primary}, ${config.secondary})`,
+                boxShadow: `0 8px 25px -5px ${config.glow}`,
+              }}
+            >
+              <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <FontAwesomeIcon icon={faHome} className="relative z-10" />
+              <span className="relative z-10">DASHBOARD</span>
+            </button>
+
+            <button
+              onClick={() => window.history.back()}
+              className="px-10 py-3.5 rounded-xl font-bold text-xs font-mono uppercase tracking-widest transition-all duration-300 border border-white/10 text-white/40 hover:text-white hover:bg-white/5"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} />
+              <span>GO BACK</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* footer little credit */}
-      <div className="absolute bottom-6 left-6 text-xs text-white/40 z-30">
-        — pagenotfound 404 • sewaiphoneaja.bekasi
+      {/* Footer */}
+      <div className="absolute bottom-6 w-full text-center z-20">
+        <p
+          className="text-[9px] font-mono tracking-[0.5em] uppercase opacity-20"
+          style={{ color: config.primary }}
+        >
+          CORE_NODE: BEKASI_01 // ACCESS_STAMP: {new Date().getFullYear()}
+        </p>
       </div>
     </div>
   );

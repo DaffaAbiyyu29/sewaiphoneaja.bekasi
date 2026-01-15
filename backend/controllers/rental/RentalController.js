@@ -7,6 +7,7 @@ const Sequelize = require("sequelize");
 const {
   generateIncrementId,
   generateInvoiceNumber,
+  lastInvoiceNumber,
 } = require("../../helpers/generateID");
 const TrnDetailRent = require("../../models/TrnDetailRental");
 const MstUnit = require("../../models/MstUnit");
@@ -742,7 +743,7 @@ const getRentById = async (req, res) => {
 
 const getNextInvoice = async (req, res) => {
   try {
-    const invoice = await generateInvoiceNumber("trn_rent");
+    const invoice = await lastInvoiceNumber("trn_rent");
 
     res.json({
       invoice,

@@ -26,14 +26,18 @@ const generalItems = [
 ];
 
 const masterItems = [
-  { name: "Unit", path: "/menu/unit", icon: faMobile, roles: ["Supervisor"] },
   {
-    name: "Customer",
-    path: "/menu/customer",
-    icon: faUsers,
-    roles: ["Supervisor"],
+    name: "Unit",
+    path: "/menu/unit",
+    icon: faMobile,
+    roles: ["Manager", "Supervisor"], // admin NO
   },
-  { name: "User", path: "/menu/user", icon: faUser, roles: ["Supervisor"] },
+  {
+    name: "User",
+    path: "/menu/user",
+    icon: faUser,
+    roles: ["Manager", "Supervisor"], // admin NO
+  },
 ];
 
 const transactionItems = [
@@ -41,16 +45,22 @@ const transactionItems = [
     name: "Penyewaan",
     path: "/menu/rental",
     icon: faClipboardList,
-    roles: ["Supervisor", "Admin"],
+    roles: ["Admin"], // fokus kerja admin
+  },
+  {
+    name: "Customer",
+    path: "/menu/customer",
+    icon: faUsers,
+    roles: ["Admin"], // termasuk blokir customer
   },
 ];
 
 const reportItems = [
   {
-    name: "Laporan",
+    name: "Laporan Keuangan",
     path: "/menu/report",
     icon: faFileInvoiceDollar,
-    roles: ["Manager", "Admin"],
+    roles: ["Manager"], // supervisor & admin NO
   },
 ];
 

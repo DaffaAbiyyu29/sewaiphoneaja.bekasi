@@ -27,6 +27,7 @@ const Unit = () => {
           `${API_URL}/api/unit/catalog?page=${page}&pageSize=${pageSize}&search=${searchTerm}&status=${filterStatus}`
         );
         if (res.data.success) {
+          console.log(res.data.data);
           setUnits(res.data.data);
           setCurrentPage(res.data.currentPage);
           setTotalPages(res.data.totalPages);

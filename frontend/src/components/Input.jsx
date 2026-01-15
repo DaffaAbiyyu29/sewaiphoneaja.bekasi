@@ -18,6 +18,7 @@ export default function Input({
 
   const isNumberLike = type === "number" || type === "currency";
   const isCurrency = type === "currency";
+  const isRawNumber = type === "rawNumber";
 
   const inputType =
     type === "password" && showPasswordToggle
@@ -32,9 +33,10 @@ export default function Input({
       : "border-gray-300 focus:ring-blue-900"
   } focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 appearance-none`;
 
-  const length = isNumberLike
-    ? value?.toString().length || 0
-    : value?.length || 0;
+  const length =
+    isNumberLike || isRawNumber
+      ? value?.toString().length || 0
+      : value?.length || 0;
 
   const handleChange = (e) => {
     const val = e.target.value;
@@ -71,15 +73,32 @@ export default function Input({
           <>
             <input
               type={inputType}
-              value={isNumberLike ? formatNumber(value) : value}
+              value={
+                isNumberLike ? formatNumber(value) : isRawNumber ? value : value
+              }
               onChange={(e) => {
+                // RAW NUMBER → angka polos, no separator
+                if (isRawNumber) {
+                  const val = e.target.value;
+
+                  if (!/^\d*$/.test(val)) return;
+                  if (maxLength && val.length > maxLength) return;
+
+                  onChange({
+                    ...e,
+                    target: {
+                      ...e.target,
+                      value: val,
+                    },
+                  });
+                  return;
+                }
+
+                // NUMBER / CURRENCY → pakai formatter
                 if (isNumberLike) {
                   const raw = unformatNumber(e.target.value);
 
-                  // block non digit
                   if (!/^\d*$/.test(raw)) return;
-
-                  // block maxLength (berdasarkan RAW)
                   if (maxLength && raw.length > maxLength) return;
 
                   onChange({
@@ -89,9 +108,11 @@ export default function Input({
                       value: raw,
                     },
                   });
-                } else {
-                  handleChange(e);
+                  return;
                 }
+
+                // NORMAL INPUT
+                handleChange(e);
               }}
               placeholder={placeholder}
               onBlur={onBlur}

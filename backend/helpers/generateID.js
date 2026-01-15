@@ -91,7 +91,7 @@ const generateInvoiceNumber = async (tableName = "trn_payment") => {
     );
 
     let cnt = 0;
-    if (results && results[0] && (results[0].cnt !== undefined)) {
+    if (results && results[0] && results[0].cnt !== undefined) {
       // some mysql libs return string counts
       cnt = Number(results[0].cnt) || 0;
     }
@@ -105,8 +105,39 @@ const generateInvoiceNumber = async (tableName = "trn_payment") => {
   }
 };
 
+const lastInvoiceNumber = async (tableName = "trn_payment") => {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const datePart = `${yy}${mm}${dd}`;
+
+  try {
+    // Count rows created today in trn_payment (uses DB server date)
+    // Keep tableName limited to alphanumeric and underscore to avoid injection
+    const safeTable = String(tableName).replace(/[^a-zA-Z0-9_]/g, "");
+    const [results] = await sequelize.query(
+      `SELECT COUNT(*) AS cnt FROM ${safeTable} WHERE DATE(created_at) = CURDATE()`
+    );
+
+    let cnt = 0;
+    if (results && results[0] && results[0].cnt !== undefined) {
+      // some mysql libs return string counts
+      cnt = Number(results[0].cnt) || 0;
+    }
+
+    const next = cnt;
+    return `INV#${datePart}${String(next).padStart(4, "0")}`;
+  } catch (err) {
+    // If table/column doesn't exist or query fails, fallback to timestamp-derived suffix
+    const fallbackNum = String(Date.now()).slice(-4);
+    return `INV#${datePart}${fallbackNum}`;
+  }
+};
+
 module.exports = {
   generateIncrementId,
+  lastInvoiceNumber,
   generateUnitCode,
   generateVariantUnitCode,
   generatePriceUnitCode,
