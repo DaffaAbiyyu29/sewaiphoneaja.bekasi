@@ -32,7 +32,7 @@ import {
   faXTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 
-import DetailPaymentDialog from "../../../components/admin/DetailPaymentDialog";
+import DetailPaymentDialog from "../../../components/shared/DetailPaymentDialog";
 import {
   formatCurrency,
   formatDate,
@@ -197,7 +197,7 @@ export default function RentalDetailPage() {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       Swal.fire({
@@ -359,7 +359,7 @@ export default function RentalDetailPage() {
       await axios.put(
         `${API_URL}/api/rental/${rentId}/cancel`,
         { notes, updated_by: user.id },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const formatRupiah = (num) =>
@@ -392,7 +392,7 @@ export default function RentalDetailPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // STEP 4 — success
@@ -487,7 +487,7 @@ export default function RentalDetailPage() {
       const res = await axios.put(
         `${API_URL}/api/rental/${rentId}/collect`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       Swal.fire({
@@ -568,7 +568,7 @@ export default function RentalDetailPage() {
       const res = await axios.put(
         `${API_URL}/api/rental/${rentId}/return`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       Swal.fire({
@@ -638,7 +638,7 @@ export default function RentalDetailPage() {
               `${API_URL}/api/customer/${rentalData.customer_id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
-              }
+              },
             );
             setCustomer(customerRes.data.data);
           } catch (customerErr) {
@@ -650,7 +650,7 @@ export default function RentalDetailPage() {
         console.error(err);
         setError(
           err.response?.data?.message ||
-            "Gagal memuat data rental. Silakan coba lagi."
+            "Gagal memuat data rental. Silakan coba lagi.",
         );
       } finally {
         setLoading(false);
@@ -699,19 +699,19 @@ export default function RentalDetailPage() {
     rental.end_rent_date && rental.start_rent_date
       ? Math.ceil(
           (new Date(rental.end_rent_date) - new Date(rental.start_rent_date)) /
-            (1000 * 60 * 60 * 24)
+            (1000 * 60 * 60 * 24),
         )
       : 0;
 
   // Calculate total from details
   const totalPriceFromDetails = details.reduce(
     (sum, d) => sum + (d.subtotal || 0) * (d.qty || 1) * rentalDays,
-    0
+    0,
   );
 
   const handlePrevImage = () => {
     setMainImageIndex((prev) =>
-      prev === 0 ? Math.max(0, details.length - 1) : prev - 1
+      prev === 0 ? Math.max(0, details.length - 1) : prev - 1,
     );
   };
 
@@ -745,7 +745,7 @@ export default function RentalDetailPage() {
               <div className="flex items-center gap-3">
                 <div
                   className={`${getStatusColor(
-                    rental.status
+                    rental.status,
                   )} px-4 py-2 rounded-lg inline-flex items-center justify-center self-start sm:self-auto`}
                 >
                   <p className="font-semibold text-sm">{rental.status}</p>
@@ -1191,7 +1191,7 @@ export default function RentalDetailPage() {
                                 </span>
                                 <span
                                   className={`text-xs px-2.5 py-1 rounded-full font-medium border ${getPaymentStatusColor(
-                                    payment.status
+                                    payment.status,
                                   )}`}
                                 >
                                   {payment.status}

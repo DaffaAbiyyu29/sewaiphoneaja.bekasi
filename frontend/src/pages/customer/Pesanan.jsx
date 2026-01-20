@@ -2,7 +2,7 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import PaymentDialog from "../../components/PaymentDialog";
+import PaymentDialog from "../../components/shared/PaymentDialog";
 
 const Pesanan = () => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -18,7 +18,7 @@ const Pesanan = () => {
       try {
         // Menambahkan query parameter untuk pagination
         const res = await axios.get(
-          `${API_URL}/api/rental/pesanan/${encodeURIComponent(searchTerm)}`
+          `${API_URL}/api/rental/pesanan/${encodeURIComponent(searchTerm)}`,
         );
         if (res.data.success) {
           setRentData(res.data.data);
@@ -143,7 +143,7 @@ const Pesanan = () => {
 
                   // hitung selisih hari
                   const totalDays = Math.ceil(
-                    (end - start) / (1000 * 60 * 60 * 24)
+                    (end - start) / (1000 * 60 * 60 * 24),
                   );
 
                   const startFormatted = start.toLocaleDateString("id-ID", {

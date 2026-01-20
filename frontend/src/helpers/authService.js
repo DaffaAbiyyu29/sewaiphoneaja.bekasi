@@ -4,9 +4,16 @@ import { getToken } from "./GetToken";
 // ===== PUBLIC ROUTES (TANPA LOGIN) =====
 export const PUBLIC_ROUTES = ["/", "/unit", "/pesanan", "/rent-form"];
 
+// Role constants
+export const ROLES = {
+  MANAGER: "Manager",
+  SUPERVISOR: "Supervisor",
+  ADMIN: "Admin",
+};
+
 // ===== ROLE PERMISSIONS MAPPING =====
 const ROLE_PERMISSIONS = {
-  Manager: {
+  [ROLES.MANAGER]: {
     canAccess: [
       "dashboard",
 
@@ -21,7 +28,7 @@ const ROLE_PERMISSIONS = {
       "menu/unit/update",
       "menu/unit/:unitCode",
 
-      // USER (ADMIN & SUPERVISOR)
+      // USER (ADMIN & SUPERVISOR) - manager can manage users including delete
       "menu/user",
       "menu/user/create",
       "menu/user/update",
@@ -39,17 +46,17 @@ const ROLE_PERMISSIONS = {
     ],
   },
 
-  Supervisor: {
+  [ROLES.SUPERVISOR]: {
     canAccess: [
       "dashboard",
 
-      // UNIT (CREATE & EDIT)
+      // UNIT (CREATE & EDIT but limited to unit operations)
       "menu/unit",
       "menu/unit/create",
       "menu/unit/update",
       "menu/unit/:unitCode",
 
-      // USER (CREATE ADMIN SAJA — validasi di backend)
+      // USER (CREATE ADMIN SAJA — backend validates elevated actions)
       "menu/user",
       "menu/user/create",
       "menu/user/:nik",
@@ -66,11 +73,11 @@ const ROLE_PERMISSIONS = {
     ],
   },
 
-  Admin: {
+  [ROLES.ADMIN]: {
     canAccess: [
       "dashboard",
 
-      // RENTAL OPERASIONAL
+      // RENTAL OPERASIONAL only
       "menu/rental",
       "menu/rental/create",
       "menu/rental/:rentId",
@@ -113,7 +120,7 @@ export const hasAccessToRoute = (path, userRole) => {
   // 1️⃣ CEK PUBLIC ROUTE DULU
   const isPublic = PUBLIC_ROUTES.some(
     (publicPath) =>
-      cleanPath === publicPath || cleanPath.startsWith(publicPath + "/")
+      cleanPath === publicPath || cleanPath.startsWith(publicPath + "/"),
   );
 
   if (isPublic) return true;
@@ -135,11 +142,15 @@ export const hasAccessToRoute = (path, userRole) => {
 };
 
 export const canPerformAction = (action, userRole) => {
+  // action keys: create_user, delete_user, create_unit, edit_unit, delete_unit, operate_rental
   const actionPermissions = {
-    create: ["Manager", "Supervisor", "Admin"],
-    edit: ["Manager", "Supervisor", "Admin"],
-    delete: ["Manager", "Admin"],
-    view: ["Manager", "Supervisor", "Admin", "Customer"],
+    create_user: [ROLES.MANAGER, ROLES.SUPERVISOR],
+    delete_user: [ROLES.MANAGER],
+    create_unit: [ROLES.MANAGER, ROLES.SUPERVISOR],
+    edit_unit: [ROLES.MANAGER, ROLES.SUPERVISOR],
+    delete_unit: [ROLES.MANAGER],
+    operate_rental: [ROLES.ADMIN],
+    view: [ROLES.MANAGER, ROLES.SUPERVISOR, ROLES.ADMIN],
   };
 
   const allowedRoles = actionPermissions[action] || [];

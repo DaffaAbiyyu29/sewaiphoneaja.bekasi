@@ -2,7 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { CustomerColumns } from "../../../columns/Customer";
-import Datatable from "../../../components/Datatable";
+import Datatable from "../../../components/shared/Datatable";
 
 export default function CustomerPage() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -42,7 +42,7 @@ export default function CustomerPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       await Swal.fire({

@@ -11,6 +11,7 @@ const rentalRoutes = require("./routes/rental/RentalRoute");
 const detailrentalRoutes = require("./routes/rental/DetailRentalRoute");
 const userAdminRoutes = require("./routes/user/UserRoute");
 const adminRoutes = require("./routes/admin/DashboardRoute");
+const reportRoutes = require("./routes/admin/ReportRoute");
 const emailRoutes = require("./routes/email/EmailRoute");
 const pdfInvoiceRoute = require("./routes/pdf/InvoiceRoute");
 
@@ -30,7 +31,7 @@ app.use(
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // Untuk mengizinkan pengiriman cookie/token
-  })
+  }),
 );
 
 // Pastikan preflight (OPTIONS) selalu dijawab dengan header CORS yang sesuai
@@ -41,7 +42,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
   // Jika menggunakan credentials, jangan gunakan wildcard origin
   // namun untuk convenience development ini mengizinkan origin dinamis.
@@ -69,6 +70,7 @@ app.use("/api/rental", rentalRoutes);
 app.use("/api/detailrental", detailrentalRoutes);
 app.use("/api/user", userAdminRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin/reports", reportRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server Node.js + MySQL jalan!");

@@ -13,6 +13,7 @@ const {
   cancelRent,
   collectUnit,
   returnUnit,
+  createRentWithDetail,
 } = require("../../controllers/rental/RentalController");
 const { verifyToken } = require("../../middleware/middleware");
 const { resSuccess } = require("../../helpers/sendResponse");
@@ -29,10 +30,10 @@ router.get("/checkAvailableUnit", verifyToken, getRentsByDateRange);
 router.get(
   "/active-by-customer/:customerId",
   verifyToken,
-  getActiveRentByCustomerAndDate
+  getActiveRentByCustomerAndDate,
 );
 
-router.post("/", createRent);
+router.post("/", createRentWithDetail);
 router.get("/", verifyToken, getRents);
 router.get("/:rentId", verifyToken, getRentById);
 router.put("/:rentId", verifyToken, updateRent);

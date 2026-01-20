@@ -2,11 +2,19 @@ const jwt = require("jsonwebtoken");
 const { resError } = require("../helpers/sendResponse");
 
 const verifyToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader)
-    return resError(res, "Token tidak ditemukan", "Unauthorized", 401);
+  // 1. Coba ambil dari header
+  let authHeader = req.headers["authorization"];
+  let token = null;
 
-  const token = authHeader.split(" ")[1];
+  if (authHeader) {
+    token = authHeader.split(" ")[1];
+  }
+
+  // 2. Kalau ga ada header, coba ambil dari query string ?token=xxx
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
+
   if (!token)
     return resError(res, "Token tidak ditemukan", "Unauthorized", 401);
 

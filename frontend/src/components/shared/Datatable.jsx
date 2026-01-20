@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Listbox, Transition } from "@headlessui/react";
 import axios from "axios";
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { getToken } from "../helpers/GetToken";
+import { getToken } from "../../helpers/GetToken";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -146,16 +146,16 @@ export default function Datatable({
       let end = Math.min(totalPages - 1, page + 1);
 
       if (page <= maxPagesToShow - 2)
-        (start = 2), (end = Math.min(totalPages - 1, maxPagesToShow - 1));
+        ((start = 2), (end = Math.min(totalPages - 1, maxPagesToShow - 1)));
       else if (page > totalPages - (maxPagesToShow - 2))
-        (start = Math.max(2, totalPages - (maxPagesToShow - 3))),
-          (end = totalPages - 1);
+        ((start = Math.max(2, totalPages - (maxPagesToShow - 3))),
+          (end = totalPages - 1));
 
       if (start > 2)
         pages.push(
           <span key="dots1" className="px-2 text-gray-500">
             ...
-          </span>
+          </span>,
         );
       for (let i = start; i <= end; i++)
         if (i !== 1 && i !== totalPages) pages.push(renderPaginationButton(i));
@@ -163,7 +163,7 @@ export default function Datatable({
         pages.push(
           <span key="dots2" className="px-2 text-gray-500">
             ...
-          </span>
+          </span>,
         );
       pages.push(renderPaginationButton(totalPages));
     }
@@ -293,7 +293,9 @@ export default function Datatable({
                       ? "cursor-pointer select-none hover:bg-blue-900 transition"
                       : ""
                   }`}
-                  onClick={() => col.sortable && handleSort(col.accessor)}
+                  onClick={() =>
+                    col.sortable && handleSort(col.orderBy || col.accessor)
+                  }
                 >
                   <div className="flex items-center justify-center gap-2">
                     {col.header}
@@ -344,7 +346,7 @@ export default function Datatable({
                     <td key={j} className="p-3 text-gray-700 align-middle">
                       {col.render
                         ? col.render(row, i)
-                        : row[col.accessor] ?? "-"}
+                        : (row[col.accessor] ?? "-")}
                     </td>
                   ))}
                 </tr>

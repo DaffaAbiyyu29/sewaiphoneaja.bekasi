@@ -53,7 +53,6 @@ const TrnRent = sequelize.define(
         "Close",
         "OverDue",
         "Invalid",
-        "Cancelled"
       ),
       allowNull: true,
       defaultValue: "Open",
@@ -68,7 +67,7 @@ const TrnRent = sequelize.define(
       defaultValue: DataTypes.NOW,
     },
     created_by: {
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     updated_at: {
@@ -77,7 +76,7 @@ const TrnRent = sequelize.define(
       defaultValue: DataTypes.NOW,
     },
     updated_by: {
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     notes: {
@@ -88,7 +87,7 @@ const TrnRent = sequelize.define(
   {
     tableName: "trn_rent",
     timestamps: false,
-  }
+  },
 );
 
 module.exports = TrnRent;

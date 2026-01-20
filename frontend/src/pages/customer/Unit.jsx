@@ -2,13 +2,13 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import DetailUnitDialog from "../../components/DetailUnitDialog";
+import DetailUnitDialog from "../../components/shared/DetailUnitDialog";
 
 const Unit = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [units, setUnits] = useState([]);
   const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("search") || ""
+    localStorage.getItem("search") || "",
   );
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -24,7 +24,7 @@ const Unit = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${API_URL}/api/unit/catalog?page=${page}&pageSize=${pageSize}&search=${searchTerm}&status=${filterStatus}`
+          `${API_URL}/api/unit/catalog?page=${page}&pageSize=${pageSize}&search=${searchTerm}&status=${filterStatus}`,
         );
         if (res.data.success) {
           console.log(res.data.data);
@@ -39,7 +39,7 @@ const Unit = () => {
         setLoading(false);
       }
     },
-    [searchTerm, filterStatus, API_URL]
+    [searchTerm, filterStatus, API_URL],
   );
 
   useEffect(() => {
@@ -275,12 +275,12 @@ const Unit = () => {
                 units.map((item) => {
                   const totalStock = item.variants?.reduce(
                     (sum, v) => sum + (v.qty || 0),
-                    0
+                    0,
                   );
 
                   const oneDayPrice =
                     item.prices?.find(
-                      (p) => p.duration === 1 && p.status === "Active"
+                      (p) => p.duration === 1 && p.status === "Active",
                     )?.price_per_day || 0;
 
                   const isAvailable =

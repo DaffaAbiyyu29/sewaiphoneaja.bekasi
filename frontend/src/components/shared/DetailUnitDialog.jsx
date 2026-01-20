@@ -2,14 +2,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ActionButton from "../components/ActionButton";
-import ModalWrapper from "../components/ModalWrapper";
-import GalleryUnit from "./customer/GaleryUnit";
-import PriceSummary from "./customer/PriceSummary";
-import SelectColor from "./customer/SelectColor";
-import SelectPrice from "./customer/SelectPrice";
-import SelectQuantity from "./customer/SelectQuantity";
-import SelectRentalDate from "./customer/SelectRentalDate";
+
+import ActionButton from "./ActionButton";
+import GalleryUnit from "./GaleryUnit";
+import ModalWrapper from "./ModalWrapper";
+import PriceSummary from "./PriceSummary";
+import SelectColor from "./SelectColor";
+import SelectPrice from "./SelectPrice";
+import SelectQuantity from "./SelectQuantity";
+import SelectRentalDate from "./SelectRentalDate";
 
 export default function DetailUnitDialog({ isOpen, onClose, unit }) {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -41,14 +42,14 @@ export default function DetailUnitDialog({ isOpen, onClose, unit }) {
 
       setActivePrices(
         unit.prices?.filter(
-          (p) => p.status === "Active" && p.is_delete === 0
-        ) || []
+          (p) => p.status === "Active" && p.is_delete === 0,
+        ) || [],
       );
 
       setSelectedPrice(
         unit.prices?.filter(
-          (p) => p.status === "Active" && p.is_delete === 0
-        )[0]
+          (p) => p.status === "Active" && p.is_delete === 0,
+        )[0],
       );
       setStartDate("");
       setEndDate("");
@@ -232,7 +233,7 @@ export default function DetailUnitDialog({ isOpen, onClose, unit }) {
                     startTime: startTime,
                     endDate: endDate,
                     endTime: endTime,
-                  })
+                  }),
                 );
                 window.location.href = "/rent-form";
               }}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatNumber, unformatNumber } from "../helpers/Format";
+import { formatNumber, unformatNumber } from "../../helpers/Format";
 
 export default function Input({
   label,

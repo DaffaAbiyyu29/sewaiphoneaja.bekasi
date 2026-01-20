@@ -1,7 +1,7 @@
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
-import DetailUnitDialog from "../../components/DetailUnitDialog"; // ✅ panggil komponen dialog
+import DetailUnitDialog from "../../components/shared/DetailUnitDialog"; // ✅ panggil komponen dialog
 
 const Unit = () => {
   const iphones = [
@@ -109,7 +109,7 @@ const Unit = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // ✅ atur buka/tutup modal
 
   const filteredIphones = iphones.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleOpenDetail = (unit) => {
@@ -190,7 +190,11 @@ const Unit = () => {
           ))
         ) : (
           <p className="text-center text-gray-500 col-span-full">
-            Tidak ada iPhone yang cocok dengan pencarian "{searchTerm}".
+            `
+            {'Tidak ada iPhone yang cocok dengan pencarian "' +
+              { searchTerm } +
+              '".'}
+            `
           </p>
         )}
       </div>

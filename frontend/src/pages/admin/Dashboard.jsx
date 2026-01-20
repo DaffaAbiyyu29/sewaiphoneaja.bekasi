@@ -1,24 +1,21 @@
-"use client";
-
-import {
-  faBoxesPacking,
-  faCalendar,
-  faDollarSign,
-  faFilter,
-  faMobileScreen,
-  faUsers,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCalendar, faFilter } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import {
+  AlertCircle,
+  DollarSign,
+  Package,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -27,353 +24,357 @@ import {
   YAxis,
 } from "recharts";
 import { RecentRentalColumns } from "../../columns/RecentRental";
-import Datatable from "../../components/Datatable";
+import Datatable from "../../components/shared/Datatable";
+import { Loader } from "../../components/shared/Loader";
+import { formatCurrency } from "../../helpers/Format";
 
-export default function Dashboard() {
+export const getWIBDate = (date) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
+const Dashboard = () => {
   const API_URL = import.meta.env.VITE_API_URL;
-
-  const [data, setData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Initialize default period: first day of month -> today (WIB)
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     return getWIBDate(firstDay);
   });
 
-  const [endDate, setEndDate] = useState(() => {
-    return getWIBDate(new Date());
-  });
-
-  function getWIBDate(date) {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Jakarta",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date);
-  }
+  const [endDate, setEndDate] = useState(() => getWIBDate(new Date()));
 
   const fetchDashboardData = async (start, end) => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const params = start && end ? { startDate: start, endDate: end } : {};
+
       const response = await axios.get(`${API_URL}/api/admin/dashboard`, {
-        params:
-          start && end
-            ? {
-                startDate: start,
-                endDate: end,
-              }
-            : {},
+        params,
+        headers,
       });
 
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setData([]);
+      setDashboardData(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 1500);
     }
   };
 
   useEffect(() => {
+    // Fetch initial data for default period
     fetchDashboardData(startDate, endDate);
-  }, [startDate, endDate]);
+  }, []);
 
   const handleFilter = () => {
-    if (startDate && endDate) {
-      fetchDashboardData(startDate, endDate);
-    }
+    if (startDate && endDate) fetchDashboardData(startDate, endDate);
   };
 
   const handleReset = () => {
     setStartDate("");
     setEndDate("");
-    fetchDashboardData(startDate, endDate);
+    fetchDashboardData();
   };
 
   if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-xl font-semibold text-gray-700">Memuat Data...</p>
-        </div>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="text-red-600 text-center py-4">{error}</div>
       </div>
     );
   }
 
-  if (!data) return null;
+  const summary = dashboardData?.summary || {};
+  const revenueTrend = dashboardData?.revenueTrend || [];
+  const orderStatus = dashboardData?.orderStatus || [];
+  const popularDevices = dashboardData?.popularDevices || [];
 
-  const revenueTrend = data.revenueTrend.map((item) => ({
-    name: `${item.month}/${item.year}`,
-    revenue: item.total,
-  }));
-
-  const orderStatusData = data.orderStatus.map((item) => ({
-    name: item.status,
-    value: item.count,
-  }));
-
-  const COLORS = {
+  // Map order status data untuk pie chart
+  const statusColorMap = {
     Open: "#3b82f6",
-    Close: "#10b981",
     "Waiting Payment": "#f59e0b",
+    Close: "#10b981",
     Cancelled: "#ef4444",
   };
 
+  const rentalStatusData = orderStatus.map((item) => ({
+    name: item.status,
+    value: item.count,
+    color: statusColorMap[item.status] || "#9ca3af",
+  }));
+
   const stats = [
     {
+      key: "revenue",
       title: "Total Pendapatan",
-      value: `Rp${data.summary.totalRevenue.toLocaleString()}`,
-      icon: faDollarSign,
-      color: "bg-emerald-500",
+      value: formatCurrency(summary.totalRevenue || 0),
+      icon: <DollarSign className="text-green-600" size={24} />,
+      color: "bg-green-100",
     },
     {
+      key: "orders",
       title: "Total Pesanan",
-      value: data.summary.totalOrders,
-      icon: faBoxesPacking,
-      color: "bg-blue-600",
+      value: (summary.totalOrders || 0).toString(),
+      icon: <TrendingUp className="text-blue-600" size={24} />,
+      color: "bg-blue-100",
     },
     {
-      title: "Customer Aktif",
-      value: data.summary.activeCustomers,
-      icon: faUsers,
-      color: "bg-purple-600",
-    },
-    {
+      key: "devices",
       title: "Device Tersedia",
-      value: data.summary.availableDevices,
-      icon: faMobileScreen,
-      color: "bg-orange-500",
+      value: (summary.availableDevices || 0).toString(),
+      icon: <Package className="text-purple-600" size={24} />,
+      color: "bg-purple-100",
+    },
+    {
+      key: "customers",
+      title: "Total Customer",
+      value: (summary.activeCustomers || 0).toString(),
+      icon: <Users className="text-orange-600" size={24} />,
+      color: "bg-orange-100",
     },
   ];
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 rounded-xl shadow-xl border-2 border-blue-200">
-          <p className="font-semibold text-gray-800 mb-2">{label}</p>
-          <p className="text-blue-600 font-bold text-lg">
-            Rp{payload[0].value.toLocaleString()}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto">
-        {/* Header & Filter */}
-        <div className="mb-8">
-          {/* Filter Section */}
-          <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
-            <div className="flex items-center gap-2 mb-4">
-              <FontAwesomeIcon icon={faFilter} className="text-blue-600" />
-              <h3 className="font-bold text-gray-800">Filter Periode</h3>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        {/* Filter Section */}
+        <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <FontAwesomeIcon icon={faFilter} className="text-blue-600" />
+            <h3 className="font-bold text-gray-800">Filter Periode</h3>
+          </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FontAwesomeIcon
+                  icon={faCalendar}
+                  className="mr-2 text-blue-600"
+                />
+                Tanggal Mulai
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FontAwesomeIcon
-                    icon={faCalendar}
-                    className="mr-2 text-blue-600"
-                  />
-                  Tanggal Mulai
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FontAwesomeIcon
+                  icon={faCalendar}
+                  className="mr-2 text-blue-600"
                 />
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FontAwesomeIcon
-                    icon={faCalendar}
-                    className="mr-2 text-blue-600"
-                  />
-                  Tanggal Akhir
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleFilter}
-                  disabled={!startDate || !endDate}
-                  className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
-                >
-                  Terapkan Filter
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-2.5 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all shadow-md"
-                >
-                  Reset
-                </button>
-              </div>
+                Tanggal Akhir
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleFilter}
+                disabled={!startDate || !endDate}
+                className="px-6 py-2.5 bg-blue-900 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+              >
+                Terapkan Filter
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-6 py-2.5 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all shadow-md"
+              >
+                Reset
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
-          {stats.map((stat, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-2 border-gray-200 transform hover:-translate-y-1"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.color} p-4 rounded-xl shadow-md`}>
-                  <FontAwesomeIcon
-                    icon={stat.icon}
-                    className="w-6 h-6 text-white"
-                  />
-                </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {stats.map((stat) => (
+          <div
+            key={stat.key}
+            className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300 border-2 border-gray-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className={`${stat.color} p-3 rounded-xl shadow-md flex items-center justify-center w-12 h-12`}
+              >
+                {stat.icon}
               </div>
-              <h3 className="text-gray-600 text-sm font-semibold mb-2">
-                {stat.title}
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">{stat.subtitle}</p>
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Revenue Trend */}
-          <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
-              Trend Pendapatan
+            <h3 className="text-gray-600 text-sm font-semibold mb-2">
+              {stat.title}
             </h3>
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={revenueTrend}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#6b7280"
-                  style={{ fontSize: "12px", fontWeight: "500" }}
+            <p className="text-3xl font-extrabold text-gray-900 truncate">
+              {stat.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center mb-4">
+            <AlertCircle className="text-red-600 mr-2" size={20} />
+            <h2 className="text-lg font-semibold">Rental Terbaru</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <Datatable
+              isCard={false}
+              isSearch={false}
+              dataValue={{
+                data: dashboardData?.recentOrders?.data?.slice(0, 5) || [],
+                pagination: {
+                  totalPages: 1,
+                  totalData: dashboardData?.recentOrders?.data?.length || 0,
+                },
+              }}
+              columns={RecentRentalColumns()}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Revenue Trend</h2>
+          {revenueTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart
+                data={revenueTrend.map((item) => ({
+                  month: `${item.month}/${item.year}`,
+                  revenue: item.total,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value) => `Rp ${(value / 1000000).toFixed(1)}M`}
                 />
-                <YAxis
-                  stroke="#6b7280"
-                  style={{ fontSize: "12px", fontWeight: "500" }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
+                <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#3b82f6"
-                  strokeWidth={3}
-                  fill="url(#colorRevenue)"
+                  strokeWidth={2}
                 />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
-          </div>
-
-          {/* Popular Devices */}
-          <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
-              Device Populer
-            </h3>
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={data.popularDevices}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#6b7280"
-                  style={{ fontSize: "12px", fontWeight: "500" }}
-                />
-                <YAxis
-                  stroke="#6b7280"
-                  style={{ fontSize: "12px", fontWeight: "500" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "2px solid #e5e7eb",
-                    borderRadius: "12px",
-                  }}
-                />
-                <Bar dataKey="count" fill="#0d69e0" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          ) : (
+            <p className="text-gray-500 text-center py-12">No data available</p>
+          )}
         </div>
 
-        {/* Bottom Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Order Status Pie Chart */}
-          <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-2 border-gray-200">
-            <h3 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
-              <span className="w-1 h-5 md:h-6 bg-blue-600 rounded-full"></span>
-              Status Pesanan
-            </h3>
-
-            <ResponsiveContainer width="100%" height={220}>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Status Rental</h2>
+          {rentalStatusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={orderStatusData}
+                  data={rentalStatusData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  dataKey="value"
-                  label={({ name, value }) =>
-                    window.innerWidth >= 768 ? `${name}: ${value}` : value
-                  }
                   labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
                 >
-                  {orderStatusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[entry.name] || "#94a3b8"}
-                    />
+                  {rentalStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip />
-                <Legend
-                  verticalAlign="bottom"
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: "12px" }}
-                />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          ) : (
+            <p className="text-gray-500 text-center py-12">No data available</p>
+          )}
+        </div>
+      </div>
 
-          {/* Recent Orders Table */}
-          <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border-2 border-gray-200 lg:col-span-2">
-            <h3 className="text-base md:text-xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
-              <span className="w-1 h-5 md:h-6 bg-blue-500 rounded-full"></span>
-              Pesanan Terbaru
-            </h3>
+      {/* Top Units & Unit Availability */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Unit Paling Populer</h2>
+          {popularDevices.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={popularDevices}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-gray-500 text-center py-12">No data available</p>
+          )}
+        </div>
 
-            {/* Table scroll horizontal di mobile */}
-            <div className="overflow-x-auto">
-              <Datatable
-                dataValue={data.recentOrders}
-                columns={RecentRentalColumns()}
-                allowAdd={false}
-              />
-            </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Ketersediaan Unit</h2>
+          <div className="space-y-4">
+            {popularDevices.length > 0 ? (
+              popularDevices.map((unit, idx) => {
+                const total = unit.count + (unit.rented || 0);
+                const percentage =
+                  total > 0 ? ((unit.count / total) * 100).toFixed(0) : 0;
+                return (
+                  <div key={idx}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">{unit.name}</span>
+                      <span className="text-sm text-gray-600">
+                        {unit.count}/{total}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 text-center py-4">
+                No data available
+              </p>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

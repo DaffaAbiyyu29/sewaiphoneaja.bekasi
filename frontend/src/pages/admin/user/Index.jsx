@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { UserColumns } from "../../../columns/User";
-import Datatable from "../../../components/Datatable";
+import Datatable from "../../../components/shared/Datatable";
 
 export default function UserPage() {
   const API_URL = import.meta.env.VITE_API_URL;

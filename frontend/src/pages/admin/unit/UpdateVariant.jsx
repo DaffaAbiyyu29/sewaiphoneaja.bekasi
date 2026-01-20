@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader } from "../../../components/Loader";
+import { Loader } from "../../../components/shared/Loader";
 import { getToken } from "../../../helpers/GetToken";
 
 export default function UpdateVariantPage() {
@@ -44,7 +44,7 @@ export default function UpdateVariantPage() {
             headers: {
               Authorization: `Bearer ${getToken()}`,
             },
-          }
+          },
         );
         const data = res.data.data || res.data;
 
@@ -150,7 +150,7 @@ export default function UpdateVariantPage() {
             Authorization: `Bearer ${getToken()}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       setResponse({ success: true, message: "Varian berhasil diperbarui!" });

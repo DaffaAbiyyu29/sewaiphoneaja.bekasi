@@ -57,7 +57,7 @@ const transactionItems = [
 
 const reportItems = [
   {
-    name: "Laporan Keuangan",
+    name: "Laporan",
     path: "/menu/report",
     icon: faFileInvoiceDollar,
     roles: ["Manager"], // supervisor & admin NO
@@ -79,7 +79,7 @@ function Tooltip({ text, position }) {
     >
       {text}
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -189,13 +189,13 @@ export default function Sidebar({
               renderNavSection(
                 "Master Data",
                 filterByRole(masterItems),
-                collapsed
+                collapsed,
               )}
             {filterByRole(transactionItems).length > 0 &&
               renderNavSection(
                 "Transaksi",
                 filterByRole(transactionItems),
-                collapsed
+                collapsed,
               )}
             {filterByRole(reportItems).length > 0 &&
               renderNavSection("Laporan", filterByRole(reportItems), collapsed)}
@@ -266,13 +266,13 @@ export default function Sidebar({
               renderNavSection(
                 "Master Data",
                 filterByRole(masterItems),
-                collapsed
+                collapsed,
               )}
             {filterByRole(transactionItems).length > 0 &&
               renderNavSection(
                 "Transaksi",
                 filterByRole(transactionItems),
-                collapsed
+                collapsed,
               )}
             {filterByRole(reportItems).length > 0 &&
               renderNavSection("Laporan", filterByRole(reportItems), collapsed)}

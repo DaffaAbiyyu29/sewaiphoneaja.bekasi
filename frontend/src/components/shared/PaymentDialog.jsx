@@ -79,7 +79,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
             ? Math.ceil(
                 (new Date(rentalData.end_rent_date) -
                   new Date(rentalData.start_rent_date)) /
-                  (1000 * 60 * 60 * 24)
+                  (1000 * 60 * 60 * 24),
               )
             : 0,
         qty: rentalData?.details?.[0]?.qty ?? 1,
@@ -217,7 +217,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
   };
 
   const isUploadDisabled = ["Open", "Close", "Cancelled", "Invalid"].includes(
-    normalized.status
+    normalized.status,
   );
 
   return (
@@ -263,7 +263,7 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
             <div className="absolute top-4 right-4">
               <span
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg ${getStatusBadgeColor(
-                  normalized.status
+                  normalized.status,
                 )}`}
               >
                 {normalized.status}
@@ -441,10 +441,10 @@ export default function PaymentDialog({ isOpen, onClose, rentalData }) {
                         isUploadDisabled
                           ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
                           : dragActive
-                          ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
-                          : errors.photo
-                          ? "border-red-400 bg-red-50 shadow-md"
-                          : "border-gray-300 cursor-pointer hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
+                            ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
+                            : errors.photo
+                              ? "border-red-400 bg-red-50 shadow-md"
+                              : "border-gray-300 cursor-pointer hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
                       }
                     `}
                   onClick={() => {

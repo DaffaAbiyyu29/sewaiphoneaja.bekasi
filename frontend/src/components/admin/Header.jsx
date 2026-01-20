@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { removeToken } from "../../helpers/GetToken";
-import Avatar from "../Avatar";
+import Avatar from "../shared/Avatar";
 
 export default function Header({ onMenuClick, userData }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,6 +40,7 @@ export default function Header({ onMenuClick, userData }) {
     { name: "Detail User", path: "/menu/user/" + nik },
     { name: "Update User", path: "/menu/user/update/" + nik },
     { name: "Profile Pengguna", path: "/menu/profile" },
+    { name: "Laporan", path: "/menu/report" },
     { name: "Sewa Aktif", path: "/sewa-aktif" },
     { name: "Pembayaran", path: "/pembayaran" },
     { name: "Booking Request", path: "/booking-request" },
@@ -149,9 +150,11 @@ export default function Header({ onMenuClick, userData }) {
           <FontAwesomeIcon icon={faBars} className="w-5 h-5 text-gray-700" />
         </button>
 
-        <h1 className="text-lg md:text-xl font-semibold text-gray-800 truncate">
-          {pageTitle}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg md:text-xl font-semibold text-gray-800 truncate">
+            {pageTitle}
+          </h1>
+        </div>
       </div>
 
       {/* Kanan */}

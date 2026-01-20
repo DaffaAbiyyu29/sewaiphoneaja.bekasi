@@ -3,9 +3,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getToken } from "../../helpers/GetToken";
-import ActionButton from "../ActionButton";
-import Input from "../Input";
-import ModalWrapper from "../ModalWrapper";
+import ActionButton from "../shared/ActionButton";
+import Input from "../shared/Input";
+import ModalWrapper from "../shared/ModalWrapper";
 // FontAwesome tidak lagi diperlukan karena tidak ada upload foto
 
 // Nama komponen diubah dari AddPriceDialog menjadi AddPriceUnitDialog agar lebih jelas
@@ -87,7 +87,7 @@ export default function AddPriceUnitDialog({ isOpen, onClose, unit, onAdded }) {
             Authorization: `Bearer ${getToken()}`,
             // Karena tidak ada file, Content-Type default (application/json) sudah benar
           },
-        }
+        },
       );
 
       if (res.data.success) {
@@ -98,7 +98,7 @@ export default function AddPriceUnitDialog({ isOpen, onClose, unit, onAdded }) {
       console.error(err);
       alert(
         "Gagal menambahkan harga unit: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
       );
     } finally {
       setLoading(false);

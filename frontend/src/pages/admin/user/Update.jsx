@@ -1,18 +1,18 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUpload,
-  faXmark,
   faCheck,
   faCircleExclamation,
-  faUser,
   faFloppyDisk,
+  faUpload,
+  faUser,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Input from "../../../components/shared/Input";
 import { getToken } from "../../../helpers/GetToken";
-import Input from "../../../components/Input";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -262,8 +262,8 @@ export default function UpdateUserPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Ubah User</h1>
               <p className="text-gray-600 text-sm mt-1">
-                Perbarui data user. Centang opsi "Ubah Password" untuk mengganti
-                kata sandi.
+                {`Perbarui data user. Centang opsi "Ubah Password" untuk mengganti
+                kata sandi.`}
               </p>
             </div>
           </div>

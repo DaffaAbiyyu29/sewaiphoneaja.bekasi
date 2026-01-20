@@ -69,7 +69,7 @@ const createRent = async (req, res) => {
           res,
           "Customer tidak ditemukan",
           "NIK tidak terdaftar",
-          404
+          404,
         );
       }
 
@@ -87,7 +87,7 @@ const createRent = async (req, res) => {
         res,
         "Data rental tidak lengkap",
         `Missing fields: ${missing.join(", ")}`,
-        400
+        400,
       );
     }
 
@@ -106,7 +106,7 @@ const createRent = async (req, res) => {
         res,
         "Customer tidak bisa menyewa",
         `Customer (${customer.nik || "-"}) berstatus INACTIVE`,
-        403
+        403,
       );
     }
 
@@ -125,7 +125,7 @@ const createRent = async (req, res) => {
         res,
         "Customer masih memiliki rental aktif",
         "Masih ada peminjaman yang belum ditutup",
-        409
+        409,
       );
     }
     // --- END VALIDASI CUSTOMER ACTIVE ---
@@ -160,7 +160,7 @@ const createRent = async (req, res) => {
           created_at: new Date(),
           created_by: created_by || null,
         },
-        { transaction: t }
+        { transaction: t },
       );
 
       // No separate approval history table anymore. Notes and status
@@ -173,17 +173,22 @@ const createRent = async (req, res) => {
       await t.rollback();
       console.error(
         "Transaction failed creating rent and approval history:",
-        txErr
+        txErr,
       );
       return resError(
         res,
-        "Gagal membuat rental (transaction)",
+        "Gagal membuat rental (transaction) : " + txErr.message,
         txErr.message,
-        500
+        500,
       );
     }
   } catch (err) {
-    return resError(res, "Gagal membuat rental", err.message, 500);
+    return resError(
+      res,
+      "Gagal membuat rental : " + err.message,
+      err.message,
+      500,
+    );
   }
 };
 
@@ -200,7 +205,7 @@ const cancelRent = async (req, res) => {
         res,
         "Akses ditolak",
         "Token tidak valid / belum login",
-        401
+        401,
       );
     }
 
@@ -234,7 +239,7 @@ const cancelRent = async (req, res) => {
         res,
         "Tidak bisa cancel, unit sudah diambil",
         "Conflict",
-        409
+        409,
       );
     }
 
@@ -246,7 +251,7 @@ const cancelRent = async (req, res) => {
         // ✅ otomatis isi dari user yang login (kalau ada user_id di token)
         updated_by: req.user.user_id || req.user.email || "ADMIN",
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -305,7 +310,7 @@ const getRentsByDateRange = async (req, res) => {
         res,
         "start dan end wajib (YYYY-MM-DD)",
         "Bad Request",
-        400
+        400,
       );
     }
 
@@ -329,7 +334,7 @@ const getRentsByDateRange = async (req, res) => {
     return resSuccess(
       res,
       "Rental berdasarkan rentang tanggal berhasil diambil",
-      rows
+      rows,
     );
   } catch (err) {
     return resError(res, "Gagal mengambil rental", err.message, 500);
@@ -365,7 +370,7 @@ const collectUnit = async (req, res) => {
         res,
         "Unit tidak bisa diambil (Status: " + rent.status + ")",
         "Conflict",
-        409
+        409,
       );
     }
 
@@ -377,7 +382,7 @@ const collectUnit = async (req, res) => {
         updated_at: new Date(),
         updated_by: updated_by || rent.updated_by,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -420,7 +425,7 @@ const returnUnit = async (req, res) => {
         res,
         "Rental sudah ditutup / unit sudah dikembalikan",
         "Conflict",
-        409
+        409,
       );
     }
 
@@ -452,7 +457,7 @@ const returnUnit = async (req, res) => {
         {
           where: { variant_unit_code: d.variant_unit_code },
           transaction: t,
-        }
+        },
       );
     }
 
@@ -471,7 +476,7 @@ const returnUnit = async (req, res) => {
 
       const totalStock = variants.reduce(
         (sum, v) => sum + Number(v.qty || 0),
-        0
+        0,
       );
 
       await MstUnit.update(
@@ -479,7 +484,7 @@ const returnUnit = async (req, res) => {
           status: totalStock > 0 ? "Available" : "Unavailable",
           updated_at: new Date(),
         },
-        { where: { unit_code }, transaction: t }
+        { where: { unit_code }, transaction: t },
       );
     }
 
@@ -493,7 +498,7 @@ const returnUnit = async (req, res) => {
         updated_by:
           req.user?.user_id || req.user?.email || rent.updated_by || null,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -680,7 +685,7 @@ const getRentById = async (req, res) => {
       ...new Set(
         payments
           .flatMap((p) => [p.created_by, p.updated_by])
-          .filter((x) => x != null)
+          .filter((x) => x != null),
       ),
     ];
 
@@ -736,7 +741,7 @@ const getRentById = async (req, res) => {
       res,
       "Gagal mengambil data rental beserta detailnya",
       err.message,
-      500
+      500,
     );
   }
 };
@@ -889,7 +894,7 @@ const getRentByInvoiceOrNik = async (req, res) => {
       res,
       "Gagal mengambil data rental beserta detailnya",
       err.message,
-      500
+      500,
     );
   }
 };
@@ -930,7 +935,7 @@ const updateRent = async (req, res) => {
           res,
           "Customer tidak bisa menyewa",
           `Customer (${customer.nik || "-"}) berstatus INACTIVE`,
-          403
+          403,
         );
       }
     }
@@ -977,8 +982,240 @@ const deleteRent = async (req, res) => {
   }
 };
 
+const createRentWithDetail = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const {
+      customer_id: bodyCustomerId,
+      nik,
+      start_rent_date,
+      end_rent_date,
+      duration,
+      total_price,
+      total_paid,
+      created_by,
+      details = [],
+    } = req.body;
+
+    // =====================
+    // VALIDASI BASIC
+    // =====================
+    if (!Array.isArray(details) || details.length === 0) {
+      await t.rollback();
+      return resError(
+        res,
+        "Detail rental wajib diisi",
+        "details tidak boleh kosong",
+        400,
+      );
+    }
+
+    // =====================
+    // RESOLVE CUSTOMER
+    // =====================
+    let customer_id = bodyCustomerId;
+
+    if (!customer_id && nik) {
+      const c = await MstCustomer.findOne({
+        where: { nik: String(nik).trim() },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!c) {
+        await t.rollback();
+        return resError(
+          res,
+          "Customer tidak ditemukan",
+          "NIK tidak terdaftar",
+          404,
+        );
+      }
+
+      customer_id = c.customer_id;
+    }
+
+    if (!customer_id) {
+      await t.rollback();
+      return resError(
+        res,
+        "customer_id atau nik wajib",
+        "Missing customer identifier",
+        400,
+      );
+    }
+
+    const customer = await MstCustomer.findOne({
+      where: { customer_id },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!customer) {
+      await t.rollback();
+      return resError(res, "Customer tidak ditemukan", "Not Found", 404);
+    }
+
+    if (!isCustomerActive(customer)) {
+      await t.rollback();
+      return resError(
+        res,
+        "Customer tidak bisa menyewa",
+        `Status customer ${customer.status}`,
+        403,
+      );
+    }
+
+    // =====================
+    // CEK RENTAL AKTIF
+    // =====================
+    const ongoingRent = await TrnRent.findOne({
+      where: {
+        customer_id,
+        status: { [Op.notIn]: ["Close", "Cancelled"] },
+        return_date: null,
+      },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (ongoingRent) {
+      await t.rollback();
+      return resError(
+        res,
+        "Customer masih punya rental aktif",
+        "Masih ada rental belum ditutup",
+        409,
+      );
+    }
+
+    // =====================
+    // CREATE RENT
+    // =====================
+    const rent_id = await generateIncrementId(TrnRent, "rent_id", "RENT");
+    const invoiceNo = await generateInvoiceNumber("trn_rent");
+
+    const rent = await TrnRent.create(
+      {
+        rent_id,
+        customer_id,
+        start_rent_date: start_rent_date || new Date(),
+        end_rent_date: end_rent_date || null,
+        duration: duration || null,
+        total_price: Number(total_price),
+        total_paid: Number(total_paid || 0),
+        balance: Number(total_price) - Number(total_paid || 0),
+        status: "Waiting Payment",
+        invoice_number: invoiceNo,
+        created_by: created_by || null,
+        created_at: new Date(),
+      },
+      { transaction: t },
+    );
+
+    // =====================
+    // LOOP DETAIL + POTONG STOK
+    // =====================
+    const createdDetails = [];
+
+    for (const item of details) {
+      const { unit_code, variant_unit_code, price, qty = 1 } = item;
+
+      if (!unit_code || !variant_unit_code || !price) {
+        await t.rollback();
+        return resError(
+          res,
+          "Detail rental tidak valid",
+          "unit_code, variant_unit_code, price wajib",
+          400,
+        );
+      }
+
+      const q = Number(qty);
+      const p = Number(price);
+
+      if (q <= 0 || p <= 0) {
+        await t.rollback();
+        return resError(res, "qty/price tidak valid", "Harus > 0", 400);
+      }
+
+      const variant = await MstVariantUnit.findOne({
+        where: { variant_unit_code },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!variant) {
+        await t.rollback();
+        return resError(res, "Variant tidak ditemukan", "Not Found", 404);
+      }
+
+      if (Number(variant.qty) < q) {
+        await t.rollback();
+        return resError(
+          res,
+          "Stok tidak cukup",
+          `Stok ${variant.qty}, diminta ${q}`,
+          409,
+        );
+      }
+
+      // potong stok
+      await variant.update(
+        {
+          qty: Number(variant.qty) - q,
+          updated_at: new Date(),
+        },
+        { transaction: t },
+      );
+
+      const detail_id = await generateIncrementId(
+        TrnDetailRent,
+        "detail_id",
+        "DET",
+      );
+
+      const detail = await TrnDetailRent.create(
+        {
+          detail_id,
+          rent_id,
+          unit_code,
+          variant_unit_code,
+          price: p,
+          qty: q,
+          subtotal: p * q,
+          created_at: new Date(),
+          created_by: created_by || null,
+        },
+        { transaction: t },
+      );
+
+      createdDetails.push(detail);
+    }
+
+    await t.commit();
+
+    return resSuccess(
+      res,
+      "Rental berhasil dibuat",
+      {
+        rent,
+        details: createdDetails,
+      },
+      null,
+      201,
+    );
+  } catch (err) {
+    await t.rollback();
+    console.error(err);
+    return resError(res, "Gagal membuat rental", err.message, 500);
+  }
+};
+
 module.exports = {
   createRent,
+  createRentWithDetail,
   getRents,
   getRentById,
   getRentByInvoiceOrNik,

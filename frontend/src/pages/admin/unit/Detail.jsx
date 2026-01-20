@@ -4,16 +4,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { PriceColumns } from "../../../columns/Price";
 import { VariantColumns } from "../../../columns/Variant";
-import Datatable from "../../../components/Datatable";
-import { Loader } from "../../../components/Loader";
-import AddVariantDialog from "../../../components/admin/AddVariantUnitDialog";
+import AddVariantDialog from "../../../components/shared/AddVariantUnitDialog";
+import Datatable from "../../../components/shared/Datatable";
+import { Loader } from "../../../components/shared/Loader";
 import { getToken } from "../../../helpers/GetToken";
 
-import EditPriceUnitDialog from "../../../components/admin/EditPriceUnitDialog";
+import EditPriceUnitDialog from "../../../components/shared/EditPriceUnitDialog";
 
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import AddPriceUnitDialog from "../../../components/admin/AddPriceUnitDialog";
+import AddPriceUnitDialog from "../../../components/shared/AddPriceUnitDialog";
 
 export default function DetailUnitPage() {
   const { unitCode } = useParams();
@@ -85,7 +85,7 @@ export default function DetailUnitPage() {
         `${API_URL}/api/unit/variant-unit/${variantUnitCode}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       await Swal.fire({

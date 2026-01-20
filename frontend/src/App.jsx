@@ -1,9 +1,9 @@
 // import { useState, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
-import LayoutAdmin from "./components/layout/LayoutAdmin";
-import LayoutCustomer from "./components/layout/LayoutCustomer";
-import PageLoader from "./components/PageLoader";
-import NotFoundPage from "./components/PageNotFound";
+import LayoutAdmin from "./components/shared/LayoutAdmin";
+import LayoutCustomer from "./components/shared/LayoutCustomer";
+import PageLoader from "./components/shared/PageLoader";
+import NotFoundPage from "./components/shared/PageNotFound";
 import ProtectedRoute from "./helpers/ProtectedRoute";
 import CustomerDetailPage from "./pages/admin/customer/Detail";
 import CustomerPage from "./pages/admin/customer/Index";
@@ -11,6 +11,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import ProfileUserPage from "./pages/admin/profile";
 import RentalDetail from "./pages/admin/rental/Detail";
 import RentalPage from "./pages/admin/rental/Index";
+import Laporan from "./pages/admin/report/Index";
 import CreateUnitPage from "./pages/admin/unit/Create";
 import DetailUnit from "./pages/admin/unit/Detail";
 import MasterUnit from "./pages/admin/unit/Index";
@@ -89,6 +90,8 @@ export default function App() {
           <Route path="menu/rental" element={<RentalPage />} />
           <Route path="menu/rental/:rentId" element={<RentalDetail />} />
           <Route path="menu/profile" element={<ProfileUserPage />} />
+
+          <Route path="menu/report" element={<Laporan />} />
         </Route>
 
         {/* AUTH ROUTE */}

@@ -1,4 +1,5 @@
 const { default: puppeteer } = require("puppeteer");
+const { Op, fn, col, literal } = require("sequelize");
 const invoiceTemplate = require("../templates/invoicePDF");
 const TrnRent = require("../models/TrnRental");
 const TrnPayment = require("../models/TrnPayment");
@@ -6,6 +7,32 @@ const TrnDetailRent = require("../models/TrnDetailRental");
 const MstCustomer = require("../models/MstCustomer");
 const MstUnit = require("../models/MstUnit");
 const MstVariantUnit = require("../models/MstVariantUnit");
+const reportTemplate = require("../templates/reportPDF");
+const {
+  getRevenueReport,
+  getRentalReport,
+  getCustomerReport,
+  getUnitReport,
+} = require("../controllers/admin/ReportController");
+
+// Helper to convert month number to Indonesian month name
+const getMonthName = (monthNumber) => {
+  const months = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+  return months[monthNumber - 1] || "";
+};
 
 const exportInvoicePdfByNumber = async (req, res) => {
   try {
@@ -41,7 +68,7 @@ const exportInvoicePdfByNumber = async (req, res) => {
 
     const totalPaid = payments.reduce(
       (sum, p) => sum + parseFloat(p.total_payment || 0),
-      0
+      0,
     );
     const remaining = rent.total_price - totalPaid;
 
@@ -133,4 +160,124 @@ const exportInvoicePdfByNumber = async (req, res) => {
   }
 };
 
-module.exports = { exportInvoicePdfByNumber };
+const exportReport = async (req, res) => {
+  try {
+    const { type, startDate, endDate } = req.query;
+
+    // 1. MODIFIKASI REQ: Paksa limit menjadi sangat besar agar pagination terlampaui
+    const exportQuery = {
+      ...req.query,
+      limit: 1000000,
+      page: 1,
+    };
+
+    const mockReq = { ...req, query: exportQuery };
+
+    // 2. Tangkap data dari controller menggunakan Mock Response
+    let resultData = null;
+    const mockRes = {
+      status: () => mockRes,
+      json: (output) => {
+        resultData = output.data;
+      },
+    };
+
+    // 3. Panggil fungsi controller berdasarkan type
+    if (type === "revenue") await getRevenueReport(mockReq, mockRes);
+    else if (type === "rental") await getRentalReport(mockReq, mockRes);
+    else if (type === "customer") await getCustomerReport(mockReq, mockRes);
+    else if (type === "unit") await getUnitReport(mockReq, mockRes);
+
+    if (!resultData || resultData.length === 0) {
+      return res.status(404).send("Data tidak ditemukan untuk periode ini.");
+    }
+
+    // 4. Mapping Kolom
+    const columnsMap = {
+      revenue: [
+        "periode",
+        "totalTransaksi",
+        "totalPendapatan",
+        "lunas",
+        "pending",
+      ],
+      rental: [
+        "invoiceNumber",
+        "customer",
+        "unit",
+        "periode",
+        "status",
+        "total",
+      ],
+      customer: [
+        "customerId",
+        "name",
+        "email",
+        "phone",
+        "totalRental",
+        "totalSpent",
+      ],
+      unit: [
+        "unitCode",
+        "unitName",
+        "totalRental",
+        "revenue",
+        // "utilization"
+      ],
+    };
+
+    // 5. Generate HTML
+    const html = reportTemplate({
+      title: `LAPORAN ${type.toUpperCase()}`,
+      period: `${startDate} s/d ${endDate}`,
+      columns: columnsMap[type] || Object.keys(resultData[0]),
+      rows: resultData,
+    });
+
+    // 6. Puppeteer Launch dengan konfigurasi yang diminta
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const page = await browser.newPage();
+
+    // SANGAT PENTING: Viewport harus pas A4
+    await page.setViewport({ width: 794, height: 1123 });
+
+    await page.setContent(html, {
+      waitUntil: ["networkidle0", "domcontentloaded", "load"],
+    });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: 0, bottom: 0, left: 0, right: 0 }, // Margin nol agar Full Putih
+      preferCSSPageSize: true,
+    });
+
+    await browser.close();
+
+    // 7. Sanitasi Nama File & Pengiriman Response
+    // Menggunakan type dan startDate karena variabel invoice_number tidak ada di konteks ini
+    const safeFileName = `${type.toUpperCase()}-${startDate}`.replace(
+      /[^a-zA-Z0-9-_]/g,
+      "",
+    );
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename=REPORT-${safeFileName}.pdf`,
+      "Content-Length": pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Export PDF Error:", error);
+    res
+      .status(500)
+      .send("Internal Server Error saat export PDF: " + error.message);
+  }
+};
+
+module.exports = { exportInvoicePdfByNumber, exportReport };

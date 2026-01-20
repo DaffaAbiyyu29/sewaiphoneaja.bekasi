@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader } from "../../../components/Loader";
+import { Loader } from "../../../components/shared/Loader";
 import { getToken } from "../../../helpers/GetToken";
 
 export default function DetailCustomerPage() {
@@ -216,7 +216,7 @@ export default function DetailCustomerPage() {
                       {customerData.created_at
                         ? new Date(customerData.created_at).toLocaleDateString(
                             "id-ID",
-                            { day: "2-digit", month: "long", year: "numeric" }
+                            { day: "2-digit", month: "long", year: "numeric" },
                           )
                         : "-"}
                     </p>

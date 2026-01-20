@@ -6,14 +6,14 @@ import React, { useEffect, useRef, useState } from "react";
 // Import komponen kustom
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import ActionButton from "../../components/ActionButton";
-import GalleryUnit from "../../components/customer/GaleryUnit";
-import PriceSummary from "../../components/customer/PriceSummary";
-import SelectColor from "../../components/customer/SelectColor";
-import SelectPrice from "../../components/customer/SelectPrice";
-import SelectQuantity from "../../components/customer/SelectQuantity";
-import SelectRentalDate from "../../components/customer/SelectRentalDate";
-import Input from "../../components/Input";
+import ActionButton from "../../components/shared/ActionButton";
+import GalleryUnit from "../../components/shared/GaleryUnit";
+import Input from "../../components/shared/Input";
+import PriceSummary from "../../components/shared/PriceSummary";
+import SelectColor from "../../components/shared/SelectColor";
+import SelectPrice from "../../components/shared/SelectPrice";
+import SelectQuantity from "../../components/shared/SelectQuantity";
+import SelectRentalDate from "../../components/shared/SelectRentalDate";
 import {
   SVGAlertCircle,
   SVGCalendar,
@@ -24,7 +24,7 @@ import {
   SVGUpload,
   SVGUser,
   SVGX,
-} from "../../components/SVGComponents";
+} from "../../components/shared/SVGComponents";
 import { getToken } from "../../helpers/GetToken";
 
 // Data dummy untuk dropdown Jenis Sosial Media
@@ -137,7 +137,7 @@ const RentalForm = () => {
 
       const activePrices =
         mappedUnit.prices?.filter(
-          (p) => p.status === "Active" && p.is_delete === 0
+          (p) => p.status === "Active" && p.is_delete === 0,
         ) || [];
       if (activePrices.length > 0) setSelectedPrice(activePrices[0]);
 
@@ -444,211 +444,158 @@ const RentalForm = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
+
     try {
       const token = await getToken();
 
-      // 1. Validasi KTP wajib
-      if (!isRepeat && !imageFile) {
-        setErrors((prev) => ({ ...prev, photo: `Foto KTP wajib diunggah.` }));
-        setLoading(false);
+      // =====================
+      // 1. VALIDASI WAJIB
+      // =====================
+      if (!formData.nik) {
+        setErrors({ nik: "NIK wajib diisi" });
         return;
       }
 
-      // 2. Cek ketersediaan customer berdasarkan NIK sebelum membuat
-      try {
-        if (!formData.nik) {
-          setErrors((prev) => ({ ...prev, nik: "NIK wajib diisi" }));
-          setLoading(false);
-          return;
-        }
+      if (!selectedVariant || !selectedPrice) {
+        setErrors({ submit: "Unit / variant belum dipilih" });
+        return;
+      }
 
+      if (!imageFile && !isRepeat) {
+        setErrors({ photo: "Foto KTP wajib diunggah" });
+        return;
+      }
+
+      // =====================
+      // 2. CEK CUSTOMER BOLEH RENT?
+      // =====================
+      try {
         const checkRes = await axios.get(
           `${API_URL}/api/customer/nik/${formData.nik}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
-        // Jika API mengembalikan success tapi can_rent === false, blokir
-        const checkData = checkRes.data?.data || {};
-        if (checkData.can_rent === false) {
+        if (checkRes.data?.data?.can_rent === false) {
           setErrors({
             submit:
               checkRes.data?.message ||
-              "Customer tidak dapat meminjam saat ini.",
+              "Customer tidak dapat meminjam saat ini",
           });
-          setLoading(false);
           return;
         }
       } catch (err) {
-        // Jika backend mengembalikan 409 Conflict, tampilkan pesan dan hentikan
-        if (err.response && err.response.status === 409) {
+        if (err.response?.status === 409) {
           setErrors({
-            submit:
-              err.response.data?.message ||
-              "Customer tidak dapat meminjam saat ini.",
+            submit: err.response.data?.message,
           });
-          setLoading(false);
           return;
         }
-
-        // Untuk error lain, lempar supaya ditangani oleh outer catch
         throw err;
       }
 
-      // 3. Buat customer (FormData, multipart)
+      // =====================
+      // 3. CREATE / UPDATE CUSTOMER
+      // =====================
       const customerPayload = new FormData();
-      customerPayload.append("nik", formData.nik || "");
-      customerPayload.append("fullname", formData.fullname || "");
-      customerPayload.append("telp", formData.telp || "");
-      customerPayload.append("email", formData.email || "");
-      customerPayload.append("address", formData.address || "");
-      customerPayload.append(
-        "closest_contact_name",
-        formData.closestContactName || ""
-      );
-      customerPayload.append(
-        "closest_contact_telp",
-        formData.closestContactTelp || ""
-      );
-      customerPayload.append(
-        "social_media_type",
-        formData.socialMediaType || ""
-      );
-      customerPayload.append(
-        "social_media_username",
-        formData.socialMediaUsername || ""
-      );
-      customerPayload.append(
-        "ktp_image",
-        imageFile?.name || formData?.ktpImage || ""
-      );
+      customerPayload.append("nik", formData.nik);
+      customerPayload.append("fullname", formData.fullname);
+      customerPayload.append("telp", formData.telp);
+      customerPayload.append("email", formData.email);
+      customerPayload.append("address", formData.address);
       customerPayload.append("status", "Active");
       customerPayload.append("photo", imageFile);
 
-      const responseCustomer = await axios.post(
+      const customerRes = await axios.post(
         `${API_URL}/api/customer`,
         customerPayload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
-      const customerData = responseCustomer.data?.data;
-      if (!customerData || !customerData.customer_id) {
-        throw new Error("Gagal membuat customer. Mohon cek data Anda.");
+      const customer = customerRes.data?.data;
+      if (!customer?.customer_id) {
+        throw new Error("Gagal membuat customer");
       }
-      const customer_id = customerData.customer_id;
 
-      // 3. Buat rental (rent)
+      // =====================
+      // 4. CREATE RENT + DETAIL (SATU API)
+      // =====================
+      const totalPrice = selectedPrice.price_per_day * quantity * rentalDays;
+
       const rentPayload = {
-        customer_id,
+        customer_id: customer.customer_id,
+        nik: formData.nik,
         start_rent_date: `${startDate}T${startTime}:00`,
         end_rent_date: `${endDate}T${endTime}:00`,
         duration: rentalDays,
-        total_price: selectedPrice?.price_per_day
-          ? selectedPrice.price_per_day * quantity * rentalDays
-          : 0,
+        total_price: totalPrice,
         total_paid: 0,
-        balance: selectedPrice?.price_per_day
-          ? selectedPrice.price_per_day * quantity * rentalDays
-          : 0,
-        status: "Waiting Payment",
         created_by: formData.fullname || "SYSTEM",
-      };
-      const responseRent = await axios.post(
-        `${API_URL}/api/rental`,
-        rentPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const responseNextInvoice = await axios.post(
-        `${API_URL}/api/rental/getInvoice`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const rentData = responseRent.data?.data;
-      if (!rentData || !rentData.rent_id) {
-        throw new Error("Gagal membuat data rental.");
-      }
-      const rent_id = rentData.rent_id;
 
-      // 4. Buat detail rental (detail)
-      const detailPayload = {
-        rent_id,
-        unit_code: unit.unit_code,
-        variant_unit_code: selectedVariant?.variant_unit_code || null,
-        price: selectedPrice?.price_per_day || 0,
-        qty: quantity,
-        created_by: formData.fullname || "SYSTEM",
-      };
-      const responseDetail = await axios.post(
-        `${API_URL}/api/detailrental`,
-        detailPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        details: [
+          {
+            unit_code: unit.unit_code,
+            variant_unit_code: selectedVariant.variant_unit_code,
+            price: selectedPrice.price_per_day,
+            qty: quantity,
           },
-        }
-      );
-      const detailData = responseDetail.data?.data;
-      if (!detailData || !detailData.detail_id) {
-        throw new Error("Gagal membuat detail rental.");
+        ],
+      };
+
+      const rentRes = await axios.post(`${API_URL}/api/rental`, rentPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const rentData = rentRes.data?.data?.rent;
+      if (!rentData?.rent_id) {
+        throw new Error("Gagal membuat rental");
       }
 
-      // helper format rupiah (kalau belum ada)
-      const formatRupiah = (num) =>
-        `Rp ${Number(num || 0).toLocaleString("id-ID")}`;
-
-      // ===== 5. SEND EMAIL INVOICE =====
-      const emailPayload = {
-        email: formData.email,
-        name: formData.fullname,
-        address: formData.address || "Bekasi, Jawa Barat",
-        phone: formData.telp,
-        invoice: responseNextInvoice.data.invoice,
-        unit: unit.unit_name,
-        variant: selectedVariant?.color || "-",
-        duration: quantity,
-        pricePerDay: formatRupiah(selectedPrice?.price_per_day),
-        subtotal: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
-        paid: "Rp 0",
-        remaining: formatRupiah((selectedPrice?.price_per_day || 0) * quantity),
-        url: `https://sewaiphoneaja.bekasi/invoice/INV-${new Date().getFullYear()}-${rent_id}`,
-        date: new Date().toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }),
-      };
+      // =====================
+      // 5. SEND EMAIL INVOICE
+      // =====================
+      const formatRupiah = (n) =>
+        `Rp ${Number(n || 0).toLocaleString("id-ID")}`;
 
       await axios.post(
         `${API_URL}/api/email/send-invoice-customer`,
-        emailPayload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+          email: formData.email,
+          name: formData.fullname,
+          address: formData.address,
+          phone: formData.telp,
+          invoice: rentData.invoice_number,
+          unit: unit.unit_name,
+          variant: selectedVariant.color || "-",
+          duration: rentalDays,
+          pricePerDay: formatRupiah(selectedPrice.price_per_day),
+          subtotal: formatRupiah(totalPrice),
+          paid: "Rp 0",
+          remaining: formatRupiah(totalPrice),
+          url: `https://sewaiphoneaja.bekasi/invoice/${rentData.invoice_number}`,
+          date: new Date().toLocaleDateString("id-ID"),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
+      // =====================
+      // DONE
+      // =====================
       setSubmissionSuccess(true);
       sessionStorage.removeItem("selectedUnit");
-    } catch (error) {
-      console.error("Submission error:", error);
+    } catch (err) {
+      console.error(err);
       setErrors({
         submit:
-          error.response?.data?.message ||
-          "Terjadi kesalahan saat mengirim pengajuan. Silakan coba lagi.",
+          err.response?.data?.message || "Terjadi kesalahan saat pengajuan",
       });
     } finally {
       setLoading(false);
@@ -686,7 +633,7 @@ const RentalForm = () => {
         setImagePreview(
           res.data.data.customer.ktp_image
             ? `${API_URL}/get-image/${res.data.data.customer.ktp_image}`
-            : null
+            : null,
         );
       }
     } catch (err) {
@@ -1012,8 +959,8 @@ const RentalForm = () => {
                       dragActive
                         ? "border-blue-900 bg-blue-50 scale-[1.02] shadow-2xl"
                         : errors.photo
-                        ? "border-red-400 bg-red-50 shadow-md"
-                        : "border-gray-300 hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
+                          ? "border-red-400 bg-red-50 shadow-md"
+                          : "border-gray-300 hover:border-blue-900 hover:bg-blue-50 hover:shadow-lg"
                     }`}
                     onDragEnter={handleDrag}
                     onDragOver={handleDrag}
@@ -1234,8 +1181,8 @@ const RentalForm = () => {
                   isCompleted
                     ? "bg-green-500 text-white"
                     : isActive
-                    ? "bg-blue-900 text-white ring-4 ring-blue-900/30"
-                    : "bg-gray-200 text-gray-600"
+                      ? "bg-blue-900 text-white ring-4 ring-blue-900/30"
+                      : "bg-gray-200 text-gray-600"
                 }`}
               >
                 {isCompleted ? (

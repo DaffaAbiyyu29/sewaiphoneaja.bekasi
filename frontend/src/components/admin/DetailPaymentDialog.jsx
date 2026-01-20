@@ -13,7 +13,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, formatTime } from "../../helpers/Format";
 import { getUserInfo } from "../../helpers/GetUserInfo";
-import ModalWrapper from "../ModalWrapper";
+import ModalWrapper from "../shared/ModalWrapper";
 
 export default function DetailPaymentDialog({
   isOpen,
@@ -280,7 +280,7 @@ export default function DetailPaymentDialog({
                         onClick={() =>
                           window.open(
                             `${API_URL}/get-image/${payment.proof_of_payment}`,
-                            "_blank"
+                            "_blank",
                           )
                         }
                       />

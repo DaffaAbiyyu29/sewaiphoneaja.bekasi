@@ -1,11 +1,10 @@
-import { useParams, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { getToken } from "../../../helpers/GetToken";
-import { Loader } from "../../../components/Loader";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Loader } from "../../../components/shared/Loader";
+import { getToken } from "../../../helpers/GetToken";
 
 export default function DetailUserPage() {
   const { nik } = useParams();
@@ -169,7 +168,7 @@ export default function DetailUserPage() {
                           day: "2-digit",
                           month: "long",
                           year: "numeric",
-                        }
+                        },
                       )}
                     </p>
                   </div>
@@ -191,7 +190,7 @@ export default function DetailUserPage() {
                       {userData.created_at
                         ? new Date(userData.created_at).toLocaleDateString(
                             "id-ID",
-                            { day: "2-digit", month: "long", year: "numeric" }
+                            { day: "2-digit", month: "long", year: "numeric" },
                           )
                         : "-"}
                     </p>

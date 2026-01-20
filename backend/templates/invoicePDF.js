@@ -133,7 +133,7 @@ module.exports = function invoiceTemplate(data) {
                 <tr>
                   <td style="vertical-align: middle;">
                     <img
-                      src="data:image/png;base64,${imageBase64}" 
+                      src="data:image/png;base64,${imageBase64}"
                       width="60"
                       height="60"
                       style="display: block;"
@@ -207,7 +207,7 @@ module.exports = function invoiceTemplate(data) {
                     TOTAL
                   </td>
                   <td style="width:30px;text-align:center;font-size:16px;font-weight:700;color:#16a34a;">
-                    Rp
+                    
                   </td>
                   <td style="text-align:right;font-size:20px;font-weight:800;color:#1e3a8a;padding:4px 0;">
                     ${data.subtotal}
@@ -222,7 +222,7 @@ module.exports = function invoiceTemplate(data) {
                         Pembayaran Diterima
                       </td>
                       <td style="text-align:center;font-size:14px;font-weight:700;color:#16a34a;">
-                        Rp
+                        
                       </td>
                       <td style="text-align:right;font-size:14px;font-weight:700;color:#16a34a;padding-top:6px;">
                         ${data.paid || "0"}
@@ -234,7 +234,7 @@ module.exports = function invoiceTemplate(data) {
                         Sisa Tagihan
                       </td>
                       <td style="text-align:center;font-size:14px;font-weight:700;color:#dc2626;">
-                        Rp
+                        
                       </td>
                       <td style="text-align:right;font-size:14px;font-weight:800;color:#dc2626;padding-top:4px;">
                         ${data.remaining}

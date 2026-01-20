@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Input from "../../components/Input";
+import Input from "../../components/shared/Input";
 
 export default function LoginPage() {
   const navigate = useNavigate();

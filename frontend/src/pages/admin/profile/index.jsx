@@ -14,8 +14,8 @@ import "animate.css";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import Avatar from "../../../components/Avatar";
-import Input from "../../../components/Input";
+import Avatar from "../../../components/shared/Avatar";
+import Input from "../../../components/shared/Input";
 import { formatDate } from "../../../helpers/Format";
 import { getToken } from "../../../helpers/GetToken";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
@@ -109,7 +109,7 @@ export default function ProfileUserPage() {
       } else {
         userPayload.append(
           "profile_picture",
-          formEditData.profile_picture || ""
+          formEditData.profile_picture || "",
         );
         userPayload.append("photo", "");
       }
@@ -496,8 +496,8 @@ export default function ProfileUserPage() {
                       displayData?.gender === "M"
                         ? "Laki-laki"
                         : displayData?.gender === "F"
-                        ? "Perempuan"
-                        : "-"
+                          ? "Perempuan"
+                          : "-"
                     }
                     isEditing={isEditing}
                     type="select"

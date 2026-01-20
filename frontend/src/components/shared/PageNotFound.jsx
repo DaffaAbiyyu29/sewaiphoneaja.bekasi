@@ -63,7 +63,7 @@ export default function ErrorPage({ message, statusCode = 404 }) {
 
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃ".split(
-        ""
+        "",
       );
     const fontSize = 16;
     const columns = canvas.width / fontSize;

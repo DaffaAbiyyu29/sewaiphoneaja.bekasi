@@ -40,7 +40,7 @@ const TrnDetailRent = sequelize.define(
       defaultValue: DataTypes.NOW,
     },
     created_by: {
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     updated_at: {
@@ -49,14 +49,14 @@ const TrnDetailRent = sequelize.define(
       defaultValue: DataTypes.NOW,
     },
     updated_by: {
-      type: DataTypes.STRING(16),
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
   },
   {
     tableName: "trn_detail_rent",
     timestamps: false,
-  }
+  },
 );
 
 module.exports = TrnDetailRent;

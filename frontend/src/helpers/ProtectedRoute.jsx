@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { Loader } from "../components/Loader";
-import PageNotFound from "../components/PageNotFound";
+import { Loader } from "../components/shared/Loader";
+import PageNotFound from "../components/shared/PageNotFound";
 import { getCurrentUser, hasAccessToRoute } from "./authService";
 import { getToken, removeToken } from "./GetToken";
 
@@ -37,7 +37,7 @@ export default function ProtectedRoute({ children }) {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (res.data.success) {
@@ -47,9 +47,6 @@ export default function ProtectedRoute({ children }) {
           const user = getCurrentUser();
           if (user && user.role) {
             const hasAccess = hasAccessToRoute(location.pathname, user.role);
-            console.log(user.role);
-            console.log(location.pathname);
-            console.log(hasAccess);
             setHasPermission(hasAccess);
           }
         } else {

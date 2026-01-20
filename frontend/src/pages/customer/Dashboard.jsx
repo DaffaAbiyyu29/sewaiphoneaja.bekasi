@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SkeletonCard from "../../components/SkeletonCard";
+import SkeletonCard from "../../components/shared/SkeletonCard";
 
 export default function Dashboard() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -76,7 +76,7 @@ export default function Dashboard() {
             const priceInfo =
               unit.prices.length > 0
                 ? `Rp ${new Intl.NumberFormat("id-ID").format(
-                    unit.prices[0].price_per_day
+                    unit.prices[0].price_per_day,
                   )} / hari`
                 : "Hubungi Admin";
 
@@ -87,7 +87,7 @@ export default function Dashboard() {
             const detailImages =
               unit.variants.length > 0
                 ? unit.variants.map(
-                    (variant) => `${IMAGE_BASE_URL}${variant.photo}`
+                    (variant) => `${IMAGE_BASE_URL}${variant.photo}`,
                   )
                 : [mainImage]; // Fallback jika tidak ada varian
 
@@ -425,7 +425,7 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <p className="text-gray-700 text-base italic mb-6">
-                  "{t.comment}"
+                  {`"${t.comment}"`}
                 </p>
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center">
@@ -513,7 +513,7 @@ export default function Dashboard() {
                   onClick={() =>
                     window.open(
                       "https://maps.app.goo.gl/T6A3fDdUNEnJj9Ka6",
-                      "_blank"
+                      "_blank",
                     )
                   }
                   className="

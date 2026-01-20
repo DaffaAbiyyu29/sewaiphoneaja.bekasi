@@ -9,7 +9,7 @@ import { getUserInfo } from "../../helpers/GetUserInfo";
 import Footer from "../admin/Footer";
 import Header from "../admin/Header";
 import Sidebar from "../admin/Sidebar";
-import Avatar from "../Avatar";
+import Avatar from "../shared/Avatar";
 
 export default function LayoutAdmin() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -92,7 +92,7 @@ export default function LayoutAdmin() {
         }
 
         avatarRoot.render(
-          <Avatar image={user?.avatar} name={user?.name} size="24" />
+          <Avatar image={user?.avatar} name={user?.name} size="24" />,
         );
       },
     });

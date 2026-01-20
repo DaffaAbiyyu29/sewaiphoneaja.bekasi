@@ -54,7 +54,8 @@ const getDashboardAdmin = async (req, res) => {
     // --- EXECUTE QUERIES ---
     const [
       totalRevenue,
-      rentStats,
+      totalOrders,
+      activeCustomersCount,
       availableDevices,
       revenueTrendRaw,
       popularDevicesRaw,
@@ -64,14 +65,10 @@ const getDashboardAdmin = async (req, res) => {
       TrnPayment.sum("total_payment", {
         where: { status: "Paid", payment_date: dateRangeFilter, is_delete: 0 },
       }),
-      TrnRent.findOne({
-        attributes: [
-          [fn("COUNT", col("rent_id")), "totalOrders"],
-          [fn("COUNT", fn("DISTINCT", col("customer_id"))), "activeCustomers"],
-        ],
-        where: { created_at: dateRangeFilter },
-        raw: true,
-      }),
+      // total orders in range
+      TrnRent.count({ where: { created_at: dateRangeFilter } }),
+      // active customers from mst_customer (status = 'Active')
+      MstCustomer.count({ where: { status: "Active" } }),
       MstUnit.count({ where: { status: "Available", is_delete: 0 } }),
       TrnPayment.findAll({
         attributes: [
@@ -161,8 +158,8 @@ const getDashboardAdmin = async (req, res) => {
       filter: { startDate: startSql, endDate: endSql },
       summary: {
         totalRevenue: parseFloat(totalRevenue || 0),
-        totalOrders: parseInt(rentStats.totalOrders || 0),
-        activeCustomers: parseInt(rentStats.activeCustomers || 0),
+        totalOrders: parseInt(totalOrders || 0),
+        activeCustomers: parseInt(activeCustomersCount || 0),
         availableDevices,
       },
       revenueTrend: revenueTrendRaw.map((r) => ({

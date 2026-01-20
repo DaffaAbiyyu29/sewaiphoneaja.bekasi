@@ -3,9 +3,9 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { getToken } from "../../helpers/GetToken";
-import ActionButton from "../ActionButton";
-import Input from "../Input";
-import ModalWrapper from "../ModalWrapper";
+import ActionButton from "../shared/ActionButton";
+import Input from "../shared/Input";
+import ModalWrapper from "../shared/ModalWrapper";
 // Asumsi impor FontAwesome sudah tersedia di proyek Anda
 import { faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -157,7 +157,7 @@ export default function AddVariantDialog({ isOpen, onClose, unit, onAdded }) {
             Authorization: `Bearer ${getToken()}`,
             // Hapus Content-Type: application/json
           },
-        }
+        },
       );
 
       if (res.data.success) {
@@ -168,7 +168,7 @@ export default function AddVariantDialog({ isOpen, onClose, unit, onAdded }) {
       console.error(err);
       alert(
         "Gagal menambahkan variant: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
       );
     } finally {
       setLoading(false);

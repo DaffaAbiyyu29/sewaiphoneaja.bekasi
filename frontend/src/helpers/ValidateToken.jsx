@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom"; // Pastikan Navigate diimport
-import { Loader } from "../components/Loader";
+import { Loader } from "../components/shared/Loader";
 import { getToken, removeToken } from "./GetToken";
 
 export default function AdminAuth({ children }) {
@@ -28,7 +28,7 @@ export default function AdminAuth({ children }) {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (res.data.success) {

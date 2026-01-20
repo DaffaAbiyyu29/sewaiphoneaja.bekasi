@@ -1,17 +1,17 @@
 "use client";
-import { useState, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faUpload,
-  faXmark,
   faCheck,
   faCircleExclamation,
-  faUser,
   faFloppyDisk,
+  faUpload,
+  faUser,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import { useRef, useState } from "react";
+import Input from "../../../components/shared/Input";
 import { getToken } from "../../../helpers/GetToken";
-import Input from "../../../components/Input";
 import { getUserInfo } from "../../../helpers/GetUserInfo";
 
 const API_URL = import.meta.env.VITE_API_URL;

@@ -36,8 +36,8 @@ const Avatar = ({ image, name, size = 8 }) => {
   return (
     <div
       className={`${sizeMap[size]} ${textSizeMap[size]} flex-shrink-0 rounded-full overflow-hidden
-      flex items-center justify-center
-      bg-blue-900 text-white font-semibold`}
+			flex items-center justify-center
+			bg-blue-900 text-white font-semibold`}
     >
       {!error && image ? (
         <img
