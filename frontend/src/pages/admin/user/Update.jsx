@@ -251,6 +251,16 @@ export default function UpdateUserPage() {
     }
   };
 
+  // determine allowed role options based on logged-in user's role
+  const currentUser = getUserInfo();
+  const ROLE_OPTIONS = (() => {
+    const r = currentUser?.role;
+    if (!r) return ["Admin", "Manager", "Supervisor"];
+    if (r === "Supervisor") return ["Admin"]; // supervisor may only set Admin
+    if (r === "Manager") return ["Admin", "Manager", "Supervisor"];
+    return ["Admin"];
+  })();
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -505,9 +515,13 @@ export default function UpdateUserPage() {
                     <option value="" disabled>
                       Pilih Role
                     </option>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Supervisor">Supervisor</option>
+                    {Array.from(new Set([formData.role, ...ROLE_OPTIONS])).map(
+                      (r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ),
+                    )}
                   </select>
 
                   {errors.role && (
