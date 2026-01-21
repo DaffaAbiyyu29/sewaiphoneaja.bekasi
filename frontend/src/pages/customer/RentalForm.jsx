@@ -505,6 +505,10 @@ const RentalForm = () => {
       customerPayload.append("email", formData.email);
       customerPayload.append("address", formData.address);
       customerPayload.append("status", "Active");
+      customerPayload.append("closest_contact_name", formData.closestContactName);
+      customerPayload.append("closest_contact_telp",formData.closestContactTelp);
+      customerPayload.append("social_media_type", formData.socialMediaType);
+      customerPayload.append("social_media_username",formData.socialMediaUsername);
       customerPayload.append("photo", imageFile);
 
       const customerRes = await axios.post(

@@ -185,7 +185,7 @@ const checkCustomerByNIK = async (req, res) => {
         res,
         "Customer tidak aktif sehingga tidak dapat melakukan peminjaman",
         "Conflict",
-        409
+        409,
       );
     }
 
@@ -204,7 +204,7 @@ const checkCustomerByNIK = async (req, res) => {
         res,
         "Customer sedang melakukan peminjaman dan belum mengembalikan unit",
         "Conflict",
-        409
+        409,
       );
     }
 
@@ -262,7 +262,7 @@ const createCustomer = async (req, res) => {
             res,
             "Customer tidak aktif, tidak bisa digunakan untuk peminjaman",
             "Conflict",
-            409
+            409,
           );
         }
 
@@ -272,7 +272,7 @@ const createCustomer = async (req, res) => {
           "Customer sudah terdaftar (tidak dibuat ulang)",
           existing,
           null,
-          200
+          200,
         );
       }
     }
@@ -304,7 +304,7 @@ const createCustomer = async (req, res) => {
         res,
         `Field berikut wajib diisi: ${missingFields.join(", ")}`,
         "Validation Error",
-        400
+        400,
       );
     }
 
@@ -316,7 +316,25 @@ const createCustomer = async (req, res) => {
       const existingEmail = await MstCustomer.findOne({ where: { email } });
       if (existingEmail) {
         if (ktpPath) deletePhoto(ktpPath);
-        return resError(res, "Email sudah terdaftar", "Conflict", 409);
+
+        // Jika customer dengan email sudah ada tapi status tidak aktif -> block
+        if (!isCustomerActive(existingEmail)) {
+          return resError(
+            res,
+            "Customer tidak aktif, tidak bisa digunakan untuk peminjaman",
+            "Conflict",
+            409,
+          );
+        }
+
+        // Kalau customer sudah ada dan ACTIVE → return sukses (tanpa insert)
+        return resSuccess(
+          res,
+          "Email sudah terdaftar — menggunakan data customer yang ada",
+          existingEmail,
+          null,
+          200,
+        );
       }
     }
 
@@ -376,8 +394,8 @@ const updateCustomer = async (req, res) => {
       const action = req.query.action.toLowerCase();
 
       if (action === "block") req.body.status = "Blocked";
-      else if (action === "Inactive") req.body.status = "Inactive";
-      else if (action === "Active" || action === "unblock")
+      else if (action === "inactive") req.body.status = "Inactive";
+      else if (action === "active" || action === "unblock")
         req.body.status = "Active";
     }
 
@@ -388,7 +406,7 @@ const updateCustomer = async (req, res) => {
         res,
         `Status tidak valid. Gunakan salah satu: ${allowedStatus.join(", ")}`,
         "Validation Error",
-        400
+        400,
       );
     }
 
@@ -440,8 +458,7 @@ const updateCustomerStatus = async (req, res) => {
       return resError(res, "Customer tidak ditemukan", "Not Found", 404);
     }
 
-    // ✅ NORMALISASI: apapun bentuknya (Active/active/Inactive/Inactive)
-    // kita buat pembandingnya jadi lowercase
+    // ✅ normalize -> lowercase
     const current = String(customer.status || "")
       .trim()
       .toLowerCase();
@@ -450,14 +467,14 @@ const updateCustomerStatus = async (req, res) => {
 
     if (current === "active") {
       newStatus = "Inactive";
-    } else if (current === "Inactive") {
+    } else if (current === "inactive") {
       newStatus = "Active";
     } else {
       return resError(
         res,
         "Status customer tidak valid",
         `Validation Error (current status: ${customer.status})`,
-        400
+        400,
       );
     }
 
@@ -499,7 +516,7 @@ const deleteCustomer = async (req, res) => {
     // 2️⃣ Soft delete
     await MstCustomer.update(
       { is_delete: 1 },
-      { where: { customer_id: customerId } }
+      { where: { customer_id: customerId } },
     );
 
     // 3️⃣ Response
@@ -532,7 +549,7 @@ const searchCustomerByEmail = async (req, res) => {
         res,
         "Customer dengan email tersebut tidak ditemukan",
         "Not Found",
-        404
+        404,
       );
     }
 

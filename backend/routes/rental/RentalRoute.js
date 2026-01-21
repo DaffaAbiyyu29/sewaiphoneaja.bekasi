@@ -8,6 +8,7 @@ const {
   getActiveRentByCustomerAndDate,
   getRentsByDateRange,
   getNextInvoice,
+  reStockForRent,
   deleteRent,
   updateRent,
   cancelRent,
@@ -27,6 +28,8 @@ router.get("/pesanan/:search", getRentByInvoiceOrNik);
 
 router.get("/checkAvailableUnit", verifyToken, getRentsByDateRange);
 
+
+
 router.get(
   "/active-by-customer/:customerId",
   verifyToken,
@@ -40,6 +43,7 @@ router.put("/:rentId", verifyToken, updateRent);
 router.put("/:rentId/collect", verifyToken, collectUnit);
 router.put("/:rentId/return", verifyToken, returnUnit);
 router.put("/:rentId/cancel", verifyToken, cancelRent);
+router.put("/:rentId/reStockForRent", verifyToken, reStockForRent);
 router.delete("/:rentId", verifyToken, deleteRent);
 
 module.exports = router;

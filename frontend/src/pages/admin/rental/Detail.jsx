@@ -92,7 +92,7 @@ const SVGAlertCircle = ({ className, size = 20 }) => (
 //   }
 // };
 
-const getStatusColor = (status) => {
+const getStatusColor = (status = "") => {
   const lower = status.toLowerCase();
 
   if (lower.includes("waiting")) {
@@ -705,7 +705,7 @@ export default function RentalDetailPage() {
 
   // Calculate total from details
   const totalPriceFromDetails = details.reduce(
-    (sum, d) => sum + (d.subtotal || 0) * (d.qty || 1) * rentalDays,
+    (sum, d) => sum + Number(d.subtotal || 0) * rentalDays,
     0,
   );
 

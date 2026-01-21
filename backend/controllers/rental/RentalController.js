@@ -192,27 +192,128 @@ const createRent = async (req, res) => {
   }
 };
 
+const reStockForRent = async (rent, t) => {
+  // rent: instance TrnRent (sudah di-lock)
+  // t: transaction
+
+  // Ambil detail rental
+  const details = await TrnDetailRent.findAll({
+    where: { rent_id: rent.rent_id },
+    transaction: t,
+    lock: t.LOCK.UPDATE,
+  });
+
+  // Kalau tidak ada detail, tidak perlu restore
+  if (!details.length) return;
+
+  // Balikin stok variant
+  for (const d of details) {
+    const qtyBack = Number(d.qty || 0);
+    if (!d.variant_unit_code || qtyBack <= 0) continue;
+
+    await MstVariantUnit.update(
+      {
+        qty: Sequelize.literal(`qty + ${qtyBack}`),
+        status: "Available",
+        updated_at: new Date(),
+      },
+      {
+        where: { variant_unit_code: d.variant_unit_code },
+        transaction: t,
+      }
+    );
+  }
+
+  // Update status unit berdasarkan total stok semua variants
+  const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+
+  for (const unit_code of unitCodes) {
+    const variants = await MstVariantUnit.findAll({
+      where: { unit_code, is_delete: 0 },
+      attributes: ["qty"],
+      transaction: t,
+    });
+
+    const totalStock = variants.reduce((sum, v) => sum + Number(v.qty || 0), 0);
+
+    await MstUnit.update(
+      {
+        status: totalStock > 0 ? "Available" : "Unavailable",
+        updated_at: new Date(),
+      },
+      { where: { unit_code }, transaction: t }
+    );
+  }
+};
+
+const restoreStockForRent = async (rentOrId, t) => {
+  const rent_id =
+    typeof rentOrId === "string" ? rentOrId : rentOrId?.rent_id;
+
+  if (!rent_id) throw new Error("rent_id is required for restoreStockForRent");
+
+  const details = await TrnDetailRent.findAll({
+    where: { rent_id },
+    transaction: t,
+    lock: t.LOCK.UPDATE,
+  });
+
+  if (!details.length) return;
+
+  for (const d of details) {
+    const qtyBack = Number(d.qty || 0);
+    if (!d.variant_unit_code || qtyBack <= 0) continue;
+
+    await MstVariantUnit.update(
+      {
+        qty: Sequelize.literal(`qty + ${qtyBack}`),
+        status: "Available",
+        updated_at: new Date(),
+      },
+      { where: { variant_unit_code: d.variant_unit_code }, transaction: t },
+    );
+  }
+
+  const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+
+  for (const unit_code of unitCodes) {
+    const variants = await MstVariantUnit.findAll({
+      where: { unit_code, is_delete: 0 },
+      attributes: ["qty"],
+      transaction: t,
+    });
+
+    const totalStock = variants.reduce((sum, v) => sum + Number(v.qty || 0), 0);
+
+    await MstUnit.update(
+      {
+        status: totalStock > 0 ? "Available" : "Unavailable",
+        updated_at: new Date(),
+      },
+      { where: { unit_code }, transaction: t },
+    );
+  }
+};
+
+
+
+
 const cancelRent = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { rentId } = req.params;
     const { notes } = req.body;
 
-    // ✅ TANPA ROLE: done yah king dayu buat request sudah login (verifyToken sudah set req.user)
     if (!req.user) {
       await t.rollback();
-      return resError(
-        res,
-        "Akses ditolak",
-        "Token tidak valid / belum login",
-        401,
-      );
+      return resError(res, "Akses ditolak", "Token tidak valid / belum login", 401);
     }
 
     const rent = await TrnRent.findOne({
       where: { rent_id: rentId },
       transaction: t,
-      lock: t.LOCK.UPDATE,
+      // lock optional
+      // lock: t.LOCK.UPDATE,
     });
 
     if (!rent) {
@@ -220,48 +321,47 @@ const cancelRent = async (req, res) => {
       return resError(res, "Rental tidak ditemukan", "Not Found", 404);
     }
 
-    // ❌ tidak boleh cancel kalau sudah close
+    // ✅ hanya boleh cancel kalau masih tahap awal
     if (rent.status === "Close") {
       await t.rollback();
       return resError(res, "Rental sudah ditutup", "Conflict", 409);
     }
 
-    // ❌ tidak boleh cancel kalau sudah cancelled
     if (rent.status === "Cancelled") {
       await t.rollback();
       return resError(res, "Rental sudah dibatalkan", "Conflict", 409);
     }
 
-    // ❌ tidak boleh cancel kalau sudah Open (unit sudah diambil)
-    if (rent.status === "Open") {
+    // kalau sudah Open / sudah di-collect => jangan boleh cancel (stok sudah “jalan”)
+    if (rent.status === "Open" || rent.collect_date) {
       await t.rollback();
-      return resError(
-        res,
-        "Tidak bisa cancel, unit sudah diambil",
-        "Conflict",
-        409,
-      );
+      return resError(res, "Tidak bisa cancel, unit sudah diambil", "Conflict", 409);
     }
 
+    // ✅ RESTOCK DULU
+    await restoreStockForRent(rentId, t);
+
+    // ✅ UPDATE RENTAL
     await rent.update(
       {
         status: "Cancelled",
         notes: notes ?? rent.notes,
         updated_at: new Date(),
-        // ✅ otomatis isi dari user yang login (kalau ada user_id di token)
         updated_by: req.user.user_id || req.user.email || "ADMIN",
       },
-      { transaction: t },
+      { transaction: t }
     );
 
     await t.commit();
-    return resSuccess(res, "Rental berhasil dibatalkan", rent);
+    return resSuccess(res, "Rental berhasil dibatalkan & stok dikembalikan", rent);
   } catch (err) {
     await t.rollback();
-    console.error(err);
+    console.error("cancelRent error:", err);
     return resError(res, "Gagal cancel rental", err.message, 500);
   }
 };
+
+
 
 //buat Rental aktif berdasarkan tanggal
 // GET /api/rent/active-by-customer/:customerId?date=2026-01-10
@@ -1225,6 +1325,7 @@ module.exports = {
   updateRent,
   deleteRent,
   cancelRent,
+  reStockForRent,
   collectUnit,
   returnUnit,
 };
