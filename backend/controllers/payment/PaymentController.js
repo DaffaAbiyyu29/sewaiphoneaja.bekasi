@@ -94,72 +94,61 @@ const getPaymentById = async (req, res) => {
 const updatePayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const {
-      rent_id,
-      payment_date,
-      due_date,
-      total_payment,
-      status,
-      updated_by,
-    } = req.body;
+    const { rent_id, payment_date, due_date, total_payment, status, updated_by } = req.body;
 
-    const rent = await TrnRent.findOne({
-      where: { rent_id: rent_id },
-    });
+    const payment = await TrnPayment.findOne({ where: { payment_id: paymentId, is_delete: 0 } });
+    if (!payment) return resError(res, "Pembayaran tidak ditemukan", "Not Found", 404);
 
-    const payment = await TrnPayment.findOne({
-      where: { payment_id: paymentId },
-    });
+    const rent = await TrnRent.findOne({ where: { rent_id: rent_id ?? payment.rent_id } });
+    if (!rent) return resError(res, "Data rental tidak ditemukan", "Not Found", 404);
 
-    if (!payment)
-      return resError(res, "Pembayaran tidak ditemukan", "Not Found", 404);
+    // ====== clamp overpayment saat mau jadi Paid ======
+    let nextTotalPayment =
+      total_payment !== undefined && total_payment !== null && total_payment !== ""
+        ? Number(total_payment)
+        : payment.total_payment;
+
+    if (status === "Paid") {
+      // total paid lain (Paid) selain payment yang sedang di-update ini
+      const paidOthers = await TrnPayment.sum("total_payment", {
+        where: {
+          rent_id: rent.rent_id,
+          status: "Paid",
+          is_delete: 0,
+          payment_id: { [require("sequelize").Op.ne]: payment.payment_id },
+        },
+      });
+
+      const remaining = Math.max(0, Number(rent.total_price) - Number(paidOthers || 0));
+
+      // kalau admin input melebihi sisa, otomatis disesuaikan ke sisa tagihan
+      if (nextTotalPayment > remaining) nextTotalPayment = remaining;
+    }
 
     await payment.update({
-      rent_id: rent_id ?? payment.rent_id,
+      rent_id: rent.rent_id,
       payment_date: payment_date ?? payment.payment_date,
       due_date: due_date ?? payment.due_date,
       proof_of_payment: payment.proof_of_payment,
-      total_payment:
-        total_payment !== undefined &&
-        total_payment !== null &&
-        total_payment !== ""
-          ? Number(total_payment)
-          : payment.total_payment,
+      total_payment: nextTotalPayment,
       status: status ?? payment.status,
       updated_at: new Date(),
       updated_by: updated_by || payment.updated_by,
     });
 
-    // Kalau status payment = Paid, update total_paid & balance
-    if (status === "Paid" && rent) {
-      const newTotalPaid =
-        Number(rent.total_paid) + Number(payment.total_payment);
-      const newBalance = Number(rent.total_price) - newTotalPaid;
+    // ====== setelah update payment, recalc rent dari SUM Paid ======
+    const totalPaid = await TrnPayment.sum("total_payment", {
+      where: { rent_id: rent.rent_id, status: "Paid", is_delete: 0 },
+    });
 
-      await rent.update({
-        total_paid: newTotalPaid,
-        balance: newBalance,
-      });
+    const newTotalPaid = Number(totalPaid || 0);
+    const newBalance = Math.max(0, Number(rent.total_price) - newTotalPaid);
 
-      if (status === "Paid" && rent) {
-        const totalPaid = await TrnPayment.sum("total_payment", {
-          where: { rent_id: rent.rent_id, status: "Paid" },
-        });
-
-        const newTotalPaid = Number(totalPaid || 0);
-        const newBalance = Number(rent.total_price) - newTotalPaid;
-
-        await rent.update({
-          total_paid: newTotalPaid,
-          balance: newBalance,
-          status: newBalance <= 0 ? "Open" : "Waiting Payment",
-        });
-        // Jika balance <= 0 → ganti status rent jadi Open
-        if (newBalance <= 0) {
-          await rent.update({ status: "Open" });
-        }
-      }
-    }
+    await rent.update({
+      total_paid: newTotalPaid,
+      balance: newBalance,
+      status: newBalance <= 0 ? "Open" : "Waiting Payment",
+    });
 
     return resSuccess(res, "Pembayaran berhasil diperbarui", payment);
   } catch (err) {
@@ -167,38 +156,54 @@ const updatePayment = async (req, res) => {
   }
 };
 
+
 const deletePayment = async (req, res) => {
   try {
     const { paymentId } = req.params;
+
     const payment = await TrnPayment.findOne({
-      where: { payment_id: paymentId },
-    });
-
-    const rent = await TrnRent.findOne({
-      where: { rent_id: payment.rent_id },
-    });
-
-    await rent.update({
-      total_paid: Number(rent.total_paid) - Number(payment.total_payment),
-      balance: Number(rent.balance) + Number(payment.total_payment),
-      status:
-        Number(rent.balance) + Number(payment.total_payment) <= 0
-          ? "Open"
-          : "Waiting Payment",
+      where: { payment_id: paymentId, is_delete: 0 },
     });
 
     if (!payment)
       return resError(res, "Pembayaran tidak ditemukan", "Not Found", 404);
 
-    await payment.update({
-      is_delete: 1,
+    const rent = await TrnRent.findOne({
+      where: { rent_id: payment.rent_id },
     });
 
-    return resSuccess(res, "Pembayaran berhasil dihapus");
+    if (!rent)
+      return resError(res, "Data rental tidak ditemukan", "Not Found", 404);
+
+    // 1) Ubah payment jadi Unpaid (bukan soft delete)
+    await payment.update({
+      status: "Unpaid",
+      // opsional: kalau kamu ingin dianggap "dibatalkan", tapi tetap ada recordnya
+      // total_payment: 0, 
+      updated_at: new Date(),
+      // updated_by: req.user?.name || null, // kalau kamu punya auth middleware
+    });
+
+    // 2) Recalculate ulang total paid & balance dari semua payment yang Paid
+    const totalPaid = await TrnPayment.sum("total_payment", {
+      where: { rent_id: rent.rent_id, status: "Paid", is_delete: 0 },
+    });
+
+    const newTotalPaid = Number(totalPaid || 0);
+    const newBalance = Math.max(0, Number(rent.total_price) - newTotalPaid);
+
+    await rent.update({
+      total_paid: newTotalPaid,
+      balance: newBalance,
+      status: newBalance <= 0 ? "Open" : "Waiting Payment",
+    });
+
+    return resSuccess(res, "Pembayaran berhasil dibatalkan (Unpaid)", payment);
   } catch (err) {
-    return resError(res, "Gagal menghapus pembayaran", err.message, 500);
+    return resError(res, "Gagal membatalkan pembayaran", err.message, 500);
   }
 };
+
 
 module.exports = {
   createPayment,
