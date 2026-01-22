@@ -32,7 +32,7 @@ const isCustomerActive = (customer) => {
   if (s === "active") return true;
 
   // semua variasi "Inactive" dianggap tidak aktif
-  if (s === "Inactive") return false;
+  if (s === "inactive") return false;
 
   // kalau ada nilai lain (mis "blocked") => anggap tidak aktif
 
@@ -1107,6 +1107,7 @@ const createRentWithDetail = async (req, res) => {
       total_price,
       total_paid,
       created_by,
+      notes,
       details = [],
     } = req.body;
 
@@ -1220,6 +1221,7 @@ const createRentWithDetail = async (req, res) => {
         balance: Number(total_price) - Number(total_paid || 0),
         status: "Waiting Payment",
         invoice_number: invoiceNo,
+        notes: notes ?? "",    
         created_by: created_by || null,
         created_at: new Date(),
       },
