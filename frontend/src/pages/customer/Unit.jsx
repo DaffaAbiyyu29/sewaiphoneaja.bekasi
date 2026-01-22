@@ -76,8 +76,8 @@ const Unit = () => {
     const totalStock = item.variants?.reduce((sum, v) => sum + (v.qty || 0), 0);
     const isAvailable = totalStock > 0 && item.status === "Available";
 
-    if (filterStatus === "available") return matchSearch && isAvailable;
-    if (filterStatus === "unavailable") return matchSearch && !isAvailable;
+    if (filterStatus === "Available") return matchSearch && isAvailable;
+    if (filterStatus === "Unavailable") return matchSearch && !isAvailable;
     return matchSearch;
   });
 
@@ -90,13 +90,6 @@ const Unit = () => {
 
   // Statistics
   const totalUnits = units.length;
-  const availableUnits = units.filter((item) => {
-    const totalStock = item.variants?.reduce((sum, v) => sum + (v.qty || 0), 0);
-    return totalStock > 0 && item.status === "Available";
-  }).length;
-  const totalStock = units.reduce((sum, item) => {
-    return sum + (item.variants?.reduce((s, v) => s + (v.qty || 0), 0) || 0);
-  }, 0);
 
   return (
     <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50 min-h-screen">
@@ -111,85 +104,6 @@ const Unit = () => {
               Sewa iPhone original dengan harga terjangkau. Semua unit dalam
               kondisi prima, bergaransi, dan siap dikirim ke seluruh Indonesia.
             </p>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 p-4 rounded-xl">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">
-                    Total Unit
-                  </p>
-                  <p className="text-3xl font-bold">{totalUnits}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4">
-                <div className="bg-green-500/30 p-4 rounded-xl">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Tersedia</p>
-                  <p className="text-3xl font-bold">{availableUnits}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <div className="flex items-center gap-4">
-                <div className="bg-purple-500/30 p-4 rounded-xl">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">
-                    Total Stok
-                  </p>
-                  <p className="text-3xl font-bold">{totalStock}</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -227,9 +141,9 @@ const Unit = () => {
                 Semua
               </button>
               <button
-                onClick={() => handleFilterChange("available")}
+                onClick={() => handleFilterChange("Available")}
                 className={`flex-1 md:flex-none px-6 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === "available"
+                  filterStatus === "Available"
                     ? "bg-green-600 text-white shadow-lg"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -237,9 +151,9 @@ const Unit = () => {
                 Tersedia
               </button>
               <button
-                onClick={() => handleFilterChange("unavailable")}
+                onClick={() => handleFilterChange("Unavailable")}
                 className={`flex-1 md:flex-none px-6 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === "unavailable"
+                  filterStatus === "Unavailable"
                     ? "bg-red-600 text-white shadow-lg"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -333,30 +247,6 @@ const Unit = () => {
                             {isAvailable ? "Available" : "Habis"}
                           </span>
                         </div>
-
-                        {/* Stock Badge */}
-                        {isAvailable && (
-                          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
-                            <div className="flex items-center gap-2">
-                              <svg
-                                className="w-4 h-4 text-blue-900"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                />
-                              </svg>
-                              <span className="text-xs font-bold text-gray-700">
-                                {totalStock} unit
-                              </span>
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* Content */}

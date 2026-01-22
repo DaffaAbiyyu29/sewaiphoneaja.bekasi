@@ -22,6 +22,14 @@ export default function ProtectedRoute({ children }) {
   const [hasPermission, setHasPermission] = useState(true);
 
   useEffect(() => {
+    const isPublic = hasAccessToRoute(location.pathname, null);
+    if (isPublic) {
+      setIsValid(true);
+      setHasPermission(true);
+      setLoading(false);
+      return;
+    }
+
     // If no token and not on login or rent-form page, redirect to login
     if (!token) {
       setIsValid(false);

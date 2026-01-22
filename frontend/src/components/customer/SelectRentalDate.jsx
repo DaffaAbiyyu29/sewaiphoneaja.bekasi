@@ -17,9 +17,10 @@ import { useEffect } from "react";
  * endTime: string,
  * setEndTime: (time: string) => void,
  * rentalDays: number,
- * requiredRentalDays: number, // DURATION DARI PAKET HARGA
- * minEndDate: string, // Tanggal minimum yang harus dipilih
- * isDurationValid: boolean, // Status validasi kelipatan
+ * requiredRentalDays: number,
+ * minEndDate: string,
+ * isDurationValid: boolean,
+ * refreshUnit: () => void,
  * }} props
  * @returns {JSX.Element}
  */
@@ -36,6 +37,7 @@ export default function SelectRentalDate({
   requiredRentalDays,
   minEndDate,
   isDurationValid,
+  refreshUnit = () => {},
 }) {
   // Efek untuk menyinkronkan waktu selesai dengan waktu mulai (tetap dipertahankan)
   useEffect(() => {
@@ -70,7 +72,10 @@ export default function SelectRentalDate({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                refreshUnit();
+              }}
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-900 focus:border-blue-900 transition-all"
             />
             <input
@@ -97,7 +102,10 @@ export default function SelectRentalDate({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                refreshUnit();
+              }}
               // Menerapkan batas minimum berdasarkan durasi paket
               min={minEndDate}
               className={`flex-1 border rounded-lg px-3 py-2 text-sm transition-all ${

@@ -27,7 +27,7 @@ export default function SelectQuantity({
 
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm mb-7">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <FontAwesomeIcon

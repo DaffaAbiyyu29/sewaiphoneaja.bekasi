@@ -97,6 +97,48 @@ const RentalForm = () => {
   const [isRepeat, setIsRepeat] = useState(false);
 
   useEffect(() => {
+    const fetchVariantAvailability = async () => {
+      if (!selectedVariant || !startDate || !endDate) return;
+      try {
+        const res = await axios.get(
+          `${API_URL}/api/unit/catalog/${unit.unit_code}`,
+          {
+            params: {
+              variant_unit_code: selectedVariant.variant_unit_code,
+              start_date: startDate,
+              end_date: endDate,
+            },
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          },
+        );
+
+        if (res.data?.success) {
+          const updatedUnit = res.data.data;
+
+          const matchedVariant = updatedUnit.variants.find(
+            (v) => v.variant_unit_code === selectedVariant.variant_unit_code,
+          );
+
+          if (matchedVariant) {
+            setSelectedVariant(matchedVariant);
+
+            // safety: qty user jangan lebih dari stok real
+            if (quantity > matchedVariant.qty) {
+              setQuantity(matchedVariant.qty > 0 ? matchedVariant.qty : 1);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Gagal cek stok variant:", err);
+      }
+    };
+
+    fetchVariantAvailability();
+  }, [selectedVariant?.variant_unit_code, startDate, endDate]);
+
+  useEffect(() => {
     if (!sessionStorage.getItem("selectedUnit")) {
       navigate("/unit");
     }
@@ -118,6 +160,7 @@ const RentalForm = () => {
       });
 
       const data = res.data.data;
+      console.log("data", data);
 
       const mappedUnit = {
         unit_code: data.unit_code,
@@ -126,6 +169,7 @@ const RentalForm = () => {
         description: data.description,
         prices: data.prices || [],
         variants: data.variants || [],
+        is_delete: data.is_delete,
         // only unit data needed; identity is always KTP so no requirement flags
       };
       setUnit(mappedUnit);
@@ -135,10 +179,13 @@ const RentalForm = () => {
       setEndDate(selectedData?.endDate);
       setEndTime(selectedData?.endTime);
 
+      console.log(mappedUnit);
+
       const activePrices =
         mappedUnit.prices?.filter(
           (p) => p.status === "Active" && p.is_delete === 0,
         ) || [];
+      console.log(activePrices);
       if (activePrices.length > 0) setSelectedPrice(activePrices[0]);
 
       const vForm = JSON.parse(sessionStorage.getItem("selectedUnit"));
@@ -163,6 +210,13 @@ const RentalForm = () => {
       retry;
     }
   };
+
+  useEffect(() => {
+    if (selectedData) {
+      setStartDate(selectedData.startDate || "");
+      setEndDate(selectedData.endDate || "");
+    }
+  }, [selectedData]);
 
   useEffect(() => {
     fetchUnitData().then(() => {
@@ -258,8 +312,9 @@ const RentalForm = () => {
     !endDate ||
     quantity <= 0 ||
     (hasVariants && !selectedVariant) ||
-    !isDurationValid;
-
+    !isDurationValid ||
+    availableStock <= 0 ||
+    quantity > availableStock;
   // ===
   // Handlers (Most Unchanged)
   // ===
@@ -505,10 +560,19 @@ const RentalForm = () => {
       customerPayload.append("email", formData.email);
       customerPayload.append("address", formData.address);
       customerPayload.append("status", "Active");
-      customerPayload.append("closest_contact_name", formData.closestContactName);
-      customerPayload.append("closest_contact_telp",formData.closestContactTelp);
+      customerPayload.append(
+        "closest_contact_name",
+        formData.closestContactName,
+      );
+      customerPayload.append(
+        "closest_contact_telp",
+        formData.closestContactTelp,
+      );
       customerPayload.append("social_media_type", formData.socialMediaType);
-      customerPayload.append("social_media_username",formData.socialMediaUsername);
+      customerPayload.append(
+        "social_media_username",
+        formData.socialMediaUsername,
+      );
       customerPayload.append("photo", imageFile);
 
       const customerRes = await axios.post(

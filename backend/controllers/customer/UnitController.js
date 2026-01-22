@@ -8,6 +8,7 @@ const {
   TrnDetailRent,
 } = require("../../models/Relations");
 const sequelize = require("../../models/index");
+const { toUTC } = require("../../helpers/format");
 
 const getAllUnitCatalog = async (req, res) => {
   try {
@@ -15,68 +16,35 @@ const getAllUnitCatalog = async (req, res) => {
       page = 1,
       limit = 9,
       search = "",
-      status = "all", // all | available | unavailable (FE)
+      status = "all",
       orderBy = "created_at",
       orderDir = "DESC",
       start_date,
       end_date,
+      variant_unit_code,
     } = req.query;
 
-    // =====================
-    // Pagination
-    // =====================
     page = parseInt(page);
     limit = parseInt(limit);
-
-    const allowedLimits = [9];
-    if (!allowedLimits.includes(limit)) limit = 9;
+    if (![9].includes(limit)) limit = 9;
 
     const offset = (page - 1) * limit;
 
-    // =====================
-    // Search
-    // =====================
-    const searchableFields = [
-      "unit_code",
-      "unit_name",
-      "brand",
-      "description",
-      "status",
-    ];
-
     const where = {
       is_delete: 0,
-      ...(search.trim() !== ""
+      ...(search.trim()
         ? {
-            [Op.or]: searchableFields.map((field) => ({
-              [field]: { [Op.like]: `%${search}%` },
-            })),
+            [Op.or]: [
+              "unit_code",
+              "unit_name",
+              "brand",
+              "description",
+              "status",
+            ].map((f) => ({ [f]: { [Op.like]: `%${search}%` } })),
           }
         : {}),
     };
 
-    // =====================
-    // Sorting
-    // =====================
-    const allowedOrderFields = [
-      "unit_code",
-      "unit_name",
-      "brand",
-      "description",
-      "status",
-      "created_at",
-      "updated_at",
-    ];
-
-    const orderField = allowedOrderFields.includes(orderBy)
-      ? orderBy
-      : "created_at";
-
-    const orderDirection = orderDir.toUpperCase() === "ASC" ? "ASC" : "DESC";
-
-    // =====================
-    // QUERY DATA
-    // =====================
     const { rows } = await MstUnit.findAndCountAll({
       where,
       limit,
@@ -86,39 +54,31 @@ const getAllUnitCatalog = async (req, res) => {
           model: MstVariantUnit,
           as: "variants",
           where: { is_delete: 0 },
-          attributes: [
-            "variant_unit_code",
-            "color",
-            "qty",
-            "status",
-            "photo",
-            "is_delete",
-          ],
+          required: false, // 🔥 penting
+          attributes: ["variant_unit_code", "color", "qty", "status", "photo"],
         },
         {
           model: MstPriceUnit,
           as: "prices",
           where: { status: "Active", is_delete: 0 },
-          attributes: [
-            "price_id",
-            "duration",
-            "price_per_day",
-            "status",
-            "is_delete",
-          ],
+          required: false,
         },
       ],
-      order: [[orderField, orderDirection]],
-      distinct: true, // biar count gak dobel
+      order: [[orderBy, orderDir]],
+      distinct: true,
     });
 
-    // =====================
-    // HITUNG STOK TERPAKAI BERDASARKAN TANGGAL
-    // =====================
+    /** ===============================
+     * RENTED MAP (ONLY SELECTED VARIANT)
+     * =============================== */
     let rentedMap = {};
+    const useDateFilter = start_date && end_date && variant_unit_code;
 
-    if (start_date && end_date) {
-      const rentedVariants = await TrnDetailRent.findAll({
+    if (useDateFilter) {
+      const startDateUTC = toUTC(start_date);
+      const endDateUTC = toUTC(end_date, true);
+
+      const rented = await TrnDetailRent.findAll({
         attributes: [
           "variant_unit_code",
           [sequelize.fn("SUM", sequelize.col("qty")), "total_rented"],
@@ -129,150 +89,218 @@ const getAllUnitCatalog = async (req, res) => {
             as: "rent",
             attributes: [],
             where: {
-              status: { [Op.notIn]: ["Cancelled", "Close"] },
-              start_rent_date: { [Op.lte]: end_date },
-              end_rent_date: { [Op.gte]: start_date },
+              start_rent_date: { [Op.lte]: endDateUTC },
+              end_rent_date: { [Op.gte]: startDateUTC },
             },
           },
         ],
+        where: { variant_unit_code },
         group: ["variant_unit_code"],
         raw: true,
       });
 
-      rentedVariants.forEach((r) => {
+      rented.forEach((r) => {
         rentedMap[r.variant_unit_code] = Number(r.total_rented);
       });
     }
 
-    // =====================
-    // OVERRIDE STATUS BERDASARKAN STOK + TANGGAL
-    // =====================
+    /** ===============================
+     * PROCESS DATA
+     * =============================== */
     const processedRows = rows.map((unit) => {
       let totalStock = 0;
       let availableStock = 0;
+      let selectedVariantAvailable = 0;
 
-      const variants = unit.variants || [];
+      const variants = (unit.variants || []).map((v) => {
+        const realQty = v.qty || 0;
+        totalStock += realQty;
 
-      variants.forEach((v) => {
-        const rentedQty = rentedMap[v.variant_unit_code] || 0;
-        const availableQty = Math.max((v.qty || 0) - rentedQty, 0);
+        // default: gak kena logic apa2
+        let finalQty = realQty;
+        let rentedQty = 0;
 
-        totalStock += v.qty || 0;
-        availableStock += availableQty;
+        // 🔥 LOGIC HANYA BUAT VARIANT TERPILIH
+        if (useDateFilter && v.variant_unit_code === variant_unit_code) {
+          rentedQty = rentedMap[v.variant_unit_code] || 0;
+          finalQty = Math.max(realQty - rentedQty, 0);
+          selectedVariantAvailable = finalQty;
+        }
 
-        // expose ke FE
-        v.available_qty = availableQty;
+        availableStock += finalQty;
+
+        return {
+          ...v.toJSON(),
+          qty: finalQty,
+          // rented_qty: rentedQty,
+        };
       });
 
       let finalStatus = unit.status;
-
-      if (availableStock === 0) {
-        finalStatus = "Unavailable";
+      if (useDateFilter) {
+        finalStatus =
+          selectedVariantAvailable > 0 ? "Available" : "Unavailable";
       }
 
       return {
         ...unit.toJSON(),
-        status: finalStatus,
+        variants,
         totalStock,
         availableStock,
-        variants,
+        status: finalStatus,
       };
     });
 
-    // =====================
-    // FILTER STATUS DARI FE
-    // =====================
+    /** ===============================
+     * STATUS FILTER
+     * =============================== */
     let filteredRows = processedRows;
 
     if (status === "available") {
-      filteredRows = processedRows.filter((u) => u.status === "Available");
+      filteredRows = filteredRows.filter((u) => u.availableStock > 0);
     }
 
     if (status === "unavailable") {
-      filteredRows = processedRows.filter((u) => u.status === "Unavailable");
+      filteredRows = filteredRows.filter((u) => u.availableStock === 0);
     }
 
-    // =====================
-    // PAGINATION SETELAH FILTER
-    // =====================
     const totalData = filteredRows.length;
     const totalPages = Math.ceil(totalData / limit);
-
     const paginatedRows = filteredRows.slice((page - 1) * limit, page * limit);
 
-    // =====================
-    // MESSAGE
-    // =====================
-    let message = "Daftar unit berhasil diambil";
-
-    if (totalData === 0) {
-      if (search.trim() !== "") {
-        message =
-          "Tidak ada unit yang ditemukan dengan kriteria pencarian tersebut.";
-      } else {
-        message = "Tidak ada data unit yang tersedia.";
-      }
-    }
-
-    // =====================
-    // RESPONSE
-    // =====================
-    return resSuccess(res, message, paginatedRows, {
+    return resSuccess(res, "Daftar unit berhasil diambil", paginatedRows, {
       totalData,
       currentPage: page,
       totalPages,
       pageSize: limit,
-      allowedPageSizes: allowedLimits,
     });
   } catch (err) {
-    console.error("getAllUnitCatalog error:", err);
+    console.error(err);
     return resError(res, "Gagal mengambil data unit", err.message, 500);
   }
 };
 
 const getCatalogByUnitCode = async (req, res) => {
   const { unitCode } = req.params;
+  const { start_date, end_date, variant_unit_code } = req.query;
 
   try {
-    const { count, rows } = await MstUnit.findAndCountAll({
-      where: { unit_code: unitCode, is_delete: 0 },
+    const { rows } = await MstUnit.findAndCountAll({
+      where: {
+        unit_code: unitCode,
+        is_delete: 0,
+      },
       include: [
         {
           model: MstVariantUnit,
           as: "variants",
           where: { is_delete: 0 },
-          attributes: [
-            "variant_unit_code",
-            "color",
-            "qty",
-            "status",
-            "photo",
-            "is_delete",
-          ],
+          required: false,
+          attributes: ["variant_unit_code", "color", "qty", "status", "photo"],
         },
         {
           model: MstPriceUnit,
           as: "prices",
           where: { status: "Active", is_delete: 0 },
-          attributes: [
-            "price_id",
-            "duration",
-            "price_per_day",
-            "status",
-            "is_delete",
-          ],
+          required: false,
         },
       ],
       distinct: true,
     });
 
-    let message = "Daftar unit berhasil diambil";
-    if (count === 0) {
-      message = "Data Unit tidak ditemukan. ";
+    if (!rows.length) {
+      return resSuccess(res, "Data Unit tidak ditemukan", null);
     }
 
-    return resSuccess(res, message, rows[0]);
+    const unit = rows[0];
+
+    /** ===============================
+     * DATE FILTER CHECK
+     * =============================== */
+    const useDateFilter = start_date && end_date && variant_unit_code;
+
+    /** ===============================
+     * RENTED MAP (ONLY SELECTED VARIANT)
+     * =============================== */
+    let rentedMap = {};
+
+    if (useDateFilter) {
+      const startDateUTC = toUTC(start_date);
+      const endDateUTC = toUTC(end_date, true);
+
+      const rented = await TrnDetailRent.findAll({
+        attributes: [
+          "variant_unit_code",
+          [sequelize.fn("SUM", sequelize.col("qty")), "total_rented"],
+        ],
+        include: [
+          {
+            model: TrnRent,
+            as: "rent",
+            attributes: [],
+            where: {
+              start_rent_date: { [Op.lte]: endDateUTC },
+              end_rent_date: { [Op.gte]: startDateUTC },
+            },
+          },
+        ],
+        where: { variant_unit_code },
+        group: ["variant_unit_code"],
+        raw: true,
+      });
+
+      rented.forEach((r) => {
+        rentedMap[r.variant_unit_code] = Number(r.total_rented);
+      });
+    }
+
+    /** ===============================
+     * PROCESS VARIANTS
+     * =============================== */
+    let totalStock = 0;
+    let availableStock = 0;
+    let selectedVariantAvailable = 0;
+
+    const variants = (unit.variants || []).map((v) => {
+      const realQty = v.qty || 0;
+      totalStock += realQty;
+
+      let finalQty = realQty;
+      let rentedQty = 0;
+
+      // 🔥 LOGIC SAMA PERSIS
+      if (useDateFilter && v.variant_unit_code === variant_unit_code) {
+        rentedQty = rentedMap[v.variant_unit_code] || 0;
+        finalQty = Math.max(realQty - rentedQty, 0);
+        selectedVariantAvailable = finalQty;
+      }
+
+      availableStock += finalQty;
+
+      return {
+        ...v.toJSON(),
+        qty: finalQty,
+        // rented_qty: rentedQty,
+      };
+    });
+
+    /** ===============================
+     * FINAL STATUS
+     * =============================== */
+    let finalStatus = unit.status;
+    if (useDateFilter) {
+      finalStatus = selectedVariantAvailable > 0 ? "Available" : "Unavailable";
+    }
+
+    return resSuccess(res, "Daftar unit berhasil diambil", {
+      ...unit.toJSON(),
+      variants,
+      totalStock,
+      availableStock,
+      status: finalStatus,
+    });
   } catch (err) {
+    console.error("getCatalogByUnitCode error:", err);
     return resError(res, "Gagal mengambil data unit", err.message, 500);
   }
 };

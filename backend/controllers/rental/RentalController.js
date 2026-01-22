@@ -220,12 +220,14 @@ const reStockForRent = async (rent, t) => {
       {
         where: { variant_unit_code: d.variant_unit_code },
         transaction: t,
-      }
+      },
     );
   }
 
   // Update status unit berdasarkan total stok semua variants
-  const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+  const unitCodes = [
+    ...new Set(details.map((d) => d.unit_code).filter(Boolean)),
+  ];
 
   for (const unit_code of unitCodes) {
     const variants = await MstVariantUnit.findAll({
@@ -241,14 +243,13 @@ const reStockForRent = async (rent, t) => {
         status: totalStock > 0 ? "Available" : "Unavailable",
         updated_at: new Date(),
       },
-      { where: { unit_code }, transaction: t }
+      { where: { unit_code }, transaction: t },
     );
   }
 };
 
 const restoreStockForRent = async (rentOrId, t) => {
-  const rent_id =
-    typeof rentOrId === "string" ? rentOrId : rentOrId?.rent_id;
+  const rent_id = typeof rentOrId === "string" ? rentOrId : rentOrId?.rent_id;
 
   if (!rent_id) throw new Error("rent_id is required for restoreStockForRent");
 
@@ -274,7 +275,9 @@ const restoreStockForRent = async (rentOrId, t) => {
     );
   }
 
-  const unitCodes = [...new Set(details.map((d) => d.unit_code).filter(Boolean))];
+  const unitCodes = [
+    ...new Set(details.map((d) => d.unit_code).filter(Boolean)),
+  ];
 
   for (const unit_code of unitCodes) {
     const variants = await MstVariantUnit.findAll({
@@ -295,9 +298,6 @@ const restoreStockForRent = async (rentOrId, t) => {
   }
 };
 
-
-
-
 const cancelRent = async (req, res) => {
   const t = await sequelize.transaction();
   try {
@@ -306,7 +306,12 @@ const cancelRent = async (req, res) => {
 
     if (!req.user) {
       await t.rollback();
-      return resError(res, "Akses ditolak", "Token tidak valid / belum login", 401);
+      return resError(
+        res,
+        "Akses ditolak",
+        "Token tidak valid / belum login",
+        401,
+      );
     }
 
     const rent = await TrnRent.findOne({
@@ -335,7 +340,12 @@ const cancelRent = async (req, res) => {
     // kalau sudah Open / sudah di-collect => jangan boleh cancel (stok sudah “jalan”)
     if (rent.status === "Open" || rent.collect_date) {
       await t.rollback();
-      return resError(res, "Tidak bisa cancel, unit sudah diambil", "Conflict", 409);
+      return resError(
+        res,
+        "Tidak bisa cancel, unit sudah diambil",
+        "Conflict",
+        409,
+      );
     }
 
     // ✅ RESTOCK DULU
@@ -349,19 +359,21 @@ const cancelRent = async (req, res) => {
         updated_at: new Date(),
         updated_by: req.user.user_id || req.user.email || "ADMIN",
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
-    return resSuccess(res, "Rental berhasil dibatalkan & stok dikembalikan", rent);
+    return resSuccess(
+      res,
+      "Rental berhasil dibatalkan & stok dikembalikan",
+      rent,
+    );
   } catch (err) {
     await t.rollback();
     console.error("cancelRent error:", err);
     return resError(res, "Gagal cancel rental", err.message, 500);
   }
 };
-
-
 
 //buat Rental aktif berdasarkan tanggal
 // GET /api/rent/active-by-customer/:customerId?date=2026-01-10
@@ -548,17 +560,17 @@ const returnUnit = async (req, res) => {
       if (qtyBack <= 0) continue;
 
       // increment qty variant
-      await MstVariantUnit.update(
-        {
-          qty: Sequelize.literal(`qty + ${qtyBack}`),
-          status: "Available", // optional: kalau kamu pakai status per variant
-          updated_at: new Date(),
-        },
-        {
-          where: { variant_unit_code: d.variant_unit_code },
-          transaction: t,
-        },
-      );
+      // await MstVariantUnit.update(
+      //   {
+      //     qty: Sequelize.literal(`qty + ${qtyBack}`),
+      //     status: "Available", // optional: kalau kamu pakai status per variant
+      //     updated_at: new Date(),
+      //   },
+      //   {
+      //     where: { variant_unit_code: d.variant_unit_code },
+      //     transaction: t,
+      //   },
+      // );
     }
 
     // ✅ OPTIONAL: update status unit berdasarkan total stok variant
@@ -1262,13 +1274,13 @@ const createRentWithDetail = async (req, res) => {
       }
 
       // potong stok
-      await variant.update(
-        {
-          qty: Number(variant.qty) - q,
-          updated_at: new Date(),
-        },
-        { transaction: t },
-      );
+      // await variant.update(
+      //   {
+      //     qty: Number(variant.qty) - q,
+      //     updated_at: new Date(),
+      //   },
+      //   { transaction: t },
+      // );
 
       const detail_id = await generateIncrementId(
         TrnDetailRent,
