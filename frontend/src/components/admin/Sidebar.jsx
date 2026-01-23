@@ -36,7 +36,7 @@ const masterItems = [
     name: "User",
     path: "/menu/user",
     icon: faUser,
-    roles: ["Manager", "Supervisor"], // admin NO
+    roles: ["Manager"], // admin NO
   },
 ];
 

@@ -75,6 +75,10 @@ const MstUser = sequelize.define(
       type: DataTypes.STRING(16),
       allowNull: true,
     },
+    role: {
+      type: DataTypes.STRING(16),
+      allowNull: true,
+    },
     is_delete: {
       type: DataTypes.INTEGER,
       allowNull: true,

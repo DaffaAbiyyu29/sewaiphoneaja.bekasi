@@ -9,6 +9,7 @@ const {
   getRentsByDateRange,
   getNextInvoice,
   reStockForRent,
+  reStockForRentOnce,
   deleteRent,
   updateRent,
   cancelRent,
@@ -44,6 +45,7 @@ router.put("/:rentId/collect", verifyToken, collectUnit);
 router.put("/:rentId/return", verifyToken, returnUnit);
 router.put("/:rentId/cancel", verifyToken, cancelRent);
 router.put("/:rentId/reStockForRent", verifyToken, reStockForRent);
+router.put("/:rentId/reStockForRentOnce", verifyToken, reStockForRentOnce);
 router.delete("/:rentId", verifyToken, deleteRent);
 
 module.exports = router;

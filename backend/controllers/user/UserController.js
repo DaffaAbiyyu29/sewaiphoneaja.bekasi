@@ -6,6 +6,23 @@ const { deletePhoto } = require("../../middleware/upload");
 const { generateIncrementId } = require("../../helpers/generateID");
 const { Op } = require("sequelize");
 
+const clamp = (val, max, fallback = "") => {
+  const s = String(val ?? "").trim();
+  if (!s) return fallback;
+  return s.length > max ? s.slice(0, max) : s;
+};
+
+const normalizeGender = (gender) => {
+  const g = String(gender ?? "").trim();
+  if (!g) return null;
+  if (g === "M" || g === "F") return g;
+
+  const low = g.toLowerCase();
+  if (low.includes("laki") || low.includes("pria")) return "M";
+  if (low.includes("perem") || low.includes("wanita")) return "F";
+  return null;
+};
+
 const createUser = async (req, res) => {
   try {
     let {
@@ -19,69 +36,79 @@ const createUser = async (req, res) => {
       gender,
       birth_place,
       birth_date,
-      profile_picture,
       created_by,
+      updated_by,
     } = req.body;
 
-    // If a file was uploaded by multer, use its filename as profile_picture
-    if (req.file && req.file.filename) {
-      profile_picture = req.file.filename;
-    }
+    // ✅ upload: samakan dengan field yg route pakai
+    // Kalau route multer pakai .single("photo") maka req.file ada.
+    // Kalau route pakai .single("profile_picture") juga req.file ada.
+    // Jadi cukup pakai req.file.filename apapun namanya.
+    let profile_picture = null;
+    if (req.file?.filename) profile_picture = req.file.filename;
 
+    // ✅ Validasi sesuai DB (email NOT NULL, role NOT NULL, created_by & updated_by NOT NULL)
     const missing = [];
     if (!nik) missing.push("nik");
     if (!name) missing.push("name");
     if (!role) missing.push("role");
+    if (!email) missing.push("email"); // DB: Null = No
     if (!password) missing.push("password");
-    if (missing.length)
-      return resError(
-        res,
-        "Data user tidak lengkap",
-        `Missing fields: ${missing.join(", ")}`,
-        400
-      );
 
-    // generate user_id if not provided
+    if (missing.length) {
+      return resError(res, "Data user tidak lengkap", `Missing fields: ${missing.join(", ")}`, 400);
+    }
+
+    // ✅ nilai actor (untuk created_by & updated_by) max 16
+    const actor = clamp(updated_by || created_by || "SYSTEM", 16, "SYSTEM");
+    const actorCreated = clamp(created_by || updated_by || "SYSTEM", 16, "SYSTEM");
+
+    // ✅ normalize enum gender
+    const genderVal = normalizeGender(gender);
+
+    // generate user_id
     const user_id = await generateIncrementId(MstUser, "user_id", "USR");
 
-    // check existing nik or email
+    // cek existing nik/email
     const existNik = await MstUser.findOne({ where: { nik } });
     if (existNik) return resError(res, "NIK sudah terdaftar", "Conflict", 409);
-    if (email) {
-      const existEmail = await MstUser.findOne({ where: { email } });
-      if (existEmail)
-        return resError(res, "Email sudah terdaftar", "Conflict", 409);
-    }
+
+    const existEmail = await MstUser.findOne({ where: { email } });
+    if (existEmail) return resError(res, "Email sudah terdaftar", "Conflict", 409);
 
     const hashed = await bcrypt.hash(password, 10);
 
     const user = await MstUser.create({
       user_id,
-      nik,
-      name,
-      role,
-      email: email || null,
+      nik: clamp(nik, 16),
+      name: clamp(name, 100),
+      role: clamp(role, 16),             // DB varchar(16) NOT NULL
+      email: clamp(email, 100),          // DB NOT NULL
       password: hashed,
-      telp: telp || null,
-      address: address || null,
-      gender: gender || null,
-      birth_place: birth_place || null,
+      telp: telp ? clamp(telp, 20) : null,
+      address: address ? clamp(address, 255) : null,
+      gender: genderVal,                 // enum('M','F') atau null
+      birth_place: birth_place ? clamp(birth_place, 100) : null,
       birth_date: birth_date || null,
       profile_picture: profile_picture || null,
       status: "Active",
+      is_delete: 0,
       created_at: new Date(),
-      created_by: created_by || null,
+      created_by: actorCreated,          // NOT NULL, max 16
+      updated_by: actor,                 // NOT NULL, max 16
+      updated_at: new Date(),
     });
 
-    // do not return password
     const userData = user.toJSON();
     delete userData.password;
 
     return resSuccess(res, "User berhasil dibuat", userData, null, 201);
   } catch (err) {
-    return resError(res, "Gagal membuat user", err.message, 500);
+    console.error("CREATE USER ERROR:", err);
+    return resError(res, "Gagal membuat user", err?.original?.sqlMessage || err.message, 500);
   }
 };
+
 
 const getUsers = async (req, res) => {
   try {
