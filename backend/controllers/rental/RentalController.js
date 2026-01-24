@@ -192,7 +192,6 @@ const createRent = async (req, res) => {
   }
 };
 
-
 const reStockForRentOnce = async (rent, t) => {
   // rent: instance TrnRent yg sudah di-lock
 
@@ -221,12 +220,14 @@ const reStockForRentOnce = async (rent, t) => {
       {
         where: { variant_unit_code: d.variant_unit_code },
         transaction: t,
-      }
+      },
     );
   }
 
   // update status unit berdasarkan total stok variant
-  const unitCodes = [...new Set(details.map(d => d.unit_code).filter(Boolean))];
+  const unitCodes = [
+    ...new Set(details.map((d) => d.unit_code).filter(Boolean)),
+  ];
 
   for (const unit_code of unitCodes) {
     const variants = await MstVariantUnit.findAll({
@@ -242,11 +243,10 @@ const reStockForRentOnce = async (rent, t) => {
         status: totalStock > 0 ? "Available" : "Unavailable",
         updated_at: new Date(),
       },
-      { where: { unit_code }, transaction: t }
+      { where: { unit_code }, transaction: t },
     );
   }
 };
-
 
 const reStockForRent = async (rent, t) => {
   // rent: instance TrnRent (sudah di-lock)
@@ -362,7 +362,12 @@ const cancelRent = async (req, res) => {
 
     if (!req.user) {
       await t.rollback();
-      return resError(res, "Akses ditolak", "Token tidak valid / belum login", 401);
+      return resError(
+        res,
+        "Akses ditolak",
+        "Token tidak valid / belum login",
+        401,
+      );
     }
 
     // lock rental (penting biar aman)
@@ -392,11 +397,15 @@ const cancelRent = async (req, res) => {
     // kalau sudah Open / sudah collect => jangan boleh cancel
     if (rent.status === "Open" || rent.collect_date) {
       await t.rollback();
-      return resError(res, "Tidak bisa cancel, unit sudah diambil", "Conflict", 409);
+      return resError(
+        res,
+        "Tidak bisa cancel, unit sudah diambil",
+        "Conflict",
+        409,
+      );
     }
 
-    // ✅ RESTORE STOK SEKALI SAJA
-    await restoreStockForRent(rentId, t);
+    // await restoreStockForRent(rentId, t);
 
     // ✅ UPDATE STATUS (Cancelled bikin tanggal 22–23 otomatis ready di dashboard
     // karena availability query harus exclude Cancelled)
@@ -407,7 +416,7 @@ const cancelRent = async (req, res) => {
         updated_at: new Date(),
         updated_by: req.user.user_id || req.user.email || "ADMIN",
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -415,7 +424,7 @@ const cancelRent = async (req, res) => {
     return resSuccess(
       res,
       `Rental dibatalkan. Stok kembali tersedia untuk tanggal ${rent.start_rent_date} s/d ${rent.end_rent_date}`,
-      rent
+      rent,
     );
   } catch (err) {
     await t.rollback();
@@ -423,7 +432,6 @@ const cancelRent = async (req, res) => {
     return resError(res, "Gagal cancel rental", err.message, 500);
   }
 };
-
 
 //buat Rental aktif berdasarkan tanggal
 // GET /api/rent/active-by-customer/:customerId?date=2026-01-10
@@ -589,8 +597,7 @@ const returnUnit = async (req, res) => {
       return resSuccess(res, "Rental sudah ditutup sebelumnya", rent);
     }
 
-    // ✅ RESTORE STOK SEKALI SAJA
-    await restoreStockForRent(rentId, t);
+    // await restoreStockForRent(rentId, t);
 
     // ✅ CLOSE RENTAL
     await rent.update(
@@ -599,9 +606,10 @@ const returnUnit = async (req, res) => {
         status: "Close",
         notes: notes ?? rent.notes,
         updated_at: new Date(),
-        updated_by: req.user?.user_id || req.user?.email || rent.updated_by || null,
+        updated_by:
+          req.user?.user_id || req.user?.email || rent.updated_by || null,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -609,7 +617,7 @@ const returnUnit = async (req, res) => {
     return resSuccess(
       res,
       `Unit dikembalikan. Stok tersedia kembali mulai tanggal return: ${rent.return_date}`,
-      rent
+      rent,
     );
   } catch (err) {
     await t.rollback();
@@ -617,7 +625,6 @@ const returnUnit = async (req, res) => {
     return resError(res, "Gagal return unit", err.message, 500);
   }
 };
-
 
 const getRents = async (req, res) => {
   try {
@@ -1218,7 +1225,7 @@ const createRentWithDetail = async (req, res) => {
         balance: Number(total_price) - Number(total_paid || 0),
         status: "Waiting Payment",
         invoice_number: invoiceNo,
-        notes: notes ?? "",    
+        notes: notes ?? "",
         created_by: created_by || null,
         created_at: new Date(),
       },
