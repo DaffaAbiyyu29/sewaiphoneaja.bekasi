@@ -89,6 +89,7 @@ const getAllUnitCatalog = async (req, res) => {
             as: "rent",
             attributes: [],
             where: {
+              status: { [Op.notIn]: ["Close", "Cancelled"] },
               start_rent_date: { [Op.lte]: endDateUTC },
               end_rent_date: { [Op.gte]: startDateUTC },
             },
@@ -239,6 +240,7 @@ const getCatalogByUnitCode = async (req, res) => {
             as: "rent",
             attributes: [],
             where: {
+              status: { [Op.notIn]: ["Close", "Cancelled"] },
               start_rent_date: { [Op.lte]: endDateUTC },
               end_rent_date: { [Op.gte]: startDateUTC },
             },
